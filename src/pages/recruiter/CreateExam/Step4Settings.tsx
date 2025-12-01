@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ExamFormData } from './index';
-import { Settings as SettingsIcon, Shuffle, Eye, Timer, Navigation } from 'lucide-react';
+import { Settings as SettingsIcon, Shuffle, Eye } from 'lucide-react';
 
 interface Step4Props {
   data: ExamFormData;
@@ -94,47 +94,9 @@ export default function Step4Settings({ data, updateData }: Step4Props) {
         </div>
       </div>
 
-      {/* Navigation Settings */}
+      {/* Exam Attempts */}
       <div className="space-y-4 pt-4 border-t">
-        <h4 className="font-medium text-gray-900">Navigation Settings</h4>
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div className="flex items-start">
-            <Navigation className="w-5 h-5 text-gray-600 mt-1 mr-3" />
-            <div>
-              <Label htmlFor="allowBackNav" className="text-base font-medium">
-                Allow Back Navigation
-              </Label>
-              <p className="text-sm text-gray-600 mt-1">
-                Students can navigate back to previous questions
-              </p>
-            </div>
-          </div>
-          <Switch
-            id="allowBackNav"
-            checked={data.settings.allowBackNavigation}
-            onCheckedChange={(checked) => updateSetting('allowBackNavigation', checked)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div className="flex items-start">
-            <Timer className="w-5 h-5 text-gray-600 mt-1 mr-3" />
-            <div>
-              <Label htmlFor="showTimer" className="text-base font-medium">
-                Show Timer
-              </Label>
-              <p className="text-sm text-gray-600 mt-1">
-                Display countdown timer during the exam
-              </p>
-            </div>
-          </div>
-          <Switch
-            id="showTimer"
-            checked={data.settings.showTimer}
-            onCheckedChange={(checked) => updateSetting('showTimer', checked)}
-          />
-        </div>
+        <h4 className="font-medium text-gray-900">Exam Attempts</h4>
 
         <div className="p-4 border rounded-lg">
           <Label htmlFor="attemptsAllowed">Number of Attempts Allowed</Label>
@@ -192,25 +154,6 @@ export default function Step4Settings({ data, updateData }: Step4Props) {
             id="allowReview"
             checked={data.settings.allowReview}
             onCheckedChange={(checked) => updateSetting('allowReview', checked)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div className="flex items-start">
-            <Eye className="w-5 h-5 text-gray-600 mt-1 mr-3" />
-            <div>
-              <Label htmlFor="showCorrect" className="text-base font-medium">
-                Show Correct Answers
-              </Label>
-              <p className="text-sm text-gray-600 mt-1">
-                Display correct answers in results
-              </p>
-            </div>
-          </div>
-          <Switch
-            id="showCorrect"
-            checked={data.settings.showCorrectAnswers}
-            onCheckedChange={(checked) => updateSetting('showCorrectAnswers', checked)}
           />
         </div>
 

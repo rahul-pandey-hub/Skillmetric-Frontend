@@ -40,7 +40,6 @@ export interface ExamFormData {
     copyPasteDetection: boolean;
     rightClickDisabled: boolean;
     fullscreenRequired: boolean;
-    faceDetection: boolean;
     violationWarningLimit: number;
     autoSubmitOnViolation: boolean;
   };
@@ -51,10 +50,7 @@ export interface ExamFormData {
     shuffleOptions: boolean;
     showResultsImmediately: boolean;
     allowReview: boolean;
-    showCorrectAnswers: boolean;
     attemptsAllowed: number;
-    allowBackNavigation: boolean;
-    showTimer: boolean;
   };
 
   // Step 5 - Shortlisting & Results
@@ -106,7 +102,6 @@ export default function CreateExam() {
       copyPasteDetection: false,
       rightClickDisabled: true,
       fullscreenRequired: false,
-      faceDetection: false,
       violationWarningLimit: 5,
       autoSubmitOnViolation: false,
     },
@@ -115,10 +110,7 @@ export default function CreateExam() {
       shuffleOptions: false,
       showResultsImmediately: false,
       allowReview: true,
-      showCorrectAnswers: false,
       attemptsAllowed: 1,
-      allowBackNavigation: true,
-      showTimer: true,
     },
     shortlistingCriteria: {
       enabled: false,
@@ -192,9 +184,6 @@ export default function CreateExam() {
           devToolsDetection: false,
           fullscreenRequired: formData.proctoringSettings.fullscreenRequired,
           autoSubmitOnViolation: formData.proctoringSettings.autoSubmitOnViolation,
-          faceDetection: formData.proctoringSettings.faceDetection,
-          multipleFaceDetection: false,
-          mobileDetection: false,
         },
         schedule: {
           startDate: formData.startDate,
@@ -206,20 +195,13 @@ export default function CreateExam() {
           passingMarks: (formData.totalMarks * formData.passingPercentage) / 100,
           passingPercentage: formData.passingPercentage,
           negativeMarking: false,
-          gradingScheme: 'PERCENTAGE',
         },
         settings: {
           shuffleQuestions: formData.settings.shuffleQuestions,
           shuffleOptions: formData.settings.shuffleOptions,
           showResultsImmediately: formData.settings.showResultsImmediately,
           allowReview: formData.settings.allowReview,
-          showCorrectAnswers: formData.settings.showCorrectAnswers,
           attemptsAllowed: formData.settings.attemptsAllowed,
-          allowSkip: true,
-          allowBackNavigation: formData.settings.allowBackNavigation,
-          showTimer: formData.settings.showTimer,
-          allowPauseResume: false,
-          saveProgressAutomatically: true,
         },
       };
 

@@ -2,7 +2,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { ExamFormData } from './index';
-import { Shield, Camera, Monitor, AlertTriangle, User, Eye, Maximize, MousePointer } from 'lucide-react';
+import { Shield, Camera, Monitor, AlertTriangle, Eye, Maximize, MousePointer } from 'lucide-react';
 
 interface Step3Props {
   data: ExamFormData;
@@ -176,68 +176,45 @@ export default function Step3Proctoring({ data, updateData }: Step3Props) {
               />
             </div>
 
-            {/* Face Detection */}
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-start">
-                <User className="w-5 h-5 text-gray-600 mt-1 mr-3" />
-                <div>
-                  <Label htmlFor="facedetect" className="text-base font-medium">
-                    Face Detection
-                  </Label>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Monitor for face presence during exam
-                  </p>
-                </div>
-              </div>
-              <Switch
-                id="facedetect"
-                checked={data.proctoringSettings.faceDetection}
-                onCheckedChange={(checked) => updateProctoringSetting('faceDetection', checked)}
-              />
-            </div>
-
             {/* Violation Thresholds */}
             <div className="space-y-6 p-4 border rounded-lg bg-gray-50">
               <h4 className="font-medium text-gray-900">Violation Thresholds</h4>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="text-sm">Maximum Tab Switches</Label>
+                  <Label className="text-sm">Violation Warning Limit</Label>
                   <span className="text-sm font-medium text-primary-600">
-                    {data.proctoringSettings.maxTabSwitches}
+                    {data.proctoringSettings.violationWarningLimit}
                   </span>
                 </div>
                 <Slider
-                  value={[data.proctoringSettings.maxTabSwitches]}
-                  onValueChange={(value) => updateProctoringSetting('maxTabSwitches', value[0])}
-                  min={1}
-                  max={10}
-                  step={1}
-                  className="mt-2"
-                />
-                <p className="text-xs text-gray-600 mt-2">
-                  Exam will be auto-submitted after exceeding this limit
-                </p>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label className="text-sm">Maximum Violations</Label>
-                  <span className="text-sm font-medium text-primary-600">
-                    {data.proctoringSettings.maxViolations}
-                  </span>
-                </div>
-                <Slider
-                  value={[data.proctoringSettings.maxViolations]}
-                  onValueChange={(value) => updateProctoringSetting('maxViolations', value[0])}
+                  value={[data.proctoringSettings.violationWarningLimit]}
+                  onValueChange={(value) => updateProctoringSetting('violationWarningLimit', value[0])}
                   min={1}
                   max={15}
                   step={1}
                   className="mt-2"
                 />
                 <p className="text-xs text-gray-600 mt-2">
-                  Total violations allowed before flagging the exam
+                  Number of warnings before taking action
                 </p>
+              </div>
+
+              {/* Auto Submit on Violation */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="autosubmit" className="text-base font-medium">
+                    Auto Submit on Violation
+                  </Label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Automatically submit exam when violation limit is exceeded
+                  </p>
+                </div>
+                <Switch
+                  id="autosubmit"
+                  checked={data.proctoringSettings.autoSubmitOnViolation}
+                  onCheckedChange={(checked) => updateProctoringSetting('autoSubmitOnViolation', checked)}
+                />
               </div>
             </div>
           </>
