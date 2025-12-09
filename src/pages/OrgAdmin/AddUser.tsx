@@ -1,18 +1,20 @@
 import { useState } from 'react';
-import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Grid,
-  MenuItem,
-  Alert,
-} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const AddUser = () => {
+export default function AddUser() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -51,116 +53,154 @@ const AddUser = () => {
   };
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Add New User
-        </Typography>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Add New User</h1>
+        <p className="text-muted-foreground">Create a new user account for your organization</p>
+      </div>
 
-        <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-          <form onSubmit={handleSubmit}>
-            {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {error}
-              </Alert>
-            )}
-            {success && (
-              <Alert severity="success" sx={{ mb: 3 }}>
-                {success}
-              </Alert>
-            )}
-
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Full Name"
-                  required
-                  value={formData.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Role"
-                  required
-                  value={formData.role}
-                  onChange={(e) => handleChange('role', e.target.value)}
-                >
-                  <MenuItem value="RECRUITER">Recruiter</MenuItem>
-                  <MenuItem value="INSTRUCTOR">Instructor</MenuItem>
-                  <MenuItem value="STUDENT">Student</MenuItem>
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Password"
-                  type="password"
-                  helperText="Leave blank to auto-generate and send via email"
-                  value={formData.password}
-                  onChange={(e) => handleChange('password', e.target.value)}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Phone"
-                  value={formData.phone}
-                  onChange={(e) => handleChange('phone', e.target.value)}
-                />
-              </Grid>
-
-              {formData.role === 'STUDENT' && (
-                <>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Department"
-                      value={formData.department}
-                      onChange={(e) => handleChange('department', e.target.value)}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Batch"
-                      value={formData.batch}
-                      onChange={(e) => handleChange('batch', e.target.value)}
-                    />
-                  </Grid>
-                </>
+      {/* Form Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle>User Information</CardTitle>
+            <CardDescription>Fill in the details to create a new user account</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Error Alert */}
+              {error && (
+                <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                  <p className="text-sm font-medium">{error}</p>
+                </div>
               )}
-            </Grid>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-              <Button onClick={() => navigate('/org-admin/users')}>Cancel</Button>
-              <Button type="submit" variant="contained">
-                Create User
-              </Button>
-            </Box>
-          </form>
-        </Paper>
-      </Box>
-    </Container>
+              {/* Success Alert */}
+              {success && (
+                <div className="flex items-center gap-2 p-4 rounded-lg bg-success-50 border border-success-200 text-success-700">
+                  <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+                  <p className="text-sm font-medium">{success}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Full Name */}
+                <div className="col-span-2">
+                  <Label htmlFor="name">Full Name *</Label>
+                  <Input
+                    id="name"
+                    required
+                    value={formData.name}
+                    onChange={(e) => handleChange('name', e.target.value)}
+                    placeholder="Enter full name"
+                    className="mt-1.5"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => handleChange('email', e.target.value)}
+                    placeholder="user@example.com"
+                    className="mt-1.5"
+                  />
+                </div>
+
+                {/* Role */}
+                <div>
+                  <Label htmlFor="role">Role *</Label>
+                  <Select value={formData.role} onValueChange={(value) => handleChange('role', value)}>
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="RECRUITER">Recruiter</SelectItem>
+                      <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
+                      <SelectItem value="STUDENT">Student</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => handleChange('password', e.target.value)}
+                    placeholder="Leave blank to auto-generate"
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Leave blank to auto-generate and send via email
+                  </p>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleChange('phone', e.target.value)}
+                    placeholder="+1234567890"
+                    className="mt-1.5"
+                  />
+                </div>
+
+                {/* Student-specific fields */}
+                {formData.role === 'STUDENT' && (
+                  <>
+                    <div>
+                      <Label htmlFor="department">Department</Label>
+                      <Input
+                        id="department"
+                        value={formData.department}
+                        onChange={(e) => handleChange('department', e.target.value)}
+                        placeholder="Computer Science"
+                        className="mt-1.5"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="batch">Batch</Label>
+                      <Input
+                        id="batch"
+                        value={formData.batch}
+                        onChange={(e) => handleChange('batch', e.target.value)}
+                        placeholder="2024"
+                        className="mt-1.5"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-between pt-4">
+                <Button type="button" variant="outline" onClick={() => navigate('/org-admin/users')}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Create User
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
   );
-};
-
-export default AddUser;
+}

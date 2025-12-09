@@ -1,23 +1,18 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Button,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Alert,
-  Chip,
-  LinearProgress,
-  IconButton,
-} from '@mui/material';
-import { Upload, Download, CloudUpload, CheckCircle, Error as ErrorIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+} from '@/components/ui/table';
+import { Upload, Download, CloudUpload, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface UserRecord {
   name: string;
@@ -27,7 +22,7 @@ interface UserRecord {
   error?: string;
 }
 
-const BulkUserUpload = () => {
+export default function BulkUserUpload() {
   const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
   const [users, setUsers] = useState<UserRecord[]>([]);
@@ -104,154 +99,211 @@ const BulkUserUpload = () => {
   const errorCount = users.filter((u) => u.status === 'error').length;
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Bulk User Upload
-        </Typography>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Bulk User Upload</h1>
+        <p className="text-muted-foreground">Upload multiple users at once using a CSV file</p>
+      </div>
 
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Upload Instructions
-          </Typography>
-          <Typography variant="body2" color="textSecondary" paragraph>
-            1. Download the CSV template below
-            <br />
-            2. Fill in user details (Name, Email, Role)
-            <br />
-            3. Upload the completed CSV file
-            <br />
-            4. Users will receive login credentials via email
-          </Typography>
+      {/* Instructions Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle>Upload Instructions</CardTitle>
+            <CardDescription>Follow these steps to upload users in bulk</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-2">
+                <div className="rounded-full bg-primary/10 text-primary w-6 h-6 flex items-center justify-center flex-shrink-0 font-semibold">
+                  1
+                </div>
+                <p>Download the CSV template below</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="rounded-full bg-primary/10 text-primary w-6 h-6 flex items-center justify-center flex-shrink-0 font-semibold">
+                  2
+                </div>
+                <p>Fill in user details (Name, Email, Role)</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="rounded-full bg-primary/10 text-primary w-6 h-6 flex items-center justify-center flex-shrink-0 font-semibold">
+                  3
+                </div>
+                <p>Upload the completed CSV file</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="rounded-full bg-primary/10 text-primary w-6 h-6 flex items-center justify-center flex-shrink-0 font-semibold">
+                  4
+                </div>
+                <p>Users will receive login credentials via email</p>
+              </div>
+            </div>
 
-          <Button
-            variant="outlined"
-            startIcon={<Download />}
-            onClick={downloadTemplate}
-          >
-            Download Template
-          </Button>
-        </Paper>
-
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Upload File
-          </Typography>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
-            <Button
-              variant="contained"
-              component="label"
-              startIcon={<CloudUpload />}
-            >
-              Select CSV File
-              <input
-                type="file"
-                accept=".csv"
-                hidden
-                onChange={handleFileSelect}
-              />
+            <Button variant="outline" onClick={downloadTemplate} className="mt-6">
+              <Download className="mr-2 h-4 w-4" />
+              Download Template
             </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-            {file && (
-              <Typography variant="body2">
-                {file.name} ({users.length} users)
-              </Typography>
-            )}
-          </Box>
+      {/* Upload File Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle>Upload File</CardTitle>
+            <CardDescription>Select a CSV file containing user information</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Button variant="outline" asChild>
+                <label className="cursor-pointer">
+                  <CloudUpload className="mr-2 h-4 w-4" />
+                  Select CSV File
+                  <input
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                </label>
+              </Button>
 
-          {users.length > 0 && !uploadComplete && (
-            <Box sx={{ mt: 2 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleUpload}
-                disabled={uploading}
-                startIcon={<Upload />}
-              >
+              {file && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="font-medium">{file.name}</span>
+                  <Badge variant="outline">{users.length} users</Badge>
+                </div>
+              )}
+            </div>
+
+            {users.length > 0 && !uploadComplete && (
+              <Button onClick={handleUpload} disabled={uploading}>
+                <Upload className="mr-2 h-4 w-4" />
                 {uploading ? 'Uploading...' : 'Upload Users'}
               </Button>
-            </Box>
-          )}
+            )}
 
-          {uploading && (
-            <Box sx={{ mt: 2 }}>
-              <LinearProgress variant="determinate" value={uploadProgress} />
-              <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-                Uploading: {Math.round(uploadProgress)}%
-              </Typography>
-            </Box>
-          )}
+            {uploading && (
+              <div className="space-y-2">
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-primary h-2 transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Uploading: {Math.round(uploadProgress)}%
+                </p>
+              </div>
+            )}
 
-          {uploadComplete && (
-            <Alert severity={errorCount > 0 ? 'warning' : 'success'} sx={{ mt: 2 }}>
-              Upload complete! {successCount} users created successfully.
-              {errorCount > 0 && ` ${errorCount} users failed.`}
-            </Alert>
-          )}
-        </Paper>
+            {uploadComplete && (
+              <div className={`flex items-center gap-2 p-4 rounded-lg border ${
+                errorCount > 0
+                  ? 'bg-warning-50 border-warning-200 text-warning-700'
+                  : 'bg-success-50 border-success-200 text-success-700'
+              }`}>
+                {errorCount > 0 ? (
+                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                ) : (
+                  <CheckCircle className="h-5 w-5 flex-shrink-0" />
+                )}
+                <p className="text-sm font-medium">
+                  Upload complete! {successCount} users created successfully.
+                  {errorCount > 0 && ` ${errorCount} users failed.`}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
-        {users.length > 0 && (
-          <TableContainer component={Paper} elevation={3}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Role</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Error</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.map((user, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Chip label={user.role} size="small" />
-                    </TableCell>
-                    <TableCell>
-                      {user.status === 'success' && (
-                        <Chip icon={<CheckCircle />} label="Success" color="success" size="small" />
-                      )}
-                      {user.status === 'error' && (
-                        <Chip icon={<ErrorIcon />} label="Failed" color="error" size="small" />
-                      )}
-                      {user.status === 'pending' && (
-                        <Chip label="Pending" size="small" />
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {user.error && (
-                        <Typography variant="body2" color="error">
-                          {user.error}
-                        </Typography>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
+      {/* Users Table */}
+      {users.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>User Preview</CardTitle>
+              <CardDescription>Review the users from your CSV file</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Error</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{user.role}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {user.status === 'success' && (
+                            <Badge variant="success" className="gap-1">
+                              <CheckCircle className="h-3 w-3" />
+                              Success
+                            </Badge>
+                          )}
+                          {user.status === 'error' && (
+                            <Badge variant="destructive" className="gap-1">
+                              <XCircle className="h-3 w-3" />
+                              Failed
+                            </Badge>
+                          )}
+                          {user.status === 'pending' && (
+                            <Badge variant="outline">Pending</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {user.error && (
+                            <span className="text-sm text-destructive">{user.error}</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
-        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+      {/* Action Buttons */}
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={() => navigate('/org-admin/users')}>
+          Back to Users
+        </Button>
+        {uploadComplete && (
           <Button onClick={() => navigate('/org-admin/users')}>
-            Back to Users
+            Done
           </Button>
-          {uploadComplete && (
-            <Button
-              variant="contained"
-              onClick={() => navigate('/org-admin/users')}
-            >
-              Done
-            </Button>
-          )}
-        </Box>
-      </Box>
-    </Container>
+        )}
+      </div>
+    </div>
   );
-};
-
-export default BulkUserUpload;
+}

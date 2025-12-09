@@ -1,28 +1,30 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import {
-  Container,
-  Typography,
-  Box,
-  Button,
-  Paper,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  TablePagination,
-  Chip,
-  IconButton,
-  TextField,
-  MenuItem,
-  CircularProgress,
-} from '@mui/material';
-import { Edit, Delete, Add, Visibility } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { Question, QuestionType, DifficultyLevel } from '../../types/question';
+} from '@/components/ui/table';
+import { Edit, Trash2, Plus, Eye, FolderTree, FileUp } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Question, QuestionType, DifficultyLevel } from '@/types/question';
 
-const QuestionsList = () => {
+export default function QuestionsList() {
   const navigate = useNavigate();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,177 +76,206 @@ const QuestionsList = () => {
     }
   };
 
-  const getDifficultyColor = (difficulty: DifficultyLevel) => {
+  const getDifficultyVariant = (difficulty: DifficultyLevel): 'success' | 'warning' | 'destructive' => {
     switch (difficulty) {
       case DifficultyLevel.EASY:
         return 'success';
       case DifficultyLevel.MEDIUM:
         return 'warning';
       case DifficultyLevel.HARD:
-        return 'error';
+        return 'destructive';
       default:
-        return 'default';
+        return 'warning';
     }
   };
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ py: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h4">Question Bank</Typography>
-          <Box display="flex" gap={1}>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => navigate('/org-admin/questions/create')}
-            >
-              Create Question
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/org-admin/questions/pools')}
-            >
-              Manage Pools
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/org-admin/questions/import')}
-            >
-              Import Questions
-            </Button>
-          </Box>
-        </Box>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Question Bank</h1>
+          <p className="text-muted-foreground">Manage your organization's question library</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate('/org-admin/questions/create')}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Question
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/org-admin/questions/pools')}>
+            <FolderTree className="mr-2 h-4 w-4" />
+            Manage Pools
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/org-admin/questions/import')}>
+            <FileUp className="mr-2 h-4 w-4" />
+            Import
+          </Button>
+        </div>
+      </div>
 
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Box display="flex" gap={2} flexWrap="wrap">
-            <TextField
-              select
-              label="Type"
-              variant="outlined"
-              size="small"
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              sx={{ minWidth: 150 }}
-            >
-              <MenuItem value="">All Types</MenuItem>
-              <MenuItem value="MULTIPLE_CHOICE">Multiple Choice</MenuItem>
-              <MenuItem value="TRUE_FALSE">True/False</MenuItem>
-              <MenuItem value="SHORT_ANSWER">Short Answer</MenuItem>
-              <MenuItem value="ESSAY">Essay</MenuItem>
-              <MenuItem value="FILL_BLANK">Fill in the Blank</MenuItem>
-            </TextField>
-            <TextField
-              select
-              label="Difficulty"
-              variant="outlined"
-              size="small"
-              value={difficultyFilter}
-              onChange={(e) => setDifficultyFilter(e.target.value)}
-              sx={{ minWidth: 150 }}
-            >
-              <MenuItem value="">All Difficulties</MenuItem>
-              <MenuItem value="EASY">Easy</MenuItem>
-              <MenuItem value="MEDIUM">Medium</MenuItem>
-              <MenuItem value="HARD">Hard</MenuItem>
-            </TextField>
-            <TextField
-              label="Category"
-              variant="outlined"
-              size="small"
+      {/* Filters */}
+      <Card className="p-4">
+        <div className="flex flex-wrap gap-4">
+          <div className="w-[180px]">
+            <Label htmlFor="type-filter" className="sr-only">Type</Label>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger id="type-filter">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="MULTIPLE_CHOICE">Multiple Choice</SelectItem>
+                <SelectItem value="TRUE_FALSE">True/False</SelectItem>
+                <SelectItem value="SHORT_ANSWER">Short Answer</SelectItem>
+                <SelectItem value="ESSAY">Essay</SelectItem>
+                <SelectItem value="FILL_BLANK">Fill in the Blank</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-[180px]">
+            <Label htmlFor="difficulty-filter" className="sr-only">Difficulty</Label>
+            <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+              <SelectTrigger id="difficulty-filter">
+                <SelectValue placeholder="All Difficulties" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Difficulties</SelectItem>
+                <SelectItem value="EASY">Easy</SelectItem>
+                <SelectItem value="MEDIUM">Medium</SelectItem>
+                <SelectItem value="HARD">Hard</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex-1 min-w-[200px]">
+            <Label htmlFor="category-filter" className="sr-only">Category</Label>
+            <Input
+              id="category-filter"
+              placeholder="Filter by category..."
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              sx={{ minWidth: 200 }}
             />
-          </Box>
-        </Paper>
+          </div>
+        </div>
+      </Card>
 
+      {/* Questions Table */}
+      <Card>
         {loading ? (
-          <Box display="flex" justifyContent="center" py={4}>
-            <CircularProgress />
-          </Box>
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
         ) : (
-          <TableContainer component={Paper} elevation={3}>
+          <div className="rounded-md border">
             <Table>
-              <TableHead>
+              <TableHeader>
                 <TableRow>
-                  <TableCell>Question</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Difficulty</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Marks</TableCell>
-                  <TableCell>Tags</TableCell>
-                  <TableCell align="center">Actions</TableCell>
+                  <TableHead>Question</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Difficulty</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Marks</TableHead>
+                  <TableHead>Tags</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
-              </TableHead>
+              </TableHeader>
               <TableBody>
-                {questions.map((question) => (
-                  <TableRow key={question._id} hover>
-                    <TableCell>
-                      <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
-                        {question.text}
-                      </Typography>
+                {questions.map((question, index) => (
+                  <motion.tr
+                    key={question._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: index * 0.05 }}
+                    className="group hover:bg-muted/50"
+                  >
+                    <TableCell className="max-w-xs">
+                      <p className="font-medium line-clamp-2">{question.text}</p>
                     </TableCell>
                     <TableCell>
-                      <Chip label={question.type.replace('_', ' ')} size="small" />
+                      <Badge variant="outline">
+                        {question.type.replace('_', ' ')}
+                      </Badge>
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={question.difficulty}
-                        color={getDifficultyColor(question.difficulty)}
-                        size="small"
-                      />
+                      <Badge variant={getDifficultyVariant(question.difficulty)}>
+                        {question.difficulty}
+                      </Badge>
                     </TableCell>
                     <TableCell>{question.category || '-'}</TableCell>
                     <TableCell>{question.marks}</TableCell>
                     <TableCell>
-                      {question.tags.slice(0, 2).map((tag) => (
-                        <Chip key={tag} label={tag} size="small" sx={{ mr: 0.5 }} />
-                      ))}
-                      {question.tags.length > 2 && <span>+{question.tags.length - 2}</span>}
+                      <div className="flex gap-1 flex-wrap max-w-[200px]">
+                        {question.tags.slice(0, 2).map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {question.tags.length > 2 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{question.tags.length - 2}
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
-                    <TableCell align="center">
-                      <IconButton
-                        size="small"
-                        onClick={() => navigate(`/org-admin/questions/${question._id}`)}
-                        title="View"
-                      >
-                        <Visibility />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => navigate(`/org-admin/questions/${question._id}/edit`)}
-                        title="Edit"
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        title="Delete"
-                        color="error"
-                      >
-                        <Delete />
-                      </IconButton>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/org-admin/questions/${question._id}`)}
+                          title="View"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/org-admin/questions/${question._id}/edit`)}
+                          title="Edit"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title="Delete"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
-                  </TableRow>
+                  </motion.tr>
                 ))}
               </TableBody>
             </Table>
-            <TablePagination
-              component="div"
-              count={total}
-              page={page}
-              onPageChange={(_, newPage) => setPage(newPage)}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={(e) => {
-                setRowsPerPage(parseInt(e.target.value, 10));
-                setPage(0);
-              }}
-            />
-          </TableContainer>
+          </div>
         )}
-      </Box>
-    </Container>
-  );
-};
 
-export default QuestionsList;
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-4 py-4 border-t">
+          <div className="text-sm text-muted-foreground">
+            Showing {page * rowsPerPage + 1} to {Math.min((page + 1) * rowsPerPage, total)} of {total} questions
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(Math.max(0, page - 1))}
+              disabled={page === 0}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(page + 1)}
+              disabled={(page + 1) * rowsPerPage >= total}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}

@@ -1,74 +1,29 @@
 import { useEffect, useState } from 'react';
-import {
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Box,
-  Button,
-  CircularProgress,
-  Paper,
-  Chip,
-} from '@mui/material';
-import {
-  Business,
-  People,
-  Assessment,
-  TrendingUp,
-  Settings,
-  Analytics,
-} from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { StatsCard } from '@/components/shared/StatsCard';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Building2,
+  Users,
+  DollarSign,
+  TrendingUp,
+  Plus,
+  Settings,
+  BarChart3,
+  CheckCircle2,
+  XCircle,
+  Clock,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 import superAdminService, { PlatformStats } from '../services/superAdminService';
 
-interface StatsCardProps {
-  title: string;
-  value: number | string;
-  icon: React.ReactNode;
-  color: string;
-  subtitle?: string;
-}
-
-const StatsCard: React.FC<StatsCardProps> = ({ title, value, icon, color, subtitle }) => (
-  <Card elevation={3}>
-    <CardContent>
-      <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-        <Box>
-          <Typography color="textSecondary" gutterBottom variant="body2">
-            {title}
-          </Typography>
-          <Typography variant="h4" component="div" sx={{ my: 1 }}>
-            {value.toLocaleString()}
-          </Typography>
-          {subtitle && (
-            <Typography variant="body2" color="textSecondary">
-              {subtitle}
-            </Typography>
-          )}
-        </Box>
-        <Box
-          sx={{
-            backgroundColor: `${color}20`,
-            borderRadius: 2,
-            p: 1.5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {icon}
-        </Box>
-      </Box>
-    </CardContent>
-  </Card>
-);
-
-const SuperAdminDashboard = () => {
+export default function SuperAdminDashboard() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<PlatformStats | null>(null);
   const [systemHealth, setSystemHealth] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboardData();
@@ -76,7 +31,6 @@ const SuperAdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      setLoading(true);
       const [platformStats, healthData] = await Promise.all([
         superAdminService.getPlatformStats(),
         superAdminService.getSystemHealth(),
@@ -90,209 +44,216 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <CircularProgress />
-      </Box>
-    );
-  }
+  const statsCards = [
+    {
+      title: 'Total Organizations',
+      value: stats?.totalOrganizations || 0,
+      icon: Building2,
+      iconColor: 'text-blue-600',
+      iconBgColor: 'bg-blue-100',
+      description: `${stats?.organizationsByStatus?.ACTIVE || 0} active`,
+    },
+    {
+      title: 'Total Users',
+      value: stats?.totalUsers || 0,
+      icon: Users,
+      iconColor: 'text-green-600',
+      iconBgColor: 'bg-green-100',
+      description: 'Across all organizations',
+    },
+    {
+      title: 'Total Exams',
+      value: stats?.totalExams || 0,
+      icon: BarChart3,
+      iconColor: 'text-purple-600',
+      iconBgColor: 'bg-purple-100',
+      description: 'Platform-wide',
+    },
+    {
+      title: 'Total Assessments',
+      value: stats?.totalAssessments || 0,
+      icon: TrendingUp,
+      iconColor: 'text-orange-600',
+      iconBgColor: 'bg-orange-100',
+      description: 'Completed',
+    },
+  ];
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ py: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-          <Box>
-            <Typography variant="h4" gutterBottom>
-              Super Admin Dashboard
-            </Typography>
-            <Typography variant="subtitle1" color="textSecondary">
-              Platform-wide management and analytics
-            </Typography>
-          </Box>
-        </Box>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Super Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Platform-wide management and analytics</p>
+        </div>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => navigate('/super-admin/system-config')}>
+            <Settings className="mr-2 h-4 w-4" />
+            System Config
+          </Button>
+          <Button onClick={() => navigate('/super-admin/organizations/create')}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Organization
+          </Button>
+        </div>
+      </div>
 
-        {/* Overview Stats */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Total Organizations"
-              value={stats?.totalOrganizations || 0}
-              icon={<Business sx={{ color: '#1976d2', fontSize: 32 }} />}
-              color="#1976d2"
-              subtitle={`${stats?.organizationsByStatus?.ACTIVE || 0} active`}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Total Users"
-              value={stats?.totalUsers || 0}
-              icon={<People sx={{ color: '#2e7d32', fontSize: 32 }} />}
-              color="#2e7d32"
-              subtitle="Across all organizations"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Total Exams"
-              value={stats?.totalExams || 0}
-              icon={<Assessment sx={{ color: '#ed6c02', fontSize: 32 }} />}
-              color="#ed6c02"
-              subtitle="Platform-wide"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Total Assessments"
-              value={stats?.totalAssessments || 0}
-              icon={<TrendingUp sx={{ color: '#9c27b0', fontSize: 32 }} />}
-              color="#9c27b0"
-              subtitle="Completed assessments"
-            />
-          </Grid>
-        </Grid>
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {statsCards.map((stat, index) => (
+          <StatsCard key={index} {...stat} loading={loading} />
+        ))}
+      </div>
 
-        {/* Quick Actions */}
-        <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-          <Typography variant="h6" gutterBottom>
-            Quick Actions
-          </Typography>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Button
-                fullWidth
-                variant="contained"
-                startIcon={<Business />}
-                onClick={() => navigate('/super-admin/organizations/create')}
-              >
-                Create Organization
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Button
-                fullWidth
-                variant="contained"
-                color="secondary"
-                startIcon={<Business />}
-                onClick={() => navigate('/super-admin/organizations')}
-              >
-                Manage Organizations
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Button
-                fullWidth
-                variant="contained"
-                color="success"
-                startIcon={<Settings />}
-                onClick={() => navigate('/super-admin/system-config')}
-              >
-                System Configuration
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Button
-                fullWidth
-                variant="contained"
-                color="info"
-                startIcon={<Analytics />}
-                onClick={() => navigate('/super-admin/analytics')}
-              >
-                View Analytics
-              </Button>
-            </Grid>
-          </Grid>
-        </Paper>
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>Common administrative tasks</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-2 md:grid-cols-4">
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => navigate('/super-admin/organizations/create')}
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Create Organization
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => navigate('/super-admin/organizations')}
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              Manage Organizations
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => navigate('/super-admin/system-config')}
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              System Configuration
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => navigate('/super-admin/analytics')}
+            >
+              <BarChart3 className="mr-2 h-4 w-4" />
+              View Analytics
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Organizations by Type & Status */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={6}>
-            <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
-              <Typography variant="h6" gutterBottom>
-                Organizations by Type
-              </Typography>
-              <Box sx={{ mt: 2 }}>
-                {stats?.organizationsByType &&
-                  Object.entries(stats.organizationsByType).map(([type, count]) => (
-                    <Box key={type} sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography>{type}</Typography>
-                      <Chip label={count} color="primary" size="small" />
-                    </Box>
-                  ))}
-              </Box>
-            </Paper>
-          </Grid>
+      {/* Organizations Breakdown */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* By Type */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Organizations by Type</CardTitle>
+            <CardDescription>Distribution by organization type</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {stats?.organizationsByType &&
+                Object.entries(stats.organizationsByType).map(([type, count]) => (
+                  <div key={type} className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{type}</span>
+                    <Badge variant="secondary">{count}</Badge>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
 
-          <Grid item xs={12} md={6}>
-            <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
-              <Typography variant="h6" gutterBottom>
-                Organizations by Status
-              </Typography>
-              <Box sx={{ mt: 2 }}>
-                {stats?.organizationsByStatus &&
-                  Object.entries(stats.organizationsByStatus).map(([status, count]) => (
-                    <Box key={status} sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography>{status}</Typography>
-                      <Chip
-                        label={count}
-                        color={status === 'ACTIVE' ? 'success' : status === 'SUSPENDED' ? 'error' : 'default'}
-                        size="small"
-                      />
-                    </Box>
-                  ))}
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
+        {/* By Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Organizations by Status</CardTitle>
+            <CardDescription>Current status distribution</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {stats?.organizationsByStatus &&
+                Object.entries(stats.organizationsByStatus).map(([status, count]) => (
+                  <div key={status} className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{status}</span>
+                    <Badge
+                      variant={
+                        status === 'ACTIVE' ? 'default' : status === 'SUSPENDED' ? 'destructive' : 'secondary'
+                      }
+                    >
+                      {count}
+                    </Badge>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Subscription Plans & System Health */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
-              <Typography variant="h6" gutterBottom>
-                Organizations by Plan
-              </Typography>
-              <Box sx={{ mt: 2 }}>
-                {stats?.organizationsByPlan &&
-                  Object.entries(stats.organizationsByPlan).map(([plan, count]) => (
-                    <Box key={plan} sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography>{plan}</Typography>
-                      <Chip label={count} color="info" size="small" />
-                    </Box>
-                  ))}
-              </Box>
-            </Paper>
-          </Grid>
+        {/* By Plan */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Organizations by Plan</CardTitle>
+            <CardDescription>Subscription plan distribution</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {stats?.organizationsByPlan &&
+                Object.entries(stats.organizationsByPlan).map(([plan, count]) => (
+                  <div key={plan} className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{plan}</span>
+                    <Badge variant="outline">{count}</Badge>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
 
-          <Grid item xs={12} md={6}>
-            <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
-              <Typography variant="h6" gutterBottom>
-                System Health
-              </Typography>
-              <Box sx={{ mt: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography>Active Users (24h)</Typography>
-                  <Chip label={systemHealth?.activeUsers || 0} color="success" size="small" />
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography>Active Exams</Typography>
-                  <Chip label={systemHealth?.activeExams || 0} color="primary" size="small" />
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography>Recent Assessments (24h)</Typography>
-                  <Chip label={systemHealth?.recentAssessments || 0} color="info" size="small" />
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography>Expiring Subscriptions (30d)</Typography>
-                  <Chip label={systemHealth?.expiringSubscriptions || 0} color="warning" size="small" />
-                </Box>
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Box>
-    </Container>
+        {/* System Health */}
+        <Card>
+          <CardHeader>
+            <CardTitle>System Health</CardTitle>
+            <CardDescription>Platform status and metrics</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Active Users (24h)</span>
+                <Badge variant="default" className="bg-green-600">
+                  <CheckCircle2 className="mr-1 h-3 w-3" />
+                  {systemHealth?.activeUsers || 0}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Active Exams</span>
+                <Badge variant="default" className="bg-blue-600">
+                  <Clock className="mr-1 h-3 w-3" />
+                  {systemHealth?.activeExams || 0}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Recent Assessments (24h)</span>
+                <Badge variant="default" className="bg-purple-600">
+                  {systemHealth?.recentAssessments || 0}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Expiring Subscriptions (30d)</span>
+                <Badge variant="destructive">
+                  <XCircle className="mr-1 h-3 w-3" />
+                  {systemHealth?.expiringSubscriptions || 0}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
-};
-
-export default SuperAdminDashboard;
+}

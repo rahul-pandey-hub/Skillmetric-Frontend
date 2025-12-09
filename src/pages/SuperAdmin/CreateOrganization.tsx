@@ -1,21 +1,20 @@
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Grid,
-  MenuItem,
-  FormControlLabel,
-  Checkbox,
-  Stepper,
-  Step,
-  StepLabel,
-  Alert,
-} from '@mui/material';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Check, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import superAdminService from '../../services/superAdminService';
 
 const steps = ['Basic Information', 'Subscription Plan', 'Features', 'Assign Admin'];
@@ -126,259 +125,282 @@ const CreateOrganization = () => {
     switch (step) {
       case 0:
         return (
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Organization Name"
-                required
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <Label htmlFor="name">
+                Organization Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="name"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
+                placeholder="Enter organization name"
+                required
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                select
-                label="Organization Type"
-                required
-                value={formData.type}
-                onChange={(e) => handleChange('type', e.target.value)}
-              >
-                <MenuItem value="COMPANY">Company</MenuItem>
-                <MenuItem value="UNIVERSITY">University</MenuItem>
-                <MenuItem value="TRAINING_INSTITUTE">Training Institute</MenuItem>
-                <MenuItem value="INDIVIDUAL">Individual</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Contact Email"
+            </div>
+            <div>
+              <Label htmlFor="type">
+                Organization Type <span className="text-red-500">*</span>
+              </Label>
+              <Select value={formData.type} onValueChange={(value) => handleChange('type', value)}>
+                <SelectTrigger id="type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="COMPANY">Company</SelectItem>
+                  <SelectItem value="UNIVERSITY">University</SelectItem>
+                  <SelectItem value="TRAINING_INSTITUTE">Training Institute</SelectItem>
+                  <SelectItem value="INDIVIDUAL">Individual</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="contactEmail">
+                Contact Email <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="contactEmail"
                 type="email"
-                required
                 value={formData.contactEmail}
                 onChange={(e) => handleChange('contactEmail', e.target.value)}
+                placeholder="contact@organization.com"
+                required
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Contact Phone"
+            </div>
+            <div>
+              <Label htmlFor="contactPhone">Contact Phone</Label>
+              <Input
+                id="contactPhone"
                 value={formData.contactPhone}
                 onChange={(e) => handleChange('contactPhone', e.target.value)}
+                placeholder="+1 234 567 8900"
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Website"
+            </div>
+            <div>
+              <Label htmlFor="website">Website</Label>
+              <Input
+                id="website"
                 value={formData.website}
                 onChange={(e) => handleChange('website', e.target.value)}
+                placeholder="https://organization.com"
               />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Street Address"
+            </div>
+            <div className="md:col-span-2">
+              <Label htmlFor="street">Street Address</Label>
+              <Input
+                id="street"
                 value={formData.street}
                 onChange={(e) => handleChange('street', e.target.value)}
+                placeholder="123 Main Street"
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="City"
+            </div>
+            <div>
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
                 value={formData.city}
                 onChange={(e) => handleChange('city', e.target.value)}
+                placeholder="New York"
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="State"
+            </div>
+            <div>
+              <Label htmlFor="state">State</Label>
+              <Input
+                id="state"
                 value={formData.state}
                 onChange={(e) => handleChange('state', e.target.value)}
+                placeholder="NY"
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Country"
+            </div>
+            <div>
+              <Label htmlFor="country">Country</Label>
+              <Input
+                id="country"
                 value={formData.country}
                 onChange={(e) => handleChange('country', e.target.value)}
+                placeholder="United States"
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Pincode"
+            </div>
+            <div>
+              <Label htmlFor="pincode">Pincode</Label>
+              <Input
+                id="pincode"
                 value={formData.pincode}
                 onChange={(e) => handleChange('pincode', e.target.value)}
+                placeholder="10001"
               />
-            </Grid>
-          </Grid>
+            </div>
+          </div>
         );
 
       case 1:
         return (
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                select
-                label="Subscription Plan"
-                required
-                value={formData.plan}
-                onChange={(e) => handleChange('plan', e.target.value)}
-              >
-                <MenuItem value="FREE">Free</MenuItem>
-                <MenuItem value="BASIC">Basic</MenuItem>
-                <MenuItem value="PRO">Pro</MenuItem>
-                <MenuItem value="ENTERPRISE">Enterprise</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label="Credits"
-                type="number"
-                required
-                value={formData.credits}
-                onChange={(e) => handleChange('credits', parseInt(e.target.value))}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label="Max Concurrent Users"
-                type="number"
-                required
-                value={formData.maxConcurrentUsers}
-                onChange={(e) => handleChange('maxConcurrentUsers', parseInt(e.target.value))}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label="Max Exams Per Month"
-                type="number"
-                required
-                value={formData.maxExamsPerMonth}
-                onChange={(e) => handleChange('maxExamsPerMonth', parseInt(e.target.value))}
-              />
-            </Grid>
-          </Grid>
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="plan">
+                Subscription Plan <span className="text-red-500">*</span>
+              </Label>
+              <Select value={formData.plan} onValueChange={(value) => handleChange('plan', value)}>
+                <SelectTrigger id="plan">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="FREE">Free</SelectItem>
+                  <SelectItem value="BASIC">Basic</SelectItem>
+                  <SelectItem value="PRO">Pro</SelectItem>
+                  <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <Label htmlFor="credits">
+                  Credits <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="credits"
+                  type="number"
+                  value={formData.credits}
+                  onChange={(e) => handleChange('credits', parseInt(e.target.value))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="maxConcurrentUsers">
+                  Max Concurrent Users <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="maxConcurrentUsers"
+                  type="number"
+                  value={formData.maxConcurrentUsers}
+                  onChange={(e) => handleChange('maxConcurrentUsers', parseInt(e.target.value))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="maxExamsPerMonth">
+                  Max Exams Per Month <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="maxExamsPerMonth"
+                  type="number"
+                  value={formData.maxExamsPerMonth}
+                  onChange={(e) => handleChange('maxExamsPerMonth', parseInt(e.target.value))}
+                  required
+                />
+              </div>
+            </div>
+          </div>
         );
 
       case 2:
         return (
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.brandingEnabled}
-                    onChange={(e) => handleChange('brandingEnabled', e.target.checked)}
-                  />
-                }
-                label="Branding Enabled"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="brandingEnabled"
+                checked={formData.brandingEnabled}
+                onCheckedChange={(checked) => handleChange('brandingEnabled', checked)}
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.customEmailTemplates}
-                    onChange={(e) => handleChange('customEmailTemplates', e.target.checked)}
-                  />
-                }
-                label="Custom Email Templates"
+              <Label htmlFor="brandingEnabled" className="cursor-pointer font-normal">
+                Branding Enabled
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="customEmailTemplates"
+                checked={formData.customEmailTemplates}
+                onCheckedChange={(checked) => handleChange('customEmailTemplates', checked)}
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.advancedProctoring}
-                    onChange={(e) => handleChange('advancedProctoring', e.target.checked)}
-                  />
-                }
-                label="Advanced Proctoring"
+              <Label htmlFor="customEmailTemplates" className="cursor-pointer font-normal">
+                Custom Email Templates
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="advancedProctoring"
+                checked={formData.advancedProctoring}
+                onCheckedChange={(checked) => handleChange('advancedProctoring', checked)}
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.apiAccess}
-                    onChange={(e) => handleChange('apiAccess', e.target.checked)}
-                  />
-                }
-                label="API Access"
+              <Label htmlFor="advancedProctoring" className="cursor-pointer font-normal">
+                Advanced Proctoring
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="apiAccess"
+                checked={formData.apiAccess}
+                onCheckedChange={(checked) => handleChange('apiAccess', checked)}
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.bulkOperations}
-                    onChange={(e) => handleChange('bulkOperations', e.target.checked)}
-                  />
-                }
-                label="Bulk Operations"
+              <Label htmlFor="apiAccess" className="cursor-pointer font-normal">
+                API Access
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="bulkOperations"
+                checked={formData.bulkOperations}
+                onCheckedChange={(checked) => handleChange('bulkOperations', checked)}
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.analyticsExport}
-                    onChange={(e) => handleChange('analyticsExport', e.target.checked)}
-                  />
-                }
-                label="Analytics Export"
+              <Label htmlFor="bulkOperations" className="cursor-pointer font-normal">
+                Bulk Operations
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="analyticsExport"
+                checked={formData.analyticsExport}
+                onCheckedChange={(checked) => handleChange('analyticsExport', checked)}
               />
-            </Grid>
-          </Grid>
+              <Label htmlFor="analyticsExport" className="cursor-pointer font-normal">
+                Analytics Export
+              </Label>
+            </div>
+          </div>
         );
 
       case 3:
         return (
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Alert severity="info">
-                Assign an organization administrator. An email with credentials will be sent automatically.
-              </Alert>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Admin Name"
+          <div className="space-y-6">
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex gap-3">
+                <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800 dark:text-blue-200">
+                  Assign an organization administrator. An email with credentials will be sent automatically.
+                </div>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="adminName">Admin Name</Label>
+              <Input
+                id="adminName"
                 value={formData.adminName}
                 onChange={(e) => handleChange('adminName', e.target.value)}
+                placeholder="John Doe"
               />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Admin Email"
+            </div>
+            <div>
+              <Label htmlFor="adminEmail">Admin Email</Label>
+              <Input
+                id="adminEmail"
                 type="email"
                 value={formData.adminEmail}
                 onChange={(e) => handleChange('adminEmail', e.target.value)}
+                placeholder="admin@organization.com"
               />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Admin Password (optional)"
+            </div>
+            <div>
+              <Label htmlFor="adminPassword">Admin Password (optional)</Label>
+              <Input
+                id="adminPassword"
                 type="password"
-                helperText="Leave blank to auto-generate"
                 value={formData.adminPassword}
                 onChange={(e) => handleChange('adminPassword', e.target.value)}
+                placeholder="Leave blank to auto-generate"
               />
-            </Grid>
-          </Grid>
+              <p className="text-sm text-muted-foreground mt-1">Leave blank to auto-generate a secure password</p>
+            </div>
+          </div>
         );
 
       default:
@@ -387,51 +409,91 @@ const CreateOrganization = () => {
   };
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Create Organization
-        </Typography>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Create Organization</h1>
+        <p className="text-muted-foreground">Set up a new organization on the platform</p>
+      </div>
 
-        <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
+      <Card>
+        <CardContent className="pt-6">
+          {/* Custom Stepper */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              {steps.map((label, index) => (
+                <div key={label} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-1">
+                    <div
+                      className={cn(
+                        'w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors',
+                        index < activeStep
+                          ? 'bg-primary border-primary text-primary-foreground'
+                          : index === activeStep
+                          ? 'bg-primary border-primary text-primary-foreground'
+                          : 'bg-background border-muted-foreground/30 text-muted-foreground'
+                      )}
+                    >
+                      {index < activeStep ? <Check className="h-5 w-5" /> : <span>{index + 1}</span>}
+                    </div>
+                    <div
+                      className={cn(
+                        'text-sm font-medium mt-2 text-center',
+                        index === activeStep ? 'text-foreground' : 'text-muted-foreground'
+                      )}
+                    >
+                      {label}
+                    </div>
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div
+                      className={cn(
+                        'h-0.5 flex-1 mx-2 transition-colors',
+                        index < activeStep ? 'bg-primary' : 'bg-muted-foreground/30'
+                      )}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
-              {error}
-            </Alert>
+            <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+              <div className="flex gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+                <div className="text-sm text-red-800 dark:text-red-200">{error}</div>
+              </div>
+            </div>
           )}
 
-          {renderStepContent(activeStep)}
+          <motion.div
+            key={activeStep}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {renderStepContent(activeStep)}
+          </motion.div>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-            <Button disabled={activeStep === 0} onClick={handleBack}>
+          <div className="flex justify-between mt-8 pt-6 border-t">
+            <Button variant="outline" onClick={handleBack} disabled={activeStep === 0}>
               Back
             </Button>
-            <Box>
-              <Button onClick={() => navigate('/super-admin/organizations')} sx={{ mr: 1 }}>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate('/super-admin/organizations')}>
                 Cancel
               </Button>
               {activeStep === steps.length - 1 ? (
-                <Button variant="contained" onClick={handleSubmit}>
-                  Create Organization
-                </Button>
+                <Button onClick={handleSubmit}>Create Organization</Button>
               ) : (
-                <Button variant="contained" onClick={handleNext}>
-                  Next
-                </Button>
+                <Button onClick={handleNext}>Next</Button>
               )}
-            </Box>
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

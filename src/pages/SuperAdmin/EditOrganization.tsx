@@ -1,19 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Grid,
-  MenuItem,
-  FormControlLabel,
-  Checkbox,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, AlertCircle } from 'lucide-react';
 import superAdminService, { Organization } from '../../services/superAdminService';
 
 const EditOrganization = () => {
@@ -132,259 +131,273 @@ const EditOrganization = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[80vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Edit Organization
-        </Typography>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Edit Organization</h1>
+        <p className="text-muted-foreground">Update organization details and settings</p>
+      </div>
 
-        <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-          <form onSubmit={handleSubmit}>
-            {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {error}
-              </Alert>
-            )}
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-6">
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <div className="flex gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+                <div className="text-sm text-red-800 dark:text-red-200">{error}</div>
+              </div>
+            </div>
+          )}
 
-            {/* Basic Information */}
-            <Typography variant="h6" gutterBottom>
-              Basic Information
-            </Typography>
-            <Grid container spacing={3} sx={{ mb: 3 }}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Organization Name"
-                  required
-                  value={formData.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Organization Type"
-                  required
-                  value={formData.type}
-                  onChange={(e) => handleChange('type', e.target.value)}
-                >
-                  <MenuItem value="COMPANY">Company</MenuItem>
-                  <MenuItem value="UNIVERSITY">University</MenuItem>
-                  <MenuItem value="TRAINING_INSTITUTE">Training Institute</MenuItem>
-                  <MenuItem value="INDIVIDUAL">Individual</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Contact Email"
-                  type="email"
-                  required
-                  value={formData.contactEmail}
-                  onChange={(e) => handleChange('contactEmail', e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Contact Phone"
-                  value={formData.contactPhone}
-                  onChange={(e) => handleChange('contactPhone', e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Website"
-                  value={formData.website}
-                  onChange={(e) => handleChange('website', e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Street Address"
-                  value={formData.street}
-                  onChange={(e) => handleChange('street', e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="City"
-                  value={formData.city}
-                  onChange={(e) => handleChange('city', e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="State"
-                  value={formData.state}
-                  onChange={(e) => handleChange('state', e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Country"
-                  value={formData.country}
-                  onChange={(e) => handleChange('country', e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Pincode"
-                  value={formData.pincode}
-                  onChange={(e) => handleChange('pincode', e.target.value)}
-                />
-              </Grid>
-            </Grid>
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <Label htmlFor="name">
+                    Organization Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => handleChange('name', e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="type">
+                    Organization Type <span className="text-red-500">*</span>
+                  </Label>
+                  <Select value={formData.type} onValueChange={(value) => handleChange('type', value)}>
+                    <SelectTrigger id="type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="COMPANY">Company</SelectItem>
+                      <SelectItem value="UNIVERSITY">University</SelectItem>
+                      <SelectItem value="TRAINING_INSTITUTE">Training Institute</SelectItem>
+                      <SelectItem value="INDIVIDUAL">Individual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="contactEmail">
+                    Contact Email <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    value={formData.contactEmail}
+                    onChange={(e) => handleChange('contactEmail', e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contactPhone">Contact Phone</Label>
+                  <Input
+                    id="contactPhone"
+                    value={formData.contactPhone}
+                    onChange={(e) => handleChange('contactPhone', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="website">Website</Label>
+                  <Input
+                    id="website"
+                    value={formData.website}
+                    onChange={(e) => handleChange('website', e.target.value)}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Label htmlFor="street">Street Address</Label>
+                  <Input
+                    id="street"
+                    value={formData.street}
+                    onChange={(e) => handleChange('street', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="city">City</Label>
+                  <Input id="city" value={formData.city} onChange={(e) => handleChange('city', e.target.value)} />
+                </div>
+                <div>
+                  <Label htmlFor="state">State</Label>
+                  <Input id="state" value={formData.state} onChange={(e) => handleChange('state', e.target.value)} />
+                </div>
+                <div>
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    value={formData.country}
+                    onChange={(e) => handleChange('country', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pincode">Pincode</Label>
+                  <Input
+                    id="pincode"
+                    value={formData.pincode}
+                    onChange={(e) => handleChange('pincode', e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Subscription */}
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-              Subscription Plan
-            </Typography>
-            <Grid container spacing={3} sx={{ mb: 3 }}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Subscription Plan"
-                  required
-                  value={formData.plan}
-                  onChange={(e) => handleChange('plan', e.target.value)}
-                >
-                  <MenuItem value="FREE">Free</MenuItem>
-                  <MenuItem value="BASIC">Basic</MenuItem>
-                  <MenuItem value="PRO">Pro</MenuItem>
-                  <MenuItem value="ENTERPRISE">Enterprise</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label="Credits"
-                  type="number"
-                  required
-                  value={formData.credits}
-                  onChange={(e) => handleChange('credits', parseInt(e.target.value))}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label="Max Concurrent Users"
-                  type="number"
-                  required
-                  value={formData.maxConcurrentUsers}
-                  onChange={(e) => handleChange('maxConcurrentUsers', parseInt(e.target.value))}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label="Max Exams Per Month"
-                  type="number"
-                  required
-                  value={formData.maxExamsPerMonth}
-                  onChange={(e) => handleChange('maxExamsPerMonth', parseInt(e.target.value))}
-                />
-              </Grid>
-            </Grid>
+          {/* Subscription Plan */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Subscription Plan</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div>
+                  <Label htmlFor="plan">
+                    Subscription Plan <span className="text-red-500">*</span>
+                  </Label>
+                  <Select value={formData.plan} onValueChange={(value) => handleChange('plan', value)}>
+                    <SelectTrigger id="plan">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="FREE">Free</SelectItem>
+                      <SelectItem value="BASIC">Basic</SelectItem>
+                      <SelectItem value="PRO">Pro</SelectItem>
+                      <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <Label htmlFor="credits">
+                      Credits <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="credits"
+                      type="number"
+                      value={formData.credits}
+                      onChange={(e) => handleChange('credits', parseInt(e.target.value))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="maxConcurrentUsers">
+                      Max Concurrent Users <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="maxConcurrentUsers"
+                      type="number"
+                      value={formData.maxConcurrentUsers}
+                      onChange={(e) => handleChange('maxConcurrentUsers', parseInt(e.target.value))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="maxExamsPerMonth">
+                      Max Exams Per Month <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="maxExamsPerMonth"
+                      type="number"
+                      value={formData.maxExamsPerMonth}
+                      onChange={(e) => handleChange('maxExamsPerMonth', parseInt(e.target.value))}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Features */}
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-              Features
-            </Typography>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.brandingEnabled}
-                      onChange={(e) => handleChange('brandingEnabled', e.target.checked)}
-                    />
-                  }
-                  label="Branding Enabled"
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.customEmailTemplates}
-                      onChange={(e) => handleChange('customEmailTemplates', e.target.checked)}
-                    />
-                  }
-                  label="Custom Email Templates"
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.advancedProctoring}
-                      onChange={(e) => handleChange('advancedProctoring', e.target.checked)}
-                    />
-                  }
-                  label="Advanced Proctoring"
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.apiAccess}
-                      onChange={(e) => handleChange('apiAccess', e.target.checked)}
-                    />
-                  }
-                  label="API Access"
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.bulkOperations}
-                      onChange={(e) => handleChange('bulkOperations', e.target.checked)}
-                    />
-                  }
-                  label="Bulk Operations"
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.analyticsExport}
-                      onChange={(e) => handleChange('analyticsExport', e.target.checked)}
-                    />
-                  }
-                  label="Analytics Export"
-                />
-              </Grid>
-            </Grid>
+          {/* Features */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Features</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="brandingEnabled"
+                    checked={formData.brandingEnabled}
+                    onCheckedChange={(checked) => handleChange('brandingEnabled', checked)}
+                  />
+                  <Label htmlFor="brandingEnabled" className="cursor-pointer font-normal">
+                    Branding Enabled
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="customEmailTemplates"
+                    checked={formData.customEmailTemplates}
+                    onCheckedChange={(checked) => handleChange('customEmailTemplates', checked)}
+                  />
+                  <Label htmlFor="customEmailTemplates" className="cursor-pointer font-normal">
+                    Custom Email Templates
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="advancedProctoring"
+                    checked={formData.advancedProctoring}
+                    onCheckedChange={(checked) => handleChange('advancedProctoring', checked)}
+                  />
+                  <Label htmlFor="advancedProctoring" className="cursor-pointer font-normal">
+                    Advanced Proctoring
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="apiAccess"
+                    checked={formData.apiAccess}
+                    onCheckedChange={(checked) => handleChange('apiAccess', checked)}
+                  />
+                  <Label htmlFor="apiAccess" className="cursor-pointer font-normal">
+                    API Access
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="bulkOperations"
+                    checked={formData.bulkOperations}
+                    onCheckedChange={(checked) => handleChange('bulkOperations', checked)}
+                  />
+                  <Label htmlFor="bulkOperations" className="cursor-pointer font-normal">
+                    Bulk Operations
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="analyticsExport"
+                    checked={formData.analyticsExport}
+                    onCheckedChange={(checked) => handleChange('analyticsExport', checked)}
+                  />
+                  <Label htmlFor="analyticsExport" className="cursor-pointer font-normal">
+                    Analytics Export
+                  </Label>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-              <Button onClick={() => navigate(`/super-admin/organizations/${id}`)}>Cancel</Button>
-              <Button type="submit" variant="contained">
-                Save Changes
-              </Button>
-            </Box>
-          </form>
-        </Paper>
-      </Box>
-    </Container>
+          <div className="flex justify-between">
+            <Button type="button" variant="outline" onClick={() => navigate(`/super-admin/organizations/${id}`)}>
+              Cancel
+            </Button>
+            <Button type="submit">Save Changes</Button>
+          </div>
+        </div>
+      </form>
+    </div>
   );
 };
 

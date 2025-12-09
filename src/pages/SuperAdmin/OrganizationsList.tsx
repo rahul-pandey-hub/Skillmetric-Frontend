@@ -1,29 +1,34 @@
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
-  Container,
-  Typography,
-  Box,
-  Button,
-  Paper,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  TablePagination,
-  Chip,
-  IconButton,
-  TextField,
-  MenuItem,
-  CircularProgress,
+} from '@/components/ui/table';
+import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-} from '@mui/material';
-import { Edit, Delete, Visibility, Add, Block, CheckCircle } from '@mui/icons-material';
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Edit, Trash2, Eye, Plus, Ban, CheckCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import superAdminService, { Organization } from '../../services/superAdminService';
 
 const OrganizationsList = () => {
@@ -95,9 +100,9 @@ const OrganizationsList = () => {
       case 'ACTIVE':
         return 'success';
       case 'SUSPENDED':
-        return 'error';
+        return 'destructive';
       case 'TRIAL':
-        return 'info';
+        return 'default';
       case 'EXPIRED':
         return 'warning';
       default:
@@ -105,183 +110,235 @@ const OrganizationsList = () => {
     }
   };
 
+  const totalPages = Math.ceil(total / rowsPerPage);
+
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ py: 4 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h4">Organizations</Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => navigate('/super-admin/organizations/create')}
-          >
-            Create Organization
-          </Button>
-        </Box>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
+          <p className="text-muted-foreground">Manage all organizations on the platform</p>
+        </div>
+        <Button onClick={() => navigate('/super-admin/organizations/create')}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Organization
+        </Button>
+      </div>
 
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Box display="flex" gap={2} flexWrap="wrap">
-            <TextField
-              label="Search"
-              variant="outlined"
-              size="small"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              sx={{ flexGrow: 1, minWidth: 200 }}
-            />
-            <TextField
-              select
-              label="Type"
-              variant="outlined"
-              size="small"
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              sx={{ minWidth: 150 }}
-            >
-              <MenuItem value="">All Types</MenuItem>
-              <MenuItem value="COMPANY">Company</MenuItem>
-              <MenuItem value="UNIVERSITY">University</MenuItem>
-              <MenuItem value="TRAINING_INSTITUTE">Training Institute</MenuItem>
-              <MenuItem value="INDIVIDUAL">Individual</MenuItem>
-            </TextField>
-            <TextField
-              select
-              label="Status"
-              variant="outlined"
-              size="small"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              sx={{ minWidth: 150 }}
-            >
-              <MenuItem value="">All Status</MenuItem>
-              <MenuItem value="ACTIVE">Active</MenuItem>
-              <MenuItem value="SUSPENDED">Suspended</MenuItem>
-              <MenuItem value="TRIAL">Trial</MenuItem>
-              <MenuItem value="EXPIRED">Expired</MenuItem>
-            </TextField>
-            <TextField
-              select
-              label="Plan"
-              variant="outlined"
-              size="small"
-              value={planFilter}
-              onChange={(e) => setPlanFilter(e.target.value)}
-              sx={{ minWidth: 150 }}
-            >
-              <MenuItem value="">All Plans</MenuItem>
-              <MenuItem value="FREE">Free</MenuItem>
-              <MenuItem value="BASIC">Basic</MenuItem>
-              <MenuItem value="PRO">Pro</MenuItem>
-              <MenuItem value="ENTERPRISE">Enterprise</MenuItem>
-            </TextField>
-          </Box>
-        </Paper>
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <Input
+                placeholder="Search organizations..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="COMPANY">Company</SelectItem>
+                <SelectItem value="UNIVERSITY">University</SelectItem>
+                <SelectItem value="TRAINING_INSTITUTE">Training Institute</SelectItem>
+                <SelectItem value="INDIVIDUAL">Individual</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="ACTIVE">Active</SelectItem>
+                <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                <SelectItem value="TRIAL">Trial</SelectItem>
+                <SelectItem value="EXPIRED">Expired</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={planFilter} onValueChange={setPlanFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Plans" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Plans</SelectItem>
+                <SelectItem value="FREE">Free</SelectItem>
+                <SelectItem value="BASIC">Basic</SelectItem>
+                <SelectItem value="PRO">Pro</SelectItem>
+                <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
-        {loading ? (
-          <Box display="flex" justifyContent="center" py={4}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <TableContainer component={Paper} elevation={3}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Plan</TableCell>
-                  <TableCell align="right">Users</TableCell>
-                  <TableCell align="right">Exams</TableCell>
-                  <TableCell align="right">Credits Used</TableCell>
-                  <TableCell align="center">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {organizations.map((org) => (
-                  <TableRow key={org._id} hover>
-                    <TableCell>
-                      <Typography variant="body1">{org.name}</Typography>
-                      <Typography variant="caption" color="textSecondary">
-                        {org.contactInfo.email}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{org.type}</TableCell>
-                    <TableCell>
-                      <Chip label={org.status} color={getStatusColor(org.status)} size="small" />
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={org.subscription.plan} color="primary" variant="outlined" size="small" />
-                    </TableCell>
-                    <TableCell align="right">{org.stats.totalUsers}</TableCell>
-                    <TableCell align="right">{org.stats.totalExams}</TableCell>
-                    <TableCell align="right">
-                      {org.stats.creditsUsed} / {org.subscription.credits}
-                    </TableCell>
-                    <TableCell align="center">
-                      <IconButton
-                        size="small"
-                        onClick={() => navigate(`/super-admin/organizations/${org._id}`)}
-                        title="View Details"
-                      >
-                        <Visibility />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => navigate(`/super-admin/organizations/${org._id}/edit`)}
-                        title="Edit"
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleSuspend(org)}
-                        title={org.status === 'SUSPENDED' ? 'Activate' : 'Suspend'}
-                        color={org.status === 'SUSPENDED' ? 'success' : 'warning'}
-                      >
-                        {org.status === 'SUSPENDED' ? <CheckCircle /> : <Block />}
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => setDeleteDialog({ open: true, org })}
-                        title="Delete"
-                        color="error"
-                      >
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePagination
-              component="div"
-              count={total}
-              page={page}
-              onPageChange={(_, newPage) => setPage(newPage)}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={(e) => {
-                setRowsPerPage(parseInt(e.target.value, 10));
-                setPage(0);
-              }}
-            />
-          </TableContainer>
-        )}
-      </Box>
+      {/* Table */}
+      <Card>
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Plan</TableHead>
+                      <TableHead className="text-right">Users</TableHead>
+                      <TableHead className="text-right">Exams</TableHead>
+                      <TableHead className="text-right">Credits Used</TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {organizations.map((org) => (
+                      <TableRow key={org._id} className="cursor-pointer hover:bg-accent/50">
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{org.name}</div>
+                            <div className="text-sm text-muted-foreground">{org.contactInfo.email}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{org.type}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusColor(org.status)}>{org.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{org.subscription.plan}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{org.stats.totalUsers}</TableCell>
+                        <TableCell className="text-right">{org.stats.totalExams}</TableCell>
+                        <TableCell className="text-right">
+                          {org.stats.creditsUsed} / {org.subscription.credits}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => navigate(`/super-admin/organizations/${org._id}`)}
+                              title="View Details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => navigate(`/super-admin/organizations/${org._id}/edit`)}
+                              title="Edit"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleSuspend(org)}
+                              title={org.status === 'SUSPENDED' ? 'Activate' : 'Suspend'}
+                              className={
+                                org.status === 'SUSPENDED'
+                                  ? 'text-green-600 hover:text-green-700'
+                                  : 'text-yellow-600 hover:text-yellow-700'
+                              }
+                            >
+                              {org.status === 'SUSPENDED' ? (
+                                <CheckCircle className="h-4 w-4" />
+                              ) : (
+                                <Ban className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleteDialog({ open: true, org })}
+                              title="Delete"
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-between px-6 py-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Showing {page * rowsPerPage + 1} to {Math.min((page + 1) * rowsPerPage, total)} of {total}{' '}
+                  organizations
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={rowsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setRowsPerPage(parseInt(value));
+                      setPage(0);
+                    }}
+                  >
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5 / page</SelectItem>
+                      <SelectItem value="10">10 / page</SelectItem>
+                      <SelectItem value="25">25 / page</SelectItem>
+                      <SelectItem value="50">50 / page</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 0}>
+                    Previous
+                  </Button>
+                  <div className="text-sm">
+                    Page {page + 1} of {totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page + 1)}
+                    disabled={page >= totalPages - 1}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, org: null })}>
-        <DialogTitle>Delete Organization</DialogTitle>
+      <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ open, org: null })}>
         <DialogContent>
-          Are you sure you want to delete <strong>{deleteDialog.org?.name}</strong>? This action cannot be undone.
+          <DialogHeader>
+            <DialogTitle>Delete Organization</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <strong>{deleteDialog.org?.name}</strong>? This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialog({ open: false, org: null })}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialog({ open: false, org: null })}>Cancel</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">
-            Delete
-          </Button>
-        </DialogActions>
       </Dialog>
-    </Container>
+    </div>
   );
 };
 

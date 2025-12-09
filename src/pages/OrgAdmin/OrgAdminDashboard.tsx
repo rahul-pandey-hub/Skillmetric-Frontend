@@ -1,25 +1,30 @@
 import { useEffect, useState } from 'react';
-import {
-  Container,
-  Typography,
-  Paper,
-  Box,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  CircularProgress,
-} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
-import { examService } from '../../services/examService';
-import { Exam } from '../../types/exam';
-import { People, Assignment, QuestionAnswer, BarChart, Settings } from '@mui/icons-material';
+import { useAuthStore } from '@/store/authStore';
+import { examService } from '@/services/examService';
+import { Exam } from '@/types/exam';
+import { StatsCard } from '@/components/shared/StatsCard';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Users,
+  ClipboardList,
+  HelpCircle,
+  Activity,
+  Plus,
+  UserPlus,
+  FileQuestion,
+  BarChart,
+  Settings,
+  Eye,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { formatDate } from '@/lib/utils';
 
-const OrgAdminDashboard = () => {
+export default function OrgAdminDashboard() {
   const navigate = useNavigate();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useAuthStore();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -53,193 +58,205 @@ const OrgAdminDashboard = () => {
     }
   };
 
-  const StatCard = ({ title, value, icon, color }: any) => (
-    <Card elevation={3}>
-      <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography color="textSecondary" variant="body2">
-              {title}
-            </Typography>
-            <Typography variant="h4" sx={{ mt: 1 }}>
-              {value}
-            </Typography>
-          </Box>
-          <Box
-            sx={{
-              backgroundColor: `${color}20`,
-              borderRadius: 2,
-              p: 1.5,
-              display: 'flex',
-            }}
-          >
-            {icon}
-          </Box>
-        </Box>
-      </CardContent>
-    </Card>
-  );
+  const statsCards = [
+    {
+      title: 'Total Users',
+      value: stats.totalUsers,
+      change: { value: 12, trend: 'up' as const },
+      icon: Users,
+      iconColor: 'text-primary-600',
+      iconBgColor: 'bg-primary-100',
+      description: 'Across all roles',
+    },
+    {
+      title: 'Total Exams',
+      value: stats.totalExams,
+      change: { value: 8, trend: 'up' as const },
+      icon: ClipboardList,
+      iconColor: 'text-success-600',
+      iconBgColor: 'bg-success-100',
+      description: 'Created exams',
+    },
+    {
+      title: 'Question Bank',
+      value: stats.totalQuestions,
+      icon: HelpCircle,
+      iconColor: 'text-warning-600',
+      iconBgColor: 'bg-warning-100',
+      description: 'Available questions',
+    },
+    {
+      title: 'Active Exams',
+      value: stats.activeExams,
+      change: { value: 5, trend: 'up' as const },
+      icon: Activity,
+      iconColor: 'text-blue-600',
+      iconBgColor: 'bg-blue-100',
+      description: 'Currently running',
+    },
+  ];
+
+  const quickActions = [
+    {
+      label: 'Add Users',
+      icon: UserPlus,
+      onClick: () => navigate('/org-admin/users/add'),
+      variant: 'default' as const,
+    },
+    {
+      label: 'Create Exam',
+      icon: Plus,
+      onClick: () => navigate('/org-admin/exams/create'),
+      variant: 'outline' as const,
+    },
+    {
+      label: 'Add Questions',
+      icon: FileQuestion,
+      onClick: () => navigate('/org-admin/questions/create'),
+      variant: 'outline' as const,
+    },
+    {
+      label: 'Manage Users',
+      icon: Users,
+      onClick: () => navigate('/org-admin/users'),
+      variant: 'outline' as const,
+    },
+    {
+      label: 'Question Bank',
+      icon: HelpCircle,
+      onClick: () => navigate('/org-admin/questions'),
+      variant: 'outline' as const,
+    },
+    {
+      label: 'View Analytics',
+      icon: BarChart,
+      onClick: () => navigate('/org-admin/analytics'),
+      variant: 'outline' as const,
+    },
+    {
+      label: 'Settings',
+      icon: Settings,
+      onClick: () => navigate('/org-admin/settings'),
+      variant: 'outline' as const,
+    },
+  ];
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Organization Dashboard
-        </Typography>
-        <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-          Welcome, {user?.name}
-        </Typography>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Organization Dashboard</h1>
+        <p className="text-muted-foreground">Welcome, {user?.name}</p>
+      </div>
 
-        {/* Stats Cards */}
-        <Grid container spacing={3} sx={{ mt: 2, mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Total Users"
-              value={stats.totalUsers}
-              icon={<People sx={{ fontSize: 32, color: '#1976d2' }} />}
-              color="#1976d2"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Total Exams"
-              value={stats.totalExams}
-              icon={<Assignment sx={{ fontSize: 32, color: '#2e7d32' }} />}
-              color="#2e7d32"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Question Bank"
-              value={stats.totalQuestions}
-              icon={<QuestionAnswer sx={{ fontSize: 32, color: '#ed6c02' }} />}
-              color="#ed6c02"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Active Exams"
-              value={stats.activeExams}
-              icon={<BarChart sx={{ fontSize: 32, color: '#9c27b0' }} />}
-              color="#9c27b0"
-            />
-          </Grid>
-        </Grid>
+      {/* Stats Grid */}
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        {statsCards.map((stat, index) => (
+          <motion.div
+            key={stat.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+          >
+            <StatsCard {...stat} loading={loading} />
+          </motion.div>
+        ))}
+      </div>
 
-        {/* Quick Actions */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Quick Actions
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
-            <Button
-              variant="contained"
-              onClick={() => navigate('/org-admin/users/add')}
-              startIcon={<People />}
-            >
-              Add Users
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={() => navigate('/org-admin/exams/create')}
-              startIcon={<Assignment />}
-            >
-              Create Exam
-            </Button>
-            <Button
-              variant="contained"
-              color="success"
-              onClick={() => navigate('/org-admin/questions/create')}
-              startIcon={<QuestionAnswer />}
-            >
-              Add Questions
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/org-admin/users')}
-            >
-              Manage Users
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/org-admin/questions')}
-            >
-              Question Bank
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/org-admin/analytics')}
-              startIcon={<BarChart />}
-            >
-              View Analytics
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/org-admin/settings')}
-              startIcon={<Settings />}
-            >
-              Settings
-            </Button>
-          </Box>
-        </Paper>
-
-        {/* Recent Exams */}
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Recent Exams
-          </Typography>
-
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : exams.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography color="textSecondary" gutterBottom>
-                No exams found. Create your first exam to get started.
-              </Typography>
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>Common tasks and shortcuts</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {quickActions.map((action) => (
               <Button
-                variant="contained"
-                onClick={() => navigate('/org-admin/exams/create')}
-                sx={{ mt: 2 }}
+                key={action.label}
+                variant={action.variant}
+                onClick={action.onClick}
+                className="h-auto flex-col gap-2 py-6"
               >
+                <action.icon className="h-6 w-6" />
+                <span className="text-sm">{action.label}</span>
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Exams */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Recent Exams</CardTitle>
+            <CardDescription>Your latest created exams</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => navigate('/org-admin/exams')}>
+            View All
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="animate-pulse space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : exams.length === 0 ? (
+            <div className="text-center py-12">
+              <ClipboardList className="mx-auto h-12 w-12 text-muted-foreground/50" />
+              <h3 className="mt-4 text-lg font-semibold">No exams found</h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                Create your first exam to get started
+              </p>
+              <Button onClick={() => navigate('/org-admin/exams/create')} className="mt-4">
+                <Plus className="mr-2 h-4 w-4" />
                 Create Your First Exam
               </Button>
-            </Box>
+            </div>
           ) : (
-            <Grid container spacing={2} sx={{ mt: 1 }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {exams.map((exam) => (
-                <Grid item xs={12} sm={6} md={4} key={exam._id}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Typography variant="h6" noWrap>
-                        {exam.title}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary" gutterBottom>
-                        Code: {exam.code}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        Duration: {exam.duration} min
-                      </Typography>
-                      <Box sx={{ mt: 2 }}>
-                        <Button
-                          size="small"
-                          onClick={() => navigate(`/org-admin/exams/${exam._id}`)}
-                        >
-                          View Details
-                        </Button>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
+                <motion.div
+                  key={exam._id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="border rounded-lg p-4 hover:bg-accent transition-colors cursor-pointer"
+                  onClick={() => navigate(`/org-admin/exams/${exam._id}`)}
+                >
+                  <div className="space-y-2">
+                    <h4 className="font-semibold line-clamp-1">{exam.title}</h4>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">Code: {exam.code}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Duration: {exam.duration} min
+                    </p>
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/org-admin/exams/${exam._id}`);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
               ))}
-            </Grid>
+            </div>
           )}
-        </Paper>
-      </Box>
-    </Container>
+        </CardContent>
+      </Card>
+    </div>
   );
-};
-
-export default OrgAdminDashboard;
+}
