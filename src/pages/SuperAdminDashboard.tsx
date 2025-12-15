@@ -31,14 +31,17 @@ export default function SuperAdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
+      console.log('🔍 Fetching dashboard data...');
       const [platformStats, healthData] = await Promise.all([
         superAdminService.getPlatformStats(),
         superAdminService.getSystemHealth(),
       ]);
+      console.log('✅ Platform Stats received:', platformStats);
+      console.log('✅ Health Data received:', healthData);
       setStats(platformStats);
       setSystemHealth(healthData);
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
+      console.error('❌ Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
     }

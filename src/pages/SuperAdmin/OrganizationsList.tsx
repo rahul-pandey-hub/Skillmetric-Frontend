@@ -137,36 +137,36 @@ const OrganizationsList = () => {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <Select value={typeFilter || undefined} onValueChange={(value) => setTypeFilter(value === 'ALL' ? '' : value)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="ALL">All Types</SelectItem>
                 <SelectItem value="COMPANY">Company</SelectItem>
                 <SelectItem value="UNIVERSITY">University</SelectItem>
                 <SelectItem value="TRAINING_INSTITUTE">Training Institute</SelectItem>
                 <SelectItem value="INDIVIDUAL">Individual</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter || undefined} onValueChange={(value) => setStatusFilter(value === 'ALL' ? '' : value)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="ALL">All Status</SelectItem>
                 <SelectItem value="ACTIVE">Active</SelectItem>
                 <SelectItem value="SUSPENDED">Suspended</SelectItem>
                 <SelectItem value="TRIAL">Trial</SelectItem>
                 <SelectItem value="EXPIRED">Expired</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={planFilter} onValueChange={setPlanFilter}>
+            <Select value={planFilter || undefined} onValueChange={(value) => setPlanFilter(value === 'ALL' ? '' : value)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="All Plans" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Plans</SelectItem>
+                <SelectItem value="ALL">All Plans</SelectItem>
                 <SelectItem value="FREE">Free</SelectItem>
                 <SelectItem value="BASIC">Basic</SelectItem>
                 <SelectItem value="PRO">Pro</SelectItem>
