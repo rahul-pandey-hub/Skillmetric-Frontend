@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Container, Typography, Paper, Box, CircularProgress, Button } from '@mui/material';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 
 const StudentDebug = () => {
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useAuthStore();
   const [debugData, setDebugData] = useState<any>(null);
   const [examsData, setExamsData] = useState<any>(null);
   const [loading, setLoading] = useState(false);

@@ -69,6 +69,16 @@ export const examService = {
   }>> => {
     return api.post(`/exams/${examId}/enroll-students`, { students });
   },
+
+  /**
+   * Delete an exam
+   */
+  deleteExam: async (examId: string): Promise<AxiosResponse<{
+    message: string;
+    examId: string;
+  }>> => {
+    return api.delete(`/exams/${examId}`);
+  },
 };
 
 export default examService;

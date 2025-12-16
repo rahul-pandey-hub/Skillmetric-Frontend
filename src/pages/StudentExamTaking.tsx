@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import {
   Container,
   Paper,
@@ -36,8 +35,7 @@ import {
 } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import Webcam from 'react-webcam';
-import { RootState } from '../store';
-import { setSessionId, setWarningCount, setMaxWarnings, setSubmitted } from '../store/slices/examSlice';
+import { useAuthStore } from '../store/authStore';
 import socketService from '../services/socket';
 import api from '../services/api';
 
@@ -67,9 +65,8 @@ interface ExamData {
 const StudentExamTaking = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useAuthStore();
 
   // Exam state
   const [examData, setExamData] = useState<ExamData | null>(null);
@@ -113,7 +110,6 @@ const StudentExamTaking = () => {
       console.log('🔒 Proctoring Settings:', data.proctoringSettings);
 
       setExamData(data);
-      dispatch(setSessionId(data.sessionId));
 
       // Calculate time remaining
       const endTime = new Date(data.endTime).getTime();
@@ -136,7 +132,7 @@ const StudentExamTaking = () => {
       enqueueSnackbar(error.response?.data?.message || 'Failed to start exam', {
         variant: 'error',
       });
-      navigate('/student/dashboard');
+      navigate('/student');
     }
   };
 
@@ -151,8 +147,6 @@ const StudentExamTaking = () => {
 
     socket.current.on('warning', (warningData: any) => {
       setWarningCountLocal(warningData.warningCount);
-      dispatch(setWarningCount(warningData.warningCount));
-      dispatch(setMaxWarnings(warningData.maxWarnings));
       setWarningMessage(warningData.message);
       setShowWarningDialog(true);
     });
@@ -397,11 +391,10 @@ const StudentExamTaking = () => {
         });
       }
 
-      dispatch(setSubmitted(true));
       enqueueSnackbar('Exam submitted successfully!', { variant: 'success' });
 
       // Navigate to results or dashboard
-      navigate('/student/dashboard', {
+      navigate('/student', {
         state: { examResult: response.data },
       });
     } catch (error: any) {

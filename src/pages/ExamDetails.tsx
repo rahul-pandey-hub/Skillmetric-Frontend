@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -28,11 +28,19 @@ import BulkStudentUpload from '../components/BulkStudentUpload';
 const ExamDetails = () => {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [exam, setExam] = useState<Exam | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Determine base path from current location (org-admin, recruiter, or admin)
+  const basePath = location.pathname.includes('/org-admin')
+    ? '/org-admin'
+    : location.pathname.includes('/recruiter')
+    ? '/recruiter'
+    : '/admin';
 
   useEffect(() => {
     fetchExam();
@@ -143,7 +151,7 @@ const ExamDetails = () => {
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Button
               startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/admin/exams')}
+              onClick={() => navigate(`${basePath}/exams`)}
               sx={{ mr: 2 }}
             >
               Back
@@ -153,7 +161,7 @@ const ExamDetails = () => {
           <Button
             variant="contained"
             startIcon={<EditIcon />}
-            onClick={() => navigate(`/admin/exams/${examId}/edit`)}
+            onClick={() => navigate(`${basePath}/exams/${examId}/edit`)}
           >
             Manage Questions
           </Button>
@@ -299,7 +307,7 @@ const ExamDetails = () => {
             <Button
               variant="outlined"
               startIcon={<AddIcon />}
-              onClick={() => navigate(`/admin/exams/${examId}/edit`)}
+              onClick={() => navigate(`${basePath}/exams/${examId}/edit`)}
               size="small"
             >
               Add Questions
@@ -315,7 +323,7 @@ const ExamDetails = () => {
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
-                onClick={() => navigate(`/admin/exams/${examId}/edit`)}
+                onClick={() => navigate(`${basePath}/exams/${examId}/edit`)}
                 sx={{ mt: 2 }}
               >
                 Add Questions

@@ -8,6 +8,8 @@ import LiveMonitoring from './pages/recruiter/LiveMonitoring';
 import CreateExam from './pages/recruiter/CreateExam';
 import ExamsList from './pages/recruiter/ExamsList';
 import BulkEnrollment from './pages/recruiter/BulkEnrollment';
+import ExamDetails from './pages/ExamDetails';
+import ManageExamQuestions from './pages/ManageExamQuestions';
 
 // Lazy load other pages for better performance
 import { lazy, Suspense } from 'react';
@@ -15,6 +17,10 @@ import { lazy, Suspense } from 'react';
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
+const StudentResults = lazy(() => import('./pages/StudentResults'));
+const StudentExamHistory = lazy(() => import('./pages/StudentExamHistory'));
+const StudentProfile = lazy(() => import('./pages/StudentProfile'));
+const StudentExamTaking = lazy(() => import('./pages/StudentExamTaking'));
 
 // Super Admin Pages
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
@@ -32,6 +38,7 @@ const AddUser = lazy(() => import('./pages/OrgAdmin/AddUser'));
 const BulkUserUpload = lazy(() => import('./pages/OrgAdmin/BulkUserUpload'));
 const QuestionsList = lazy(() => import('./pages/OrgAdmin/QuestionsList'));
 const CreateQuestion = lazy(() => import('./pages/OrgAdmin/CreateQuestion'));
+const EditQuestion = lazy(() => import('./pages/EditQuestion'));
 const OrgAnalytics = lazy(() => import('./pages/OrgAdmin/OrgAnalytics'));
 const OrgSettings = lazy(() => import('./pages/OrgAdmin/OrgSettings'));
 
@@ -66,6 +73,8 @@ function App() {
             >
               <Route index element={<RecruiterDashboard />} />
               <Route path="exams" element={<ExamsList />} />
+              <Route path="exams/:examId" element={<ExamDetails />} />
+              <Route path="exams/:examId/edit" element={<ManageExamQuestions />} />
               <Route path="create-exam" element={<CreateExam />} />
               <Route path="bulk-enrollment" element={<BulkEnrollment />} />
               <Route path="monitoring" element={<LiveMonitoring />} />
@@ -85,18 +94,25 @@ function App() {
               {/* Question Bank */}
               <Route path="questions" element={<QuestionsList />} />
               <Route path="questions/create" element={<CreateQuestion />} />
+              <Route path="questions/:id/edit" element={<EditQuestion />} />
+              <Route path="questions/:id" element={<EditQuestion />} />
               {/* Analytics & Settings */}
               <Route path="analytics" element={<OrgAnalytics />} />
               <Route path="settings" element={<OrgSettings />} />
-              {/* Can reuse exam routes from recruiter */}
+              {/* Exam Management - Reuse from recruiter */}
+              <Route path="exams" element={<ExamsList />} />
               <Route path="exams/create" element={<CreateExam />} />
-              <Route path="exams/:id" element={<ExamsList />} />
+              <Route path="exams/:examId" element={<ExamDetails />} />
+              <Route path="exams/:examId/edit" element={<ManageExamQuestions />} />
             </Route>
 
             {/* Student Routes */}
             <Route path="/student" element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
               <Route index element={<StudentDashboard />} />
-              {/* Add more student routes here */}
+              <Route path="exam/:examId" element={<StudentExamTaking />} />
+              <Route path="results/:examId" element={<StudentResults />} />
+              <Route path="history" element={<StudentExamHistory />} />
+              <Route path="profile" element={<StudentProfile />} />
             </Route>
 
             {/* Super Admin Routes */}

@@ -29,10 +29,13 @@ import {
   Lock,
   PlayArrow,
   Info,
+  Person,
+  History,
+  EmojiEvents,
+  TrendingUp,
 } from '@mui/icons-material';
-import { useSelector } from 'react-redux';
 import { useSnackbar } from 'notistack';
-import { RootState } from '../store';
+import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 
 interface StudentExam {
@@ -58,7 +61,7 @@ interface StudentExam {
 }
 
 const StudentDashboard = () => {
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useAuthStore();
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const location = useLocation();
@@ -171,13 +174,96 @@ const StudentDashboard = () => {
               Student Dashboard
             </Typography>
             <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-              Welcome, {user?.name}
+              Welcome, {user?.fullName || user?.email}
             </Typography>
           </Box>
-          <Button variant="outlined" onClick={() => navigate('/student/debug')}>
-            Debug Info
-          </Button>
         </Box>
+
+        {/* Quick Navigation Cards */}
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              sx={{
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: 4,
+                },
+              }}
+              onClick={() => navigate('/student/profile')}
+            >
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Person sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
+                <Typography variant="h6">My Profile</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  View & edit profile
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              sx={{
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: 4,
+                },
+              }}
+              onClick={() => navigate('/student/history')}
+            >
+              <CardContent sx={{ textAlign: 'center' }}>
+                <History sx={{ fontSize: 48, color: 'info.main', mb: 1 }} />
+                <Typography variant="h6">Exam History</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  View past attempts
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              sx={{
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: 4,
+                },
+              }}
+            >
+              <CardContent sx={{ textAlign: 'center' }}>
+                <EmojiEvents sx={{ fontSize: 48, color: 'warning.main', mb: 1 }} />
+                <Typography variant="h6">Achievements</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {exams.filter(e => e.attemptStatus === 'completed').length} completed
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              sx={{
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: 4,
+                },
+              }}
+            >
+              <CardContent sx={{ textAlign: 'center' }}>
+                <TrendingUp sx={{ fontSize: 48, color: 'success.main', mb: 1 }} />
+                <Typography variant="h6">Progress</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {exams.length} total exams
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
 
         <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
           <Typography variant="h6" gutterBottom>
@@ -256,16 +342,28 @@ const StudentDashboard = () => {
                       </Box>
                     </CardContent>
                     <CardActions>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={exam.canAttempt ? <PlayArrow /> : <Info />}
-                        onClick={() => handleStartExam(exam)}
-                        disabled={!exam.canAttempt && exam.examStatus !== 'active'}
-                        fullWidth
-                      >
-                        {exam.canAttempt ? 'Start Exam' : exam.attemptStatus === 'completed' ? 'View Details' : 'View Info'}
-                      </Button>
+                      {exam.attemptStatus === 'completed' ? (
+                        <Button
+                          variant="contained"
+                          color="success"
+                          startIcon={<CheckCircle />}
+                          onClick={() => navigate(`/student/results/${exam._id}`)}
+                          fullWidth
+                        >
+                          View Results
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          startIcon={exam.canAttempt ? <PlayArrow /> : <Info />}
+                          onClick={() => handleStartExam(exam)}
+                          disabled={!exam.canAttempt && exam.examStatus !== 'active'}
+                          fullWidth
+                        >
+                          {exam.canAttempt ? 'Start Exam' : 'View Info'}
+                        </Button>
+                      )}
                     </CardActions>
                   </Card>
                 </Grid>

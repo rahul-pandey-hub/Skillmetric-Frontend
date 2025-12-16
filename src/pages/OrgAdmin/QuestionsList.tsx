@@ -31,9 +31,10 @@ export default function QuestionsList() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [total, setTotal] = useState(0);
-  const [typeFilter, setTypeFilter] = useState('');
-  const [difficultyFilter, setDifficultyFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [difficultyFilter, setDifficultyFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchQuestions();
@@ -42,35 +43,21 @@ export default function QuestionsList() {
   const fetchQuestions = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API call
-      // const response = await questionService.getAllQuestions({ page: page + 1, limit: rowsPerPage, type: typeFilter, difficulty: difficultyFilter });
+      const { questionsService } = await import('@/services/questionsService');
+      const response = await questionsService.getAllQuestions({
+        page: page + 1,
+        limit: rowsPerPage,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        difficulty: difficultyFilter !== 'all' ? difficultyFilter : undefined,
+        category: categoryFilter || undefined,
+      });
 
-      // Mock data
-      const mockQuestions: Question[] = [
-        {
-          _id: '1',
-          text: 'What is React?',
-          type: QuestionType.MULTIPLE_CHOICE,
-          difficulty: DifficultyLevel.EASY,
-          options: [
-            { id: '1', text: 'A library', isCorrect: true },
-            { id: '2', text: 'A framework' },
-          ],
-          correctAnswer: '1',
-          marks: 2,
-          negativeMarks: 0,
-          tags: ['React', 'Frontend'],
-          category: 'Programming',
-          createdBy: { _id: '1', name: 'Admin', email: 'admin@example.com' },
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-      setQuestions(mockQuestions);
-      setTotal(mockQuestions.length);
+      setQuestions(response.data.data || []);
+      setTotal(response.data.total || 0);
     } catch (error) {
       console.error('Failed to fetch questions:', error);
+      setQuestions([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -86,6 +73,26 @@ export default function QuestionsList() {
         return 'destructive';
       default:
         return 'warning';
+    }
+  };
+
+  const handleDelete = async (questionId: string, questionText: string) => {
+    if (!window.confirm(`Are you sure you want to delete this question?\n\n"${questionText.slice(0, 100)}..."\n\nThis action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setDeletingId(questionId);
+      const { questionsService } = await import('@/services/questionsService');
+      await questionsService.deleteQuestion(questionId);
+
+      // Refresh the questions list
+      fetchQuestions();
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      alert(error.response?.data?.message || 'Failed to delete question. Please try again.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -123,7 +130,7 @@ export default function QuestionsList() {
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="MULTIPLE_CHOICE">Multiple Choice</SelectItem>
                 <SelectItem value="TRUE_FALSE">True/False</SelectItem>
                 <SelectItem value="SHORT_ANSWER">Short Answer</SelectItem>
@@ -139,7 +146,7 @@ export default function QuestionsList() {
                 <SelectValue placeholder="All Difficulties" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Difficulties</SelectItem>
+                <SelectItem value="all">All Difficulties</SelectItem>
                 <SelectItem value="EASY">Easy</SelectItem>
                 <SelectItem value="MEDIUM">Medium</SelectItem>
                 <SelectItem value="HARD">Hard</SelectItem>
@@ -239,8 +246,14 @@ export default function QuestionsList() {
                           size="sm"
                           title="Delete"
                           className="text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(question._id, question.text)}
+                          disabled={deletingId === question._id}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          {deletingId === question._id ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </TableCell>

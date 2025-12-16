@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useExams } from '@/hooks/useExams';
+import { examService } from '@/services/examService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -33,9 +34,38 @@ type ExamStatus = 'draft' | 'active' | 'scheduled' | 'completed' | 'archived';
 
 export default function ExamsList() {
   const navigate = useNavigate();
-  const { data: exams, isLoading } = useExams();
+  const location = useLocation();
+  const { data: exams, isLoading, refetch } = useExams();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | ExamStatus>('all');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Determine base path from current location (org-admin or recruiter)
+  const basePath = location.pathname.includes('/org-admin')
+    ? '/org-admin'
+    : '/recruiter';
+
+  const handleDeleteExam = async (examId: string, examTitle: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${examTitle}"?\n\nThis action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setDeletingId(examId);
+      await examService.deleteExam(examId);
+
+      // Show success message
+      alert('Exam deleted successfully!');
+
+      // Refresh the exam list
+      refetch();
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      alert(error.response?.data?.message || 'Failed to delete exam. Please try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -101,7 +131,7 @@ export default function ExamsList() {
           <h1 className="text-3xl font-bold text-gray-900">Exams</h1>
           <p className="text-gray-600 mt-2">Manage all your assessments and exams</p>
         </div>
-        <Button onClick={() => navigate('/recruiter/create-exam')} className="gap-2">
+        <Button onClick={() => navigate(`${basePath}/exams/create`)} className="gap-2">
           <Plus className="w-4 h-4" />
           Create Exam
         </Button>
@@ -215,22 +245,39 @@ export default function ExamsList() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/recruiter/monitoring/${exam._id || exam.id}`)}
+                            onClick={() => navigate(`${basePath}/exams/${exam._id || exam.id}`)}
+                            title="View Exam Details"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/recruiter/edit-exam/${exam._id || exam.id}`)}
+                            onClick={() => navigate(`${basePath}/exams/${exam._id || exam.id}/edit`)}
+                            title="Manage Questions"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Duplicate Exam (Coming Soon)"
+                          >
                             <Copy className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="text-destructive-600">
-                            <Trash2 className="w-4 h-4" />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive-600 hover:text-destructive-700"
+                            onClick={() => handleDeleteExam(exam._id || exam.id, exam.title)}
+                            disabled={deletingId === (exam._id || exam.id)}
+                            title="Delete Exam"
+                          >
+                            {deletingId === (exam._id || exam.id) ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
                           </Button>
                         </div>
                       </TableCell>
@@ -243,7 +290,7 @@ export default function ExamsList() {
             <div className="text-center py-12">
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-600 mb-4">No exams found</p>
-              <Button onClick={() => navigate('/recruiter/create-exam')}>
+              <Button onClick={() => navigate(`${basePath}/exams/create`)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create Your First Exam
               </Button>

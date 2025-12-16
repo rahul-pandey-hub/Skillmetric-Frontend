@@ -29,14 +29,14 @@ export default function CreateQuestion() {
     explanation: '',
   });
   const [options, setOptions] = useState([
-    { text: '', isCorrect: false },
-    { text: '', isCorrect: false },
+    { id: crypto.randomUUID(), text: '', isCorrect: false },
+    { id: crypto.randomUUID(), text: '', isCorrect: false },
   ]);
   const [tagInput, setTagInput] = useState('');
   const [error, setError] = useState('');
 
   const handleAddOption = () => {
-    setOptions([...options, { text: '', isCorrect: false }]);
+    setOptions([...options, { id: crypto.randomUUID(), text: '', isCorrect: false }]);
   };
 
   const handleOptionChange = (index: number, text: string) => {
@@ -74,8 +74,26 @@ export default function CreateQuestion() {
     e.preventDefault();
     try {
       setError('');
-      // TODO: API call
-      // await questionService.createQuestion({ ...formData, options });
+
+      // Find the correct answer ID
+      const correctOption = options.find(opt => opt.isCorrect);
+      if (!correctOption) {
+        setError('Please select a correct answer');
+        return;
+      }
+
+      const { questionsService } = await import('@/services/questionsService');
+
+      // Prepare data - remove empty strings for optional fields
+      const questionData = {
+        ...formData,
+        category: formData.category || undefined,
+        explanation: formData.explanation || undefined,
+        options,
+        correctAnswer: correctOption.id,
+      };
+
+      await questionsService.createQuestion(questionData);
       navigate('/org-admin/questions');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create question');
