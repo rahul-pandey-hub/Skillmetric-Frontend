@@ -1,11 +1,10 @@
 import { Outlet } from 'react-router-dom';
-import { Box } from '@mui/material';
 
 const Layout = () => {
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <div className="min-h-screen bg-background">
       <Outlet />
-    </Box>
+    </div>
   );
 };
 

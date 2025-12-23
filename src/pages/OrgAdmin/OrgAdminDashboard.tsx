@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { examService } from '@/services/examService';
+import { orgAdminService } from '@/services/orgAdminService';
 import { Exam } from '@/types/exam';
 import { StatsCard } from '@/components/shared/StatsCard';
 import { Button } from '@/components/ui/button';
@@ -41,15 +42,28 @@ export default function OrgAdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await examService.getAllExams();
-      setExams(response.data.data.slice(0, 6));
 
-      // Mock stats - replace with actual API call
+      // Fetch both exams and organization stats in parallel
+      const [examsResponse, orgStatsResponse] = await Promise.all([
+        examService.getAllExams(),
+        orgAdminService.getOrganizationStats(),
+      ]);
+
+      setExams(examsResponse.data.data.slice(0, 6));
+
+      // Debug logging
+      console.log('📊 Org Stats Response:', orgStatsResponse);
+      console.log('📋 Exams Response:', examsResponse.data.data);
+      console.log('🔍 Exam statuses:', examsResponse.data.data.map((e: Exam) => e.status));
+
+      // Use real data from the API
       setStats({
-        totalUsers: 120,
-        totalExams: response.data.data.length,
-        totalQuestions: 450,
-        activeExams: response.data.data.filter((e: Exam) => e.status === 'ACTIVE').length,
+        totalUsers: orgStatsResponse.users.total,
+        totalExams: examsResponse.data.data.length,
+        totalQuestions: orgStatsResponse.questions.total,
+        activeExams: examsResponse.data.data.filter((e: Exam) =>
+          e.status === 'ACTIVE' || e.status === 'PUBLISHED'
+        ).length,
       });
     } catch (err) {
       console.error('Failed to load dashboard data:', err);

@@ -14,6 +14,10 @@ import {
   X,
   FileText,
   Upload,
+  Users,
+  Building2,
+  PlusCircle,
+  UserPlus,
 } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,13 +36,26 @@ export default function DashboardLayout() {
   // Define navigation based on role
   const getNavigation = () => {
     switch (user?.role) {
+      case 'ORG_ADMIN':
+        return [
+          { name: 'Dashboard', href: '/org-admin', icon: LayoutDashboard },
+          { name: 'Question Bank', href: '/org-admin/questions', icon: FileText },
+          { name: 'Create Question', href: '/org-admin/questions/create', icon: PlusCircle },
+          { name: 'Exams', href: '/org-admin/exams', icon: ClipboardList },
+          { name: 'Create Exam', href: '/org-admin/exams/create', icon: PlusCircle },
+          { name: 'Users', href: '/org-admin/users', icon: Users },
+          { name: 'Add User', href: '/org-admin/users/add', icon: UserPlus },
+          { name: 'Bulk Upload Users', href: '/org-admin/users/bulk-upload', icon: Upload },
+          { name: 'Analytics', href: '/org-admin/analytics', icon: BarChart3 },
+          { name: 'Settings', href: '/org-admin/settings', icon: Settings },
+        ];
       case 'RECRUITER':
         return [
           { name: 'Dashboard', href: '/recruiter', icon: LayoutDashboard },
           { name: 'Assessments', href: '/recruiter/exams', icon: ClipboardList },
+          { name: 'Create Exam', href: '/recruiter/create-exam', icon: PlusCircle },
           { name: 'Live Monitoring', href: '/recruiter/monitoring', icon: Eye },
-          { name: 'Bulk Enroll', href: '/recruiter/bulk-enroll', icon: Upload },
-          { name: 'Question Bank', href: '/recruiter/questions', icon: FileText },
+          { name: 'Bulk Enroll', href: '/recruiter/bulk-enrollment', icon: Upload },
           { name: 'Analytics', href: '/recruiter/analytics', icon: BarChart3 },
           { name: 'Settings', href: '/recruiter/settings', icon: Settings },
         ];
@@ -46,8 +63,17 @@ export default function DashboardLayout() {
         return [
           { name: 'Dashboard', href: '/student', icon: LayoutDashboard },
           { name: 'My Assessments', href: '/student/exams', icon: ClipboardList },
+          { name: 'Exam History', href: '/student/history', icon: FileText },
           { name: 'Results', href: '/student/results', icon: BarChart3 },
           { name: 'Profile', href: '/student/profile', icon: Settings },
+        ];
+      case 'SUPER_ADMIN':
+        return [
+          { name: 'Dashboard', href: '/super-admin', icon: LayoutDashboard },
+          { name: 'Organizations', href: '/super-admin/organizations', icon: Building2 },
+          { name: 'Create Organization', href: '/super-admin/organizations/create', icon: PlusCircle },
+          { name: 'System Config', href: '/super-admin/system-config', icon: Settings },
+          { name: 'Analytics', href: '/super-admin/analytics', icon: BarChart3 },
         ];
       default:
         return [];

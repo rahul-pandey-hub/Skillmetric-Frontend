@@ -30,51 +30,79 @@ import {
 } from '@/components/ui/dialog';
 import { Edit, Trash2, Plus, UserMinus, UserPlus, Eye, Upload } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-  isActive: boolean;
-  lastLogin?: string;
-  createdAt: string;
-}
+import { orgAdminService, User } from '@/services/orgAdminService';
+import { useSnackbar } from 'notistack';
 
 export default function UsersList() {
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [total, setTotal] = useState(0);
-  const [roleFilter, setRoleFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [searchDebounced, setSearchDebounced] = useState('');
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: User | null }>({
     open: false,
     user: null,
   });
 
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchDebounced(search);
+      setPage(1); // Reset to first page on search
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Reset to page 1 when role filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [roleFilter]);
+
   useEffect(() => {
     fetchUsers();
-  }, [page, rowsPerPage, roleFilter, search]);
+  }, [page, rowsPerPage, roleFilter, searchDebounced]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API call
-      // const response = await userService.getAllUsers({ page: page + 1, limit: rowsPerPage, role: roleFilter, search });
 
-      // Mock data for now
-      const mockUsers: User[] = [
-        { _id: '1', name: 'John Doe', email: 'john@example.com', role: 'RECRUITER', isActive: true, createdAt: new Date().toISOString() },
-        { _id: '2', name: 'Jane Smith', email: 'jane@example.com', role: 'INSTRUCTOR', isActive: true, createdAt: new Date().toISOString() },
-        { _id: '3', name: 'Bob Wilson', email: 'bob@example.com', role: 'STUDENT', isActive: false, createdAt: new Date().toISOString() },
-      ];
-      setUsers(mockUsers);
-      setTotal(mockUsers.length);
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
+      // DEBUG: Check token
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('🔐 TOKEN PAYLOAD:', payload);
+        console.log('📍 Has organizationId?', !!payload.organizationId);
+      }
+
+      // DEBUG: Check request params
+      const params = {
+        page,
+        limit: rowsPerPage,
+        role: roleFilter,
+        search: searchDebounced || undefined,
+      };
+      console.log('📤 REQUEST PARAMS:', params);
+
+      const response = await orgAdminService.getAllUsers(params);
+
+      console.log('📥 RESPONSE:', response);
+      console.log('👥 Users count:', response.data.length);
+      console.log('📊 Total in DB:', response.meta.total);
+
+      setUsers(response.data);
+      setTotal(response.meta.total);
+    } catch (error: any) {
+      console.error('❌ ERROR:', error);
+      console.error('❌ ERROR RESPONSE:', error.response?.data);
+      enqueueSnackbar(error.response?.data?.message || 'Failed to fetch users', {
+        variant: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -83,20 +111,28 @@ export default function UsersList() {
   const handleDelete = async () => {
     if (!deleteDialog.user) return;
     try {
-      // TODO: await userService.deleteUser(deleteDialog.user._id);
+      await orgAdminService.deleteUser(deleteDialog.user._id);
+      enqueueSnackbar('User deleted successfully', { variant: 'success' });
       setDeleteDialog({ open: false, user: null });
       fetchUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to delete user:', error);
+      enqueueSnackbar(error.response?.data?.message || 'Failed to delete user', {
+        variant: 'error',
+      });
     }
   };
 
   const handleToggleStatus = async (user: User) => {
     try {
-      // TODO: await userService.toggleUserStatus(user._id);
+      const result = await orgAdminService.toggleUserStatus(user._id);
+      enqueueSnackbar(result.message, { variant: 'success' });
       fetchUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to toggle user status:', error);
+      enqueueSnackbar(error.response?.data?.message || 'Failed to toggle user status', {
+        variant: 'error',
+      });
     }
   };
 
@@ -151,7 +187,7 @@ export default function UsersList() {
                 <SelectValue placeholder="All Roles" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Roles</SelectItem>
+                <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="RECRUITER">Recruiter</SelectItem>
                 <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
                 <SelectItem value="STUDENT">Student</SelectItem>
@@ -250,14 +286,14 @@ export default function UsersList() {
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-4 border-t">
           <div className="text-sm text-muted-foreground">
-            Showing {page * rowsPerPage + 1} to {Math.min((page + 1) * rowsPerPage, total)} of {total} users
+            Showing {(page - 1) * rowsPerPage + 1} to {Math.min(page * rowsPerPage, total)} of {total} users
           </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPage(Math.max(0, page - 1))}
-              disabled={page === 0}
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
             >
               Previous
             </Button>
@@ -265,7 +301,7 @@ export default function UsersList() {
               variant="outline"
               size="sm"
               onClick={() => setPage(page + 1)}
-              disabled={(page + 1) * rowsPerPage >= total}
+              disabled={page * rowsPerPage >= total}
             >
               Next
             </Button>

@@ -32,6 +32,7 @@ export default function CreateQuestion() {
     { id: crypto.randomUUID(), text: '', isCorrect: false },
     { id: crypto.randomUUID(), text: '', isCorrect: false },
   ]);
+  const [shortAnswerText, setShortAnswerText] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [error, setError] = useState('');
 
@@ -70,33 +71,105 @@ export default function CreateQuestion() {
     setFormData({ ...formData, tags: formData.tags.filter((t) => t !== tag) });
   };
 
+  const handleTypeChange = (newType: QuestionType) => {
+    setFormData({ ...formData, type: newType });
+
+    // Initialize options based on type
+    if (newType === QuestionType.TRUE_FALSE) {
+      setOptions([
+        { id: crypto.randomUUID(), text: 'True', isCorrect: false },
+        { id: crypto.randomUUID(), text: 'False', isCorrect: false },
+      ]);
+    } else if (newType === QuestionType.MULTIPLE_CHOICE) {
+      setOptions([
+        { id: crypto.randomUUID(), text: '', isCorrect: false },
+        { id: crypto.randomUUID(), text: '', isCorrect: false },
+      ]);
+    }
+
+    // Reset short answer text
+    setShortAnswerText('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setError('');
 
-      // Find the correct answer ID
-      const correctOption = options.find(opt => opt.isCorrect);
-      if (!correctOption) {
-        setError('Please select a correct answer');
+      // Validate question text length
+      if (formData.text.length < 10) {
+        setError('Question text must be at least 10 characters long');
         return;
       }
 
-      const { questionsService } = await import('@/services/questionsService');
+      const { orgAdminQuestionsService } = await import('@/services/orgAdminQuestionsService');
 
-      // Prepare data - remove empty strings for optional fields
-      const questionData = {
-        ...formData,
+      // Prepare data based on question type
+      let questionData: any = {
+        text: formData.text,
+        type: formData.type,
+        difficulty: formData.difficulty,
         category: formData.category || undefined,
         explanation: formData.explanation || undefined,
-        options,
-        correctAnswer: correctOption.id,
+        marks: formData.marks,
+        negativeMarks: formData.negativeMarks,
+        tags: formData.tags.length > 0 ? formData.tags : undefined,
       };
 
-      await questionsService.createQuestion(questionData);
+      // Handle type-specific fields
+      switch (formData.type) {
+        case QuestionType.MULTIPLE_CHOICE:
+          const correctOption = options.find(opt => opt.isCorrect);
+          if (!correctOption) {
+            setError('Please select a correct answer');
+            return;
+          }
+          if (options.length < 2) {
+            setError('Multiple choice questions must have at least 2 options');
+            return;
+          }
+          questionData.options = options;
+          questionData.correctAnswer = correctOption.id;
+          break;
+
+        case QuestionType.TRUE_FALSE:
+          const trueFalseCorrect = options.find(opt => opt.isCorrect);
+          if (!trueFalseCorrect) {
+            setError('Please select a correct answer');
+            return;
+          }
+          // For TRUE_FALSE, correctAnswer should be boolean
+          questionData.options = options;
+          questionData.correctAnswer = trueFalseCorrect.text.toLowerCase() === 'true';
+          break;
+
+        case QuestionType.SHORT_ANSWER:
+          if (!shortAnswerText.trim()) {
+            setError('Please provide a model answer for the short answer question');
+            return;
+          }
+          questionData.correctAnswer = shortAnswerText;
+          // No options for short answer
+          break;
+
+        case QuestionType.ESSAY:
+          // Essay questions don't need correctAnswer or options
+          break;
+
+        default:
+          setError('Invalid question type');
+          return;
+      }
+
+      await orgAdminQuestionsService.createQuestion(questionData);
       navigate('/org-admin/questions');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create question');
+      const errorMessage = err.response?.data?.message;
+      if (Array.isArray(errorMessage)) {
+        setError(errorMessage.join(', '));
+      } else {
+        setError(errorMessage || 'Failed to create question');
+      }
     }
   };
 
@@ -131,7 +204,7 @@ export default function CreateQuestion() {
 
               {/* Question Text */}
               <div>
-                <Label htmlFor="text">Question Text *</Label>
+                <Label htmlFor="text">Question Text * (minimum 10 characters)</Label>
                 <textarea
                   id="text"
                   required
@@ -139,8 +212,11 @@ export default function CreateQuestion() {
                   value={formData.text}
                   onChange={(e) => setFormData({ ...formData, text: e.target.value })}
                   className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1.5"
-                  placeholder="Enter your question here..."
+                  placeholder="Enter your question here (at least 10 characters)..."
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formData.text.length}/10 characters minimum
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -149,7 +225,7 @@ export default function CreateQuestion() {
                   <Label htmlFor="type">Question Type *</Label>
                   <Select
                     value={formData.type}
-                    onValueChange={(value) => setFormData({ ...formData, type: value as QuestionType })}
+                    onValueChange={(value) => handleTypeChange(value as QuestionType)}
                   >
                     <SelectTrigger className="mt-1.5">
                       <SelectValue />
@@ -234,7 +310,7 @@ export default function CreateQuestion() {
                   </div>
                   <div className="space-y-3">
                     {options.map((option, index) => (
-                      <div key={index} className="flex gap-2">
+                      <div key={option.id} className="flex gap-2">
                         <Input
                           value={option.text}
                           onChange={(e) => handleOptionChange(index, e.target.value)}
@@ -263,6 +339,58 @@ export default function CreateQuestion() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Options for True/False */}
+              {formData.type === QuestionType.TRUE_FALSE && (
+                <div className="space-y-4">
+                  <Label>Select the Correct Answer *</Label>
+                  <div className="space-y-3">
+                    {options.map((option, index) => (
+                      <div key={option.id} className="flex gap-2 items-center">
+                        <div className="flex-1 px-4 py-2 border rounded-md bg-muted/50">
+                          {option.text}
+                        </div>
+                        <Button
+                          type="button"
+                          variant={option.isCorrect ? 'default' : 'outline'}
+                          onClick={() => handleCorrectToggle(index)}
+                          className="whitespace-nowrap"
+                        >
+                          {option.isCorrect ? 'Correct Answer' : 'Mark as Correct'}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Model Answer for Short Answer */}
+              {formData.type === QuestionType.SHORT_ANSWER && (
+                <div>
+                  <Label htmlFor="shortAnswer">Model Answer *</Label>
+                  <textarea
+                    id="shortAnswer"
+                    required
+                    rows={3}
+                    value={shortAnswerText}
+                    onChange={(e) => setShortAnswerText(e.target.value)}
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1.5"
+                    placeholder="Enter the model/expected answer..."
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This will be used as the reference answer for grading.
+                  </p>
+                </div>
+              )}
+
+              {/* Info for Essay Questions */}
+              {formData.type === QuestionType.ESSAY && (
+                <div className="p-4 rounded-lg bg-muted/50 border">
+                  <p className="text-sm text-muted-foreground">
+                    Essay questions will require manual grading. No model answer is needed.
+                  </p>
                 </div>
               )}
 

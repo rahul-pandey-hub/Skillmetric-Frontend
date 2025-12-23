@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/table';
 import { Upload, Download, CloudUpload, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import * as XLSX from 'xlsx';
 
 interface UserRecord {
   name: string;
@@ -38,61 +39,131 @@ export default function BulkUserUpload() {
     setUsers([]);
     setUploadComplete(false);
 
-    // Parse CSV
-    const text = await selectedFile.text();
-    const lines = text.split('\n');
-
+    const fileName = selectedFile.name.toLowerCase();
     const parsedUsers: UserRecord[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      if (lines[i].trim()) {
-        const values = lines[i].split(',').map((v) => v.trim());
-        parsedUsers.push({
-          name: values[0] || '',
-          email: values[1] || '',
-          role: values[2] || 'STUDENT',
-          status: 'pending',
-        });
-      }
-    }
 
-    setUsers(parsedUsers);
+    try {
+      if (fileName.endsWith('.csv')) {
+        // Parse CSV
+        const text = await selectedFile.text();
+        const lines = text.split('\n');
+
+        for (let i = 1; i < lines.length; i++) {
+          if (lines[i].trim()) {
+            const values = lines[i].split(',').map((v) => v.trim());
+            parsedUsers.push({
+              name: values[0] || '',
+              email: values[1] || '',
+              role: values[2] || 'STUDENT',
+              status: 'pending',
+            });
+          }
+        }
+      } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+        // Parse Excel
+        const data = await selectedFile.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][];
+
+        // Skip header row (index 0) and process data rows
+        for (let i = 1; i < jsonData.length; i++) {
+          const row = jsonData[i];
+          if (row && row.length > 0 && row[0]) {
+            parsedUsers.push({
+              name: String(row[0] || '').trim(),
+              email: String(row[1] || '').trim(),
+              role: String(row[2] || 'STUDENT').trim(),
+              status: 'pending',
+            });
+          }
+        }
+      }
+
+      setUsers(parsedUsers);
+    } catch (error) {
+      console.error('Error parsing file:', error);
+      alert('Failed to parse file. Please ensure it follows the template format.');
+    }
   };
 
   const handleUpload = async () => {
     setUploading(true);
     setUploadProgress(0);
 
-    // Simulate upload
-    for (let i = 0; i < users.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 200));
+    try {
+      // Import the service
+      const { orgAdminService } = await import('@/services/orgAdminService');
 
-      setUsers((prev) =>
-        prev.map((user, index) =>
-          index === i
-            ? {
-                ...user,
-                status: Math.random() > 0.1 ? 'success' : 'error',
-                error: Math.random() > 0.1 ? undefined : 'Email already exists',
-              }
-            : user
-        )
-      );
+      // Prepare users data for bulk creation
+      const usersToCreate = users.map(user => ({
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }));
 
-      setUploadProgress(((i + 1) / users.length) * 100);
+      // Call backend bulk create API
+      const response = await orgAdminService.bulkCreateUsers(usersToCreate);
+
+      console.log('Bulk upload response:', response);
+
+      // Update users with actual results
+      const updatedUsers = users.map((user) => {
+        // Check if user was successful
+        const successUser = response.success?.find((s: any) => s.email === user.email);
+        if (successUser) {
+          return { ...user, status: 'success' as const };
+        }
+
+        // Check if user failed
+        const failedUser = response.failed?.find((f: any) => f.email === user.email);
+        if (failedUser) {
+          return {
+            ...user,
+            status: 'error' as const,
+            error: failedUser.error || 'Failed to create user',
+          };
+        }
+
+        return user;
+      });
+
+      setUsers(updatedUsers);
+      setUploadProgress(100);
+    } catch (error: any) {
+      console.error('Bulk upload error:', error);
+      // Mark all as error if the entire request failed
+      setUsers(prev => prev.map(user => ({
+        ...user,
+        status: 'error' as const,
+        error: error.response?.data?.message || 'Failed to upload users',
+      })));
+    } finally {
+      setUploading(false);
+      setUploadComplete(true);
     }
-
-    setUploading(false);
-    setUploadComplete(true);
   };
 
-  const downloadTemplate = () => {
-    const template = 'Name,Email,Role\nJohn Doe,john@example.com,STUDENT\nJane Smith,jane@example.com,INSTRUCTOR';
-    const blob = new Blob([template], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'user-upload-template.csv';
-    a.click();
+  const downloadTemplate = (format: 'csv' | 'excel' = 'csv') => {
+    if (format === 'csv') {
+      const template = 'Name,Email,Role\nJohn Doe,john@example.com,STUDENT\nJane Smith,jane@example.com,INSTRUCTOR';
+      const blob = new Blob([template], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'user-upload-template.csv';
+      a.click();
+    } else {
+      // Create Excel template
+      const ws = XLSX.utils.aoa_to_sheet([
+        ['Name', 'Email', 'Role'],
+        ['John Doe', 'john@example.com', 'STUDENT'],
+        ['Jane Smith', 'jane@example.com', 'INSTRUCTOR'],
+      ]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Users');
+      XLSX.writeFile(wb, 'user-upload-template.xlsx');
+    }
   };
 
   const successCount = users.filter((u) => u.status === 'success').length;
@@ -103,7 +174,7 @@ export default function BulkUserUpload() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Bulk User Upload</h1>
-        <p className="text-muted-foreground">Upload multiple users at once using a CSV file</p>
+        <p className="text-muted-foreground">Upload multiple users at once using a CSV or Excel file</p>
       </div>
 
       {/* Instructions Card */}
@@ -145,10 +216,16 @@ export default function BulkUserUpload() {
               </div>
             </div>
 
-            <Button variant="outline" onClick={downloadTemplate} className="mt-6">
-              <Download className="mr-2 h-4 w-4" />
-              Download Template
-            </Button>
+            <div className="flex gap-2 mt-6">
+              <Button variant="outline" onClick={() => downloadTemplate('csv')}>
+                <Download className="mr-2 h-4 w-4" />
+                Download CSV Template
+              </Button>
+              <Button variant="outline" onClick={() => downloadTemplate('excel')}>
+                <Download className="mr-2 h-4 w-4" />
+                Download Excel Template
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
@@ -162,17 +239,17 @@ export default function BulkUserUpload() {
         <Card>
           <CardHeader>
             <CardTitle>Upload File</CardTitle>
-            <CardDescription>Select a CSV file containing user information</CardDescription>
+            <CardDescription>Select a CSV or Excel file (.csv, .xlsx, .xls) containing user information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
               <Button variant="outline" asChild>
                 <label className="cursor-pointer">
                   <CloudUpload className="mr-2 h-4 w-4" />
-                  Select CSV File
+                  Select CSV or Excel File
                   <input
                     type="file"
-                    accept=".csv"
+                    accept=".csv,.xlsx,.xls"
                     className="hidden"
                     onChange={handleFileSelect}
                   />

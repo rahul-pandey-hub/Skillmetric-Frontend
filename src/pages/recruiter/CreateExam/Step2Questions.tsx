@@ -1,58 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ExamFormData } from './index';
-import { Search, Plus, Trash2, FileText } from 'lucide-react';
+import { Search, Plus, Trash2, FileText, Loader2 } from 'lucide-react';
+import { orgAdminQuestionsService } from '@/services/orgAdminQuestionsService';
 
 interface Step2Props {
   data: ExamFormData;
   updateData: (data: Partial<ExamFormData>) => void;
 }
 
-// Mock question data - in real app, fetch from API
-const MOCK_QUESTIONS = [
-  {
-    id: '1',
-    questionText: 'What is the time complexity of binary search?',
-    type: 'MCQ',
-    difficulty: 'easy',
-    marks: 2,
-    category: 'algorithms',
-  },
-  {
-    id: '2',
-    questionText: 'Explain the concept of closures in JavaScript',
-    type: 'TEXT',
-    difficulty: 'medium',
-    marks: 5,
-    category: 'programming',
-  },
-  {
-    id: '3',
-    questionText: 'What are the SOLID principles?',
-    type: 'MSQ',
-    difficulty: 'medium',
-    marks: 3,
-    category: 'system-design',
-  },
-  {
-    id: '4',
-    questionText: 'Implement a function to reverse a linked list',
-    type: 'CODING',
-    difficulty: 'hard',
-    marks: 10,
-    category: 'data-structures',
-  },
-];
+interface Question {
+  _id: string;
+  text: string;
+  type: string;
+  difficulty: string;
+  marks: number;
+  category?: string;
+}
 
 export default function Step2Questions({ data, updateData }: Step2Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const filteredQuestions = MOCK_QUESTIONS.filter((q) => {
-    const matchesSearch = q.questionText.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    fetchQuestions();
+  }, []);
+
+  const fetchQuestions = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await orgAdminQuestionsService.getAllQuestions({
+        page: 1,
+        limit: 100, // Fetch all questions
+      });
+      setQuestions(response.data.data || []);
+    } catch (err: any) {
+      console.error('Failed to fetch questions:', err);
+      setError(err.response?.data?.message || 'Failed to load questions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredQuestions = questions.filter((q) => {
+    const matchesSearch = q.text.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'all' || q.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
@@ -67,12 +65,13 @@ export default function Step2Questions({ data, updateData }: Step2Props) {
   };
 
   const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy':
+    switch (difficulty.toUpperCase()) {
+      case 'EASY':
         return 'bg-success-100 text-success-700';
-      case 'medium':
+      case 'MEDIUM':
         return 'bg-warning-100 text-warning-700';
-      case 'hard':
+      case 'HARD':
+      case 'EXPERT':
         return 'bg-destructive-100 text-destructive-700';
       default:
         return 'bg-gray-100 text-gray-700';
@@ -132,38 +131,56 @@ export default function Step2Questions({ data, updateData }: Step2Props) {
       </div>
 
       <div className="space-y-3 max-h-96 overflow-y-auto">
-        {filteredQuestions.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <Loader2 className="w-8 h-8 text-primary-500 mx-auto mb-3 animate-spin" />
+            <p className="text-gray-600">Loading questions...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-destructive-600 mb-2">{error}</p>
+            <Button variant="outline" size="sm" onClick={fetchQuestions}>
+              Retry
+            </Button>
+          </div>
+        ) : filteredQuestions.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600">No questions found</p>
+            <p className="text-gray-600">
+              {questions.length === 0
+                ? 'No questions available. Create your first question!'
+                : 'No questions match your search criteria'}
+            </p>
           </div>
         ) : (
           filteredQuestions.map((question) => (
             <div
-              key={question.id}
+              key={question._id}
               className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                isQuestionSelected(question.id)
+                isQuestionSelected(question._id)
                   ? 'border-primary-500 bg-primary-50'
                   : 'border-gray-200 bg-white hover:border-gray-300'
               }`}
-              onClick={() => toggleQuestion(question.id)}
+              onClick={() => toggleQuestion(question._id)}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge variant="outline" className="text-xs">
-                      {question.type}
+                      {question.type.replace('_', ' ')}
                     </Badge>
                     <Badge className={getDifficultyColor(question.difficulty)}>
                       {question.difficulty}
                     </Badge>
                     <span className="text-xs text-gray-500">{question.marks} marks</span>
                   </div>
-                  <p className="text-sm text-gray-900">{question.questionText}</p>
-                  <p className="text-xs text-gray-500 mt-1 capitalize">{question.category}</p>
+                  <p className="text-sm text-gray-900">{question.text}</p>
+                  {question.category && (
+                    <p className="text-xs text-gray-500 mt-1 capitalize">{question.category}</p>
+                  )}
                 </div>
                 <div className="ml-4">
-                  {isQuestionSelected(question.id) ? (
+                  {isQuestionSelected(question._id) ? (
                     <div className="w-5 h-5 bg-primary-500 rounded flex items-center justify-center">
                       <svg
                         className="w-3 h-3 text-white"

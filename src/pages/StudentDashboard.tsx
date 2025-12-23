@@ -1,40 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
-  Container,
-  Typography,
-  Paper,
-  Box,
-  Grid,
-  Button,
-  Chip,
-  Card,
-  CardContent,
-  CardActions,
-  Alert,
-  CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  List,
-  ListItem,
-  ListItemText,
-} from '@mui/material';
-import {
-  AccessTime,
-  Assignment,
+  Clock,
+  FileText,
   CheckCircle,
-  Schedule,
+  Calendar,
   Lock,
-  PlayArrow,
+  Play,
   Info,
-  Person,
+  User,
   History,
-  EmojiEvents,
+  Trophy,
   TrendingUp,
-} from '@mui/icons-material';
-import { useSnackbar } from 'notistack';
+  Loader2,
+  AlertCircle,
+} from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 
@@ -62,7 +47,6 @@ interface StudentExam {
 
 const StudentDashboard = () => {
   const { user } = useAuthStore();
-  const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -79,13 +63,9 @@ const StudentDashboard = () => {
     if (location.state?.examResult) {
       const result = location.state.examResult;
       if (result.passed) {
-        enqueueSnackbar(`Congratulations! You passed with ${result.score}/${result.totalMarks}`, {
-          variant: 'success',
-        });
+        toast.success(`Congratulations! You passed with ${result.score}/${result.totalMarks}`);
       } else {
-        enqueueSnackbar(`Exam submitted. Score: ${result.score}/${result.totalMarks}`, {
-          variant: 'info',
-        });
+        toast.info(`Exam submitted. Score: ${result.score}/${result.totalMarks}`);
       }
     }
   }, []);
@@ -95,9 +75,7 @@ const StudentDashboard = () => {
       const response = await api.get('/student/exams');
       setExams(response.data.data);
     } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to load exams', {
-        variant: 'error',
-      });
+      toast.error(error.response?.data?.message || 'Failed to load exams');
     } finally {
       setLoading(false);
     }
@@ -112,12 +90,10 @@ const StudentDashboard = () => {
       if (response.data.canStart) {
         setShowInstructionsDialog(true);
       } else {
-        enqueueSnackbar(response.data.reason, { variant: 'warning' });
+        toast.warning(response.data.reason);
       }
     } catch (error: any) {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to access exam', {
-        variant: 'error',
-      });
+      toast.error(error.response?.data?.message || 'Failed to access exam');
     }
   };
 
@@ -128,25 +104,25 @@ const StudentDashboard = () => {
     }
   };
 
-  const getExamStatusColor = (status: string) => {
+  const getExamStatusVariant = (status: string): 'default' | 'secondary' | 'success' | 'destructive' | 'outline' => {
     switch (status) {
       case 'active':
         return 'success';
       case 'upcoming':
-        return 'info';
+        return 'secondary';
       case 'expired':
-        return 'error';
+        return 'destructive';
       default:
         return 'default';
     }
   };
 
-  const getAttemptStatusColor = (status: string) => {
+  const getAttemptStatusVariant = (status: string): 'default' | 'secondary' | 'success' | 'destructive' => {
     switch (status) {
       case 'completed':
         return 'success';
       case 'in_progress':
-        return 'warning';
+        return 'secondary';
       default:
         return 'default';
     }
@@ -154,298 +130,231 @@ const StudentDashboard = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg">
-        <Box sx={{ py: 8, textAlign: 'center' }}>
-          <CircularProgress size={60} />
-          <Typography variant="h6" sx={{ mt: 2 }}>
-            Loading exams...
-          </Typography>
-        </Box>
-      </Container>
+      <div className="container max-w-7xl mx-auto px-4 py-8">
+        <div className="flex flex-col items-center justify-center min-h-[400px]">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+          <p className="text-lg text-muted-foreground">Loading exams...</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Box>
-            <Typography variant="h4" gutterBottom>
-              Student Dashboard
-            </Typography>
-            <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-              Welcome, {user?.fullName || user?.email}
-            </Typography>
-          </Box>
-        </Box>
+    <div className="container max-w-7xl mx-auto px-4 py-8">
+      <div className="space-y-8">
+        {/* Header */}
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Student Dashboard</h1>
+          <p className="text-lg text-muted-foreground">
+            Welcome, {user?.fullName || user?.email}
+          </p>
+        </div>
 
         {/* Quick Navigation Cards */}
-        <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card
-              sx={{
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: 4,
-                },
-              }}
-              onClick={() => navigate('/student/profile')}
-            >
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Person sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
-                <Typography variant="h6">My Profile</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  View & edit profile
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card
-              sx={{
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: 4,
-                },
-              }}
-              onClick={() => navigate('/student/history')}
-            >
-              <CardContent sx={{ textAlign: 'center' }}>
-                <History sx={{ fontSize: 48, color: 'info.main', mb: 1 }} />
-                <Typography variant="h6">Exam History</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  View past attempts
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card
-              sx={{
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: 4,
-                },
-              }}
-            >
-              <CardContent sx={{ textAlign: 'center' }}>
-                <EmojiEvents sx={{ fontSize: 48, color: 'warning.main', mb: 1 }} />
-                <Typography variant="h6">Achievements</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {exams.filter(e => e.attemptStatus === 'completed').length} completed
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card
-              sx={{
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: 4,
-                },
-              }}
-            >
-              <CardContent sx={{ textAlign: 'center' }}>
-                <TrendingUp sx={{ fontSize: 48, color: 'success.main', mb: 1 }} />
-                <Typography variant="h6">Progress</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {exams.length} total exams
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card
+            className="cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1"
+            onClick={() => navigate('/student/profile')}
+          >
+            <CardContent className="pt-6 text-center">
+              <User className="w-12 h-12 mx-auto mb-3 text-primary" />
+              <h3 className="text-lg font-semibold mb-1">My Profile</h3>
+              <p className="text-sm text-muted-foreground">View & edit profile</p>
+            </CardContent>
+          </Card>
 
-        <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            My Exams
-          </Typography>
+          <Card
+            className="cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1"
+            onClick={() => navigate('/student/history')}
+          >
+            <CardContent className="pt-6 text-center">
+              <History className="w-12 h-12 mx-auto mb-3 text-blue-500" />
+              <h3 className="text-lg font-semibold mb-1">Exam History</h3>
+              <p className="text-sm text-muted-foreground">View past attempts</p>
+            </CardContent>
+          </Card>
 
-          {exams.length === 0 ? (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              You are not enrolled in any exams at the moment. Please check back later or contact your
-              administrator.
-            </Alert>
-          ) : (
-            <Grid container spacing={3} sx={{ mt: 1 }}>
-              {exams.map((exam) => (
-                <Grid item xs={12} md={6} key={exam._id}>
-                  <Card elevation={2}>
-                    <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                        <Typography variant="h6" gutterBottom>
-                          {exam.title}
-                        </Typography>
-                        <Chip
-                          label={exam.examStatus}
-                          size="small"
-                          color={getExamStatusColor(exam.examStatus)}
-                        />
-                      </Box>
+          <Card className="cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1">
+            <CardContent className="pt-6 text-center">
+              <Trophy className="w-12 h-12 mx-auto mb-3 text-amber-500" />
+              <h3 className="text-lg font-semibold mb-1">Achievements</h3>
+              <p className="text-sm text-muted-foreground">
+                {exams.filter(e => e.attemptStatus === 'completed').length} completed
+              </p>
+            </CardContent>
+          </Card>
 
+          <Card className="cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1">
+            <CardContent className="pt-6 text-center">
+              <TrendingUp className="w-12 h-12 mx-auto mb-3 text-green-500" />
+              <h3 className="text-lg font-semibold mb-1">Progress</h3>
+              <p className="text-sm text-muted-foreground">{exams.length} total exams</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Exams Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">My Exams</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {exams.length === 0 ? (
+              <div className="flex items-center gap-2 p-4 rounded-lg bg-blue-50 border border-blue-200 text-blue-800">
+                <Info className="h-5 w-5 flex-shrink-0" />
+                <p className="text-sm">
+                  You are not enrolled in any exams at the moment. Please check back later or contact your administrator.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {exams.map((exam) => (
+                  <Card key={exam._id} className="shadow-sm">
+                    <CardHeader>
+                      <div className="flex justify-between items-start mb-2">
+                        <CardTitle className="text-xl">{exam.title}</CardTitle>
+                        <Badge variant={getExamStatusVariant(exam.examStatus)}>
+                          {exam.examStatus}
+                        </Badge>
+                      </div>
                       {exam.description && (
-                        <Typography variant="body2" color="textSecondary" gutterBottom>
-                          {exam.description}
-                        </Typography>
+                        <CardDescription>{exam.description}</CardDescription>
                       )}
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="w-4 h-4" />
+                        <span>Duration: {exam.duration} minutes</span>
+                      </div>
 
-                      <Box sx={{ mt: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                          <AccessTime fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="textSecondary">
-                            Duration: {exam.duration} minutes
-                          </Typography>
-                        </Box>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <FileText className="w-4 h-4" />
+                        <span>
+                          Total Marks: {exam.grading.totalMarks} | Passing: {exam.grading.passingMarks}
+                        </span>
+                      </div>
 
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                          <Assignment fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="textSecondary">
-                            Total Marks: {exam.grading.totalMarks} | Passing: {exam.grading.passingMarks}
-                          </Typography>
-                        </Box>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4" />
+                        <span className="text-xs">
+                          {new Date(exam.schedule.startDate).toLocaleString()} -{' '}
+                          {new Date(exam.schedule.endDate).toLocaleString()}
+                        </span>
+                      </div>
 
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                          <Schedule fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="textSecondary">
-                            {new Date(exam.schedule.startDate).toLocaleString()} -{' '}
-                            {new Date(exam.schedule.endDate).toLocaleString()}
-                          </Typography>
-                        </Box>
-
+                      <div className="flex gap-2 flex-wrap">
                         {exam.attemptStatus !== 'not_started' && (
-                          <Chip
-                            label={exam.attemptStatus === 'completed' ? 'Completed' : 'In Progress'}
-                            size="small"
-                            color={getAttemptStatusColor(exam.attemptStatus)}
-                            sx={{ mt: 1 }}
-                          />
+                          <Badge variant={getAttemptStatusVariant(exam.attemptStatus)}>
+                            {exam.attemptStatus === 'completed' ? 'Completed' : 'In Progress'}
+                          </Badge>
                         )}
 
                         {exam.proctoringSettings.enabled && (
-                          <Chip
-                            label="Proctored"
-                            size="small"
-                            icon={<Lock />}
-                            variant="outlined"
-                            sx={{ mt: 1, ml: 1 }}
-                          />
+                          <Badge variant="outline" className="gap-1">
+                            <Lock className="w-3 h-3" />
+                            Proctored
+                          </Badge>
                         )}
-                      </Box>
+                      </div>
                     </CardContent>
-                    <CardActions>
+                    <CardFooter>
                       {exam.attemptStatus === 'completed' ? (
                         <Button
-                          variant="contained"
-                          color="success"
-                          startIcon={<CheckCircle />}
+                          className="w-full"
+                          variant="default"
                           onClick={() => navigate(`/student/results/${exam._id}`)}
-                          fullWidth
                         >
+                          <CheckCircle className="mr-2 h-4 w-4" />
                           View Results
                         </Button>
                       ) : (
                         <Button
-                          variant="contained"
-                          color="primary"
-                          startIcon={exam.canAttempt ? <PlayArrow /> : <Info />}
+                          className="w-full"
                           onClick={() => handleStartExam(exam)}
                           disabled={!exam.canAttempt && exam.examStatus !== 'active'}
-                          fullWidth
                         >
-                          {exam.canAttempt ? 'Start Exam' : 'View Info'}
+                          {exam.canAttempt ? (
+                            <>
+                              <Play className="mr-2 h-4 w-4" />
+                              Start Exam
+                            </>
+                          ) : (
+                            <>
+                              <Info className="mr-2 h-4 w-4" />
+                              View Info
+                            </>
+                          )}
                         </Button>
                       )}
-                    </CardActions>
+                    </CardFooter>
                   </Card>
-                </Grid>
-              ))}
-            </Grid>
-          )}
-        </Paper>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Instructions Dialog */}
-        <Dialog
-          open={showInstructionsDialog}
-          onClose={() => setShowInstructionsDialog(false)}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle>
-            <Typography variant="h5">Exam Instructions</Typography>
-            <Typography variant="subtitle2" color="textSecondary">
-              {selectedExam?.title}
-            </Typography>
-          </DialogTitle>
-          <DialogContent>
+        <Dialog open={showInstructionsDialog} onOpenChange={setShowInstructionsDialog}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">Exam Instructions</DialogTitle>
+              <DialogDescription>{selectedExam?.title}</DialogDescription>
+            </DialogHeader>
+
             {examAccess?.instructions && (
-              <>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  <Typography variant="body2" gutterBottom>
-                    <strong>Duration:</strong> {examAccess.instructions.duration} minutes
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Total Questions:</strong> {examAccess.instructions.totalQuestions}
-                  </Typography>
-                </Alert>
+              <div className="space-y-4">
+                <div className="flex items-start gap-2 p-4 rounded-lg bg-blue-50 border border-blue-200">
+                  <Info className="h-5 w-5 flex-shrink-0 text-blue-600 mt-0.5" />
+                  <div className="space-y-1 text-sm">
+                    <p><strong>Duration:</strong> {examAccess.instructions.duration} minutes</p>
+                    <p><strong>Total Questions:</strong> {examAccess.instructions.totalQuestions}</p>
+                  </div>
+                </div>
 
                 {examAccess.instructions.proctoringEnabled && (
-                  <Alert severity="warning" sx={{ mb: 2 }}>
-                    <Typography variant="body2" gutterBottom>
-                      <strong>This exam is proctored. Please note:</strong>
-                    </Typography>
-                    <List dense>
-                      {examAccess.instructions.requirements.map((req: string, index: number) => (
-                        <ListItem key={index}>
-                          <ListItemText primary={`• ${req}`} />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Alert>
+                  <div className="flex items-start gap-2 p-4 rounded-lg bg-amber-50 border border-amber-200">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0 text-amber-600 mt-0.5" />
+                    <div className="space-y-2 text-sm">
+                      <p className="font-semibold text-amber-900">This exam is proctored. Please note:</p>
+                      <ul className="list-disc list-inside space-y-1 text-amber-800">
+                        {examAccess.instructions.requirements.map((req: string, index: number) => (
+                          <li key={index}>{req}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 )}
 
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  <Typography variant="body2">
-                    <strong>General Instructions:</strong>
-                  </Typography>
-                  <List dense>
-                    <ListItem>
-                      <ListItemText primary="• Read each question carefully before answering" />
-                    </ListItem>
-                    <ListItem>
-                      <ListItemText primary="• Your answers are auto-saved every 30 seconds" />
-                    </ListItem>
-                    <ListItem>
-                      <ListItemText primary="• You can navigate between questions freely" />
-                    </ListItem>
-                    <ListItem>
-                      <ListItemText primary="• Flag questions you want to review later" />
-                    </ListItem>
-                    <ListItem>
-                      <ListItemText primary="• Submit your exam before time runs out" />
-                    </ListItem>
-                  </List>
-                </Alert>
-              </>
+                <div className="flex items-start gap-2 p-4 rounded-lg bg-green-50 border border-green-200">
+                  <CheckCircle className="h-5 w-5 flex-shrink-0 text-green-600 mt-0.5" />
+                  <div className="space-y-2 text-sm">
+                    <p className="font-semibold text-green-900">General Instructions:</p>
+                    <ul className="list-disc list-inside space-y-1 text-green-800">
+                      <li>Read each question carefully before answering</li>
+                      <li>Your answers are auto-saved every 30 seconds</li>
+                      <li>You can navigate between questions freely</li>
+                      <li>Flag questions you want to review later</li>
+                      <li>Submit your exam before time runs out</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowInstructionsDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={confirmStartExam}>
+                <Play className="mr-2 h-4 w-4" />
+                I Understand, Start Exam
+              </Button>
+            </DialogFooter>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowInstructionsDialog(false)}>Cancel</Button>
-            <Button onClick={confirmStartExam} variant="contained" color="primary" startIcon={<PlayArrow />}>
-              I Understand, Start Exam
-            </Button>
-          </DialogActions>
         </Dialog>
-      </Box>
-    </Container>
+      </div>
+    </div>
   );
 };
 

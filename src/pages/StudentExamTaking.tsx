@@ -1,43 +1,36 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Paper,
-  Typography,
-  Box,
-  Button,
-  Alert,
-  LinearProgress,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  FormLabel,
-  Checkbox,
-  TextField,
-  Grid,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Chip,
-  IconButton,
-  CircularProgress,
-} from '@mui/material';
-import {
-  NavigateNext,
-  NavigateBefore,
+  ChevronRight,
+  ChevronLeft,
   Flag,
   Timer,
-  Warning,
+  AlertTriangle,
   CheckCircle,
-  Assignment,
-} from '@mui/icons-material';
+  FileText,
+  Loader2,
+} from 'lucide-react';
 import { useSnackbar } from 'notistack';
 import Webcam from 'react-webcam';
 import { useAuthStore } from '../store/authStore';
 import socketService from '../services/socket';
 import api from '../services/api';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Checkbox } from '../components/ui/checkbox';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Progress } from '../components/ui/progress';
+import { Badge } from '../components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
+import { cn } from '../lib/utils';
 
 interface ExamQuestion {
   _id: string;
@@ -93,10 +86,24 @@ const StudentExamTaking = () => {
   // Start exam and load questions
   useEffect(() => {
     startExam();
+
+    // Set page title
+    document.title = 'Exam in Progress - SkillMetric';
+
+    // Prevent accidental page close
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (autoSaveRef.current) clearInterval(autoSaveRef.current);
       if (socket.current) socketService.disconnect();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.title = 'SkillMetric';
     };
   }, [examId]);
 
@@ -105,7 +112,6 @@ const StudentExamTaking = () => {
       const response = await api.post(`/student/exams/${examId}/start`);
       const data: ExamData = response.data;
 
-      // Debug logging
       console.log('🔍 Exam Started - Full Response:', data);
       console.log('🔒 Proctoring Settings:', data.proctoringSettings);
 
@@ -309,7 +315,6 @@ const StudentExamTaking = () => {
     const newAnswers = new Map(answers);
 
     if (type === 'MULTIPLE_CHOICE') {
-      // For multiple choice, value is array of selected options
       newAnswers.set(questionId, { selectedOptions: value });
     } else if (type === 'TRUE_FALSE') {
       newAnswers.set(questionId, { selectedOption: value });
@@ -373,7 +378,6 @@ const StudentExamTaking = () => {
     await saveCurrentAnswer();
 
     try {
-      // Convert answers map to array
       const answersArray = Array.from(answers.entries()).map(([questionId, answer]) => ({
         questionId,
         ...answer,
@@ -392,8 +396,6 @@ const StudentExamTaking = () => {
       }
 
       enqueueSnackbar('Exam submitted successfully!', { variant: 'success' });
-
-      // Navigate to results or dashboard
       navigate('/student', {
         state: { examResult: response.data },
       });
@@ -417,14 +419,12 @@ const StudentExamTaking = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg">
-        <Box sx={{ py: 8, textAlign: 'center' }}>
-          <CircularProgress size={60} />
-          <Typography variant="h6" sx={{ mt: 2 }}>
-            Loading exam...
-          </Typography>
-        </Box>
-      </Container>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-700">Loading exam...</h3>
+        </div>
+      </div>
     );
   }
 
@@ -437,326 +437,332 @@ const StudentExamTaking = () => {
   const answeredCount = answers.size;
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5', py: 2 }}>
-      <Container maxWidth="lg">
+    <div className="min-h-screen bg-gray-50 py-2">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4">
         {/* Header with timer and warnings */}
-        <Paper elevation={3} sx={{ p: 2, mb: 2, position: 'sticky', top: 0, zIndex: 100 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={4}>
-              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
-                <Assignment sx={{ mr: 1 }} />
-                {examData.exam.title}
-              </Typography>
-            </Grid>
-            <Grid item xs={6} md={4} sx={{ textAlign: 'center' }}>
-              <Typography
-                variant="h5"
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: timeRemaining < 300 ? 'error.main' : 'primary.main',
-                  fontWeight: 'bold',
-                }}
-              >
-                <Timer sx={{ mr: 1 }} />
-                {formatTime(timeRemaining)}
-              </Typography>
-            </Grid>
-            <Grid item xs={6} md={4} sx={{ textAlign: 'right' }}>
-              {warningCount > 0 && (
-                <Chip
-                  icon={<Warning />}
-                  label={`Warnings: ${warningCount}/${examData.proctoringSettings.violationWarningLimit}`}
-                  color="warning"
-                  sx={{ mr: 1 }}
-                />
-              )}
-              <Button
-                variant="contained"
-                color="success"
-                onClick={handleSubmit}
-                disabled={submitting}
-                startIcon={<CheckCircle />}
-              >
-                Submit Exam
-              </Button>
-            </Grid>
-          </Grid>
+        <Card className="mb-4 sticky top-0 z-50 shadow-lg">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
+                <h1 className="text-lg font-bold truncate">{examData.exam.title}</h1>
+              </div>
 
-          {/* Progress bar */}
-          <Box sx={{ mt: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-              <Typography variant="body2">
-                Question {currentQuestionIndex + 1} of {examData.questions.length}
-              </Typography>
-              <Typography variant="body2">
-                Answered: {answeredCount}/{examData.questions.length}
-              </Typography>
-            </Box>
-            <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 1 }} />
-          </Box>
-        </Paper>
+              <div className="flex items-center justify-center gap-2">
+                <Timer className={cn(
+                  "w-6 h-6",
+                  timeRemaining < 300 ? "text-red-500" : "text-primary"
+                )} />
+                <span className={cn(
+                  "text-2xl font-bold tabular-nums",
+                  timeRemaining < 300 ? "text-red-500" : "text-primary"
+                )}>
+                  {formatTime(timeRemaining)}
+                </span>
+              </div>
 
-        <Grid container spacing={2}>
-          {/* Question panel */}
-          <Grid item xs={12} md={9}>
-            <Paper elevation={3} sx={{ p: 3, minHeight: 500 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'between', alignItems: 'start', mb: 2 }}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Question {currentQuestionIndex + 1}
-                  </Typography>
-                  <Chip
-                    label={currentQuestion.difficulty}
-                    size="small"
-                    color={
-                      currentQuestion.difficulty === 'EASY'
-                        ? 'success'
-                        : currentQuestion.difficulty === 'MEDIUM'
-                        ? 'warning'
-                        : 'error'
-                    }
-                    sx={{ mr: 1 }}
-                  />
-                  <Chip label={`${currentQuestion.marks} marks`} size="small" variant="outlined" />
-                </Box>
-                <IconButton
-                  onClick={() => toggleFlag(currentQuestion._id)}
-                  color={flaggedQuestions.has(currentQuestion._id) ? 'warning' : 'default'}
+              <div className="flex items-center justify-end gap-2">
+                {warningCount > 0 && (
+                  <Badge variant="destructive" className="flex items-center gap-1">
+                    <AlertTriangle className="w-4 h-4" />
+                    Warnings: {warningCount}/{examData.proctoringSettings.violationWarningLimit}
+                  </Badge>
+                )}
+                <Button
+                  variant="success"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="flex items-center gap-2"
                 >
-                  <Flag />
-                </IconButton>
-              </Box>
+                  <CheckCircle className="w-4 h-4" />
+                  Submit Exam
+                </Button>
+              </div>
+            </div>
 
-              <Typography variant="body1" sx={{ mb: 3, fontSize: '1.1rem', lineHeight: 1.8 }}>
-                {currentQuestion.questionText}
-              </Typography>
+            {/* Progress bar */}
+            <div className="mt-4">
+              <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <span>Question {currentQuestionIndex + 1} of {examData.questions.length}</span>
+                <span>Answered: {answeredCount}/{examData.questions.length}</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+          </CardContent>
+        </Card>
 
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* Question panel */}
+          <div className="lg:col-span-3">
+            <Card className="shadow-lg">
+              <CardContent className="p-6 min-h-[500px]">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold mb-2">Question {currentQuestionIndex + 1}</h2>
+                    <div className="flex gap-2">
+                      <Badge
+                        variant={
+                          currentQuestion.difficulty === 'EASY'
+                            ? 'success'
+                            : currentQuestion.difficulty === 'MEDIUM'
+                            ? 'default'
+                            : 'destructive'
+                        }
+                      >
+                        {currentQuestion.difficulty}
+                      </Badge>
+                      <Badge variant="outline">{currentQuestion.marks} marks</Badge>
+                    </div>
+                  </div>
+                  <Button
+                    variant={flaggedQuestions.has(currentQuestion._id) ? 'default' : 'ghost'}
+                    size="icon"
+                    onClick={() => toggleFlag(currentQuestion._id)}
+                    className={flaggedQuestions.has(currentQuestion._id) ? 'bg-yellow-500 hover:bg-yellow-600' : ''}
+                  >
+                    <Flag className="w-5 h-5" />
+                  </Button>
+                </div>
 
-              {currentQuestion.type === 'MULTIPLE_CHOICE' && (
-                <FormControl component="fieldset" fullWidth>
-                  <FormLabel component="legend">Select all that apply</FormLabel>
-                  {currentQuestion.options?.map((option) => {
-                    const selectedOptions = answers.get(currentQuestion._id)?.selectedOptions || [];
-                    return (
-                      <FormControlLabel
-                        key={option.id}
-                        control={
+                <p className="text-lg leading-relaxed mb-6">{currentQuestion.questionText}</p>
+
+                {/* Multiple Choice Questions */}
+                {currentQuestion.type === 'MULTIPLE_CHOICE' && (
+                  <div className="space-y-3">
+                    <Label className="text-sm text-gray-600">Select all that apply</Label>
+                    {currentQuestion.options?.map((option) => {
+                      const selectedOptions = answers.get(currentQuestion._id)?.selectedOptions || [];
+                      const isChecked = selectedOptions.includes(option.id);
+
+                      return (
+                        <div
+                          key={option.id}
+                          className={cn(
+                            "flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50",
+                            isChecked && "bg-primary/5 border-primary"
+                          )}
+                          onClick={() => {
+                            const newSelected = isChecked
+                              ? selectedOptions.filter((id: string) => id !== option.id)
+                              : [...selectedOptions, option.id];
+                            handleAnswerChange(currentQuestion._id, newSelected, 'MULTIPLE_CHOICE');
+                          }}
+                        >
                           <Checkbox
-                            checked={selectedOptions.includes(option.id)}
-                            onChange={(e) => {
-                              const newSelected = e.target.checked
+                            checked={isChecked}
+                            onCheckedChange={(checked) => {
+                              const newSelected = checked
                                 ? [...selectedOptions, option.id]
                                 : selectedOptions.filter((id: string) => id !== option.id);
                               handleAnswerChange(currentQuestion._id, newSelected, 'MULTIPLE_CHOICE');
                             }}
                           />
-                        }
-                        label={option.text}
-                        sx={{
-                          mb: 1,
-                          p: 2,
-                          border: '1px solid #e0e0e0',
-                          borderRadius: 1,
-                          '&:hover': { bgcolor: '#f5f5f5' },
-                        }}
-                      />
-                    );
-                  })}
-                </FormControl>
-              )}
+                          <Label className="flex-1 cursor-pointer">{option.text}</Label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
-              {currentQuestion.type === 'TRUE_FALSE' && (
-                <FormControl component="fieldset" fullWidth>
-                  <RadioGroup
-                    value={answers.get(currentQuestion._id)?.selectedOption || ''}
-                    onChange={(e) => handleAnswerChange(currentQuestion._id, e.target.value, 'TRUE_FALSE')}
+                {/* True/False Questions */}
+                {currentQuestion.type === 'TRUE_FALSE' && (
+                  <div className="space-y-3">
+                    {['true', 'false'].map((value) => {
+                      const isSelected = answers.get(currentQuestion._id)?.selectedOption === value;
+
+                      return (
+                        <div
+                          key={value}
+                          className={cn(
+                            "flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50",
+                            isSelected && "bg-primary/5 border-primary"
+                          )}
+                          onClick={() => handleAnswerChange(currentQuestion._id, value, 'TRUE_FALSE')}
+                        >
+                          <div className={cn(
+                            "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                            isSelected && "border-primary"
+                          )}>
+                            {isSelected && <div className="w-3 h-3 rounded-full bg-primary" />}
+                          </div>
+                          <Label className="flex-1 cursor-pointer capitalize">{value}</Label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Short Answer / Fill in Blank */}
+                {(currentQuestion.type === 'SHORT_ANSWER' || currentQuestion.type === 'FILL_BLANK') && (
+                  <textarea
+                    className="w-full min-h-[120px] p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+                    placeholder="Type your answer here..."
+                    value={answers.get(currentQuestion._id)?.answer || ''}
+                    onChange={(e) => handleAnswerChange(currentQuestion._id, e.target.value, currentQuestion.type)}
+                  />
+                )}
+
+                {/* Essay Questions */}
+                {currentQuestion.type === 'ESSAY' && (
+                  <textarea
+                    className="w-full min-h-[250px] p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+                    placeholder="Type your essay here..."
+                    value={answers.get(currentQuestion._id)?.answer || ''}
+                    onChange={(e) => handleAnswerChange(currentQuestion._id, e.target.value, 'ESSAY')}
+                  />
+                )}
+
+                {/* Navigation buttons */}
+                <div className="flex justify-between mt-8">
+                  <Button
+                    variant="outline"
+                    onClick={() => goToQuestion(currentQuestionIndex - 1)}
+                    disabled={currentQuestionIndex === 0}
                   >
-                    <FormControlLabel
-                      value="true"
-                      control={<Radio />}
-                      label="True"
-                      sx={{
-                        mb: 1,
-                        p: 2,
-                        border: '1px solid #e0e0e0',
-                        borderRadius: 1,
-                        '&:hover': { bgcolor: '#f5f5f5' },
-                      }}
-                    />
-                    <FormControlLabel
-                      value="false"
-                      control={<Radio />}
-                      label="False"
-                      sx={{
-                        mb: 1,
-                        p: 2,
-                        border: '1px solid #e0e0e0',
-                        borderRadius: 1,
-                        '&:hover': { bgcolor: '#f5f5f5' },
-                      }}
-                    />
-                  </RadioGroup>
-                </FormControl>
-              )}
-
-              {(currentQuestion.type === 'SHORT_ANSWER' || currentQuestion.type === 'FILL_BLANK') && (
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={3}
-                  placeholder="Type your answer here..."
-                  value={answers.get(currentQuestion._id)?.answer || ''}
-                  onChange={(e) => handleAnswerChange(currentQuestion._id, e.target.value, currentQuestion.type)}
-                  variant="outlined"
-                />
-              )}
-
-              {currentQuestion.type === 'ESSAY' && (
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={8}
-                  placeholder="Type your essay here..."
-                  value={answers.get(currentQuestion._id)?.answer || ''}
-                  onChange={(e) => handleAnswerChange(currentQuestion._id, e.target.value, 'ESSAY')}
-                  variant="outlined"
-                />
-              )}
-
-              {/* Navigation buttons */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                <Button
-                  variant="outlined"
-                  startIcon={<NavigateBefore />}
-                  onClick={() => goToQuestion(currentQuestionIndex - 1)}
-                  disabled={currentQuestionIndex === 0}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="contained"
-                  endIcon={<NavigateNext />}
-                  onClick={() => goToQuestion(currentQuestionIndex + 1)}
-                  disabled={currentQuestionIndex === examData.questions.length - 1}
-                >
-                  Next
-                </Button>
-              </Box>
-            </Paper>
-          </Grid>
+                    <ChevronLeft className="w-4 h-4 mr-2" />
+                    Previous
+                  </Button>
+                  <Button
+                    onClick={() => goToQuestion(currentQuestionIndex + 1)}
+                    disabled={currentQuestionIndex === examData.questions.length - 1}
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Question navigator */}
-          <Grid item xs={12} md={3}>
-            <Paper elevation={3} sx={{ p: 2, position: 'sticky', top: 140 }}>
-              <Typography variant="h6" gutterBottom>
-                Questions
-              </Typography>
-              <Grid container spacing={1}>
-                {examData.questions.map((question, index) => {
-                  const isAnswered = answers.has(question._id);
-                  const isFlagged = flaggedQuestions.has(question._id);
-                  const isCurrent = index === currentQuestionIndex;
+          <div className="lg:col-span-1">
+            <Card className="sticky top-24 shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-lg">Questions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  {examData.questions.map((question, index) => {
+                    const isAnswered = answers.has(question._id);
+                    const isFlagged = flaggedQuestions.has(question._id);
+                    const isCurrent = index === currentQuestionIndex;
 
-                  return (
-                    <Grid item xs={3} key={question._id}>
+                    return (
                       <Button
-                        variant={isCurrent ? 'contained' : 'outlined'}
-                        size="small"
+                        key={question._id}
+                        variant={isCurrent ? 'default' : 'outline'}
+                        size="sm"
                         onClick={() => goToQuestion(index)}
-                        sx={{
-                          minWidth: 40,
-                          height: 40,
-                          bgcolor: isAnswered ? (isCurrent ? 'primary.main' : 'success.light') : undefined,
-                          color: isAnswered && !isCurrent ? 'white' : undefined,
-                          borderColor: isFlagged ? 'warning.main' : undefined,
-                          borderWidth: isFlagged ? 2 : 1,
-                          '&:hover': {
-                            bgcolor: isAnswered ? 'success.main' : undefined,
-                          },
-                        }}
+                        className={cn(
+                          "h-10 w-full",
+                          isAnswered && !isCurrent && "bg-green-100 hover:bg-green-200 text-green-700 border-green-300",
+                          isFlagged && "border-2 border-yellow-500"
+                        )}
                       >
                         {index + 1}
                       </Button>
-                    </Grid>
-                  );
-                })}
-              </Grid>
+                    );
+                  })}
+                </div>
 
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="caption" display="block" gutterBottom>
-                  <Box component="span" sx={{ display: 'inline-block', width: 16, height: 16, bgcolor: 'success.light', mr: 1, borderRadius: 0.5 }} />
-                  Answered
-                </Typography>
-                <Typography variant="caption" display="block" gutterBottom>
-                  <Box component="span" sx={{ display: 'inline-block', width: 16, height: 16, border: '1px solid', borderColor: 'grey.400', mr: 1, borderRadius: 0.5 }} />
-                  Not Answered
-                </Typography>
-                <Typography variant="caption" display="block">
-                  <Box component="span" sx={{ display: 'inline-block', width: 16, height: 16, border: '2px solid', borderColor: 'warning.main', mr: 1, borderRadius: 0.5 }} />
-                  Flagged
-                </Typography>
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-green-100 border border-green-300 rounded" />
+                    <span>Answered</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border border-gray-300 rounded" />
+                    <span>Not Answered</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-yellow-500 rounded" />
+                    <span>Flagged</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         {/* Hidden webcam for proctoring */}
         {examData.proctoringSettings.webcamRequired && (
-          <Box sx={{ display: 'none' }}>
+          <div className="hidden">
             <Webcam
               ref={webcamRef}
               audio={false}
               screenshotFormat="image/jpeg"
               videoConstraints={{ facingMode: 'user' }}
             />
-          </Box>
+          </div>
         )}
 
         {/* Submit confirmation dialog */}
-        <Dialog open={showSubmitDialog} onClose={() => setShowSubmitDialog(false)}>
-          <DialogTitle>Submit Exam?</DialogTitle>
-          <DialogContent>
-            <Typography>
-              Are you sure you want to submit your exam? You have answered {answeredCount} out of{' '}
-              {examData.questions.length} questions.
-            </Typography>
+        <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Submit Exam?</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to submit your exam? You have answered {answeredCount} out of{' '}
+                {examData.questions.length} questions.
+              </DialogDescription>
+            </DialogHeader>
+
             {answeredCount < examData.questions.length && (
-              <Alert severity="warning" sx={{ mt: 2 }}>
-                You have {examData.questions.length - answeredCount} unanswered questions!
-              </Alert>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-yellow-800">
+                  You have {examData.questions.length - answeredCount} unanswered questions!
+                </p>
+              </div>
             )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowSubmitDialog(false)}>
+                Cancel
+              </Button>
+              <Button variant="success" onClick={confirmSubmit} disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit'
+                )}
+              </Button>
+            </DialogFooter>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowSubmitDialog(false)}>Cancel</Button>
-            <Button onClick={confirmSubmit} variant="contained" color="success" disabled={submitting}>
-              {submitting ? 'Submitting...' : 'Submit'}
-            </Button>
-          </DialogActions>
         </Dialog>
 
         {/* Warning dialog */}
-        <Dialog open={showWarningDialog} onClose={() => setShowWarningDialog(false)}>
-          <DialogTitle sx={{ bgcolor: 'warning.main', color: 'white' }}>
-            <Warning sx={{ mr: 1, verticalAlign: 'middle' }} />
-            Security Warning
-          </DialogTitle>
-          <DialogContent sx={{ mt: 2 }}>
-            <Typography>{warningMessage}</Typography>
-            <Alert severity="error" sx={{ mt: 2 }}>
-              Warning {warningCount} of {examData.proctoringSettings.violationWarningLimit}. Exceeding the limit will
-              result in automatic submission!
-            </Alert>
+        <Dialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader className="bg-yellow-500 -m-6 mb-0 p-6 rounded-t-lg">
+              <DialogTitle className="text-white flex items-center gap-2">
+                <AlertTriangle className="w-6 h-6" />
+                Security Warning
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="pt-4">
+              <p className="text-gray-700 mb-4">{warningMessage}</p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-800">
+                  <strong>Warning {warningCount} of {examData.proctoringSettings.violationWarningLimit}.</strong>
+                  {' '}Exceeding the limit will result in automatic submission!
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button onClick={() => setShowWarningDialog(false)}>
+                I Understand
+              </Button>
+            </DialogFooter>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowWarningDialog(false)} variant="contained">
-              I Understand
-            </Button>
-          </DialogActions>
         </Dialog>
-      </Container>
-    </Box>
+      </div>
+    </div>
   );
 };
 

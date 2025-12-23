@@ -38,7 +38,8 @@ const AddUser = lazy(() => import('./pages/OrgAdmin/AddUser'));
 const BulkUserUpload = lazy(() => import('./pages/OrgAdmin/BulkUserUpload'));
 const QuestionsList = lazy(() => import('./pages/OrgAdmin/QuestionsList'));
 const CreateQuestion = lazy(() => import('./pages/OrgAdmin/CreateQuestion'));
-const EditQuestion = lazy(() => import('./pages/EditQuestion'));
+const QuestionView = lazy(() => import('./pages/OrgAdmin/QuestionView'));
+const EditQuestion = lazy(() => import('./pages/OrgAdmin/EditQuestion'));
 const OrgAnalytics = lazy(() => import('./pages/OrgAdmin/OrgAnalytics'));
 const OrgSettings = lazy(() => import('./pages/OrgAdmin/OrgSettings'));
 
@@ -65,6 +66,14 @@ function App() {
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
+          {/* Exam Taking Route - Isolated from Layout */}
+          <Route
+            path="/student/exam/:examId"
+            element={<ProtectedRoute allowedRoles={['STUDENT']} />}
+          >
+            <Route index element={<StudentExamTaking />} />
+          </Route>
+
           <Route element={<DashboardLayout />}>
             {/* Recruiter Routes */}
             <Route
@@ -94,8 +103,8 @@ function App() {
               {/* Question Bank */}
               <Route path="questions" element={<QuestionsList />} />
               <Route path="questions/create" element={<CreateQuestion />} />
+              <Route path="questions/:id" element={<QuestionView />} />
               <Route path="questions/:id/edit" element={<EditQuestion />} />
-              <Route path="questions/:id" element={<EditQuestion />} />
               {/* Analytics & Settings */}
               <Route path="analytics" element={<OrgAnalytics />} />
               <Route path="settings" element={<OrgSettings />} />
@@ -109,7 +118,6 @@ function App() {
             {/* Student Routes */}
             <Route path="/student" element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
               <Route index element={<StudentDashboard />} />
-              <Route path="exam/:examId" element={<StudentExamTaking />} />
               <Route path="results/:examId" element={<StudentResults />} />
               <Route path="history" element={<StudentExamHistory />} />
               <Route path="profile" element={<StudentProfile />} />

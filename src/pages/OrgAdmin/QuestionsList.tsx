@@ -43,8 +43,8 @@ export default function QuestionsList() {
   const fetchQuestions = async () => {
     try {
       setLoading(true);
-      const { questionsService } = await import('@/services/questionsService');
-      const response = await questionsService.getAllQuestions({
+      const { orgAdminQuestionsService } = await import('@/services/orgAdminQuestionsService');
+      const response = await orgAdminQuestionsService.getAllQuestions({
         page: page + 1,
         limit: rowsPerPage,
         type: typeFilter !== 'all' ? typeFilter : undefined,
@@ -52,8 +52,9 @@ export default function QuestionsList() {
         category: categoryFilter || undefined,
       });
 
+      // Org-admin endpoint returns data.data and data.meta (not pagination)
       setQuestions(response.data.data || []);
-      setTotal(response.data.total || 0);
+      setTotal(response.data.meta?.total || 0);
     } catch (error) {
       console.error('Failed to fetch questions:', error);
       setQuestions([]);
@@ -83,8 +84,8 @@ export default function QuestionsList() {
 
     try {
       setDeletingId(questionId);
-      const { questionsService } = await import('@/services/questionsService');
-      await questionsService.deleteQuestion(questionId);
+      const { orgAdminQuestionsService } = await import('@/services/orgAdminQuestionsService');
+      await orgAdminQuestionsService.deleteQuestion(questionId);
 
       // Refresh the questions list
       fetchQuestions();

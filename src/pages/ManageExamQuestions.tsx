@@ -1,32 +1,22 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Container,
-  Typography,
-  Paper,
-  Box,
-  Button,
-  Alert,
-  CircularProgress,
-  Grid,
-  Card,
-  CardContent,
-  Checkbox,
-  FormControlLabel,
-  Chip,
-  Divider,
-  TextField,
-  MenuItem,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { examService } from '../services/examService';
-import { questionsService } from '../services/questionsService';
+import { orgAdminQuestionsService } from '../services/orgAdminQuestionsService';
 import { Exam } from '../types/exam';
 import { Question } from '../types/question';
 
 const ManageExamQuestions = () => {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [exam, setExam] = useState<Exam | null>(null);
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
@@ -37,9 +27,16 @@ const ManageExamQuestions = () => {
   const [success, setSuccess] = useState('');
 
   // Filters
-  const [typeFilter, setTypeFilter] = useState('');
-  const [difficultyFilter, setDifficultyFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [difficultyFilter, setDifficultyFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('');
+
+  // Determine base path from current location
+  const basePath = location.pathname.includes('/org-admin')
+    ? '/org-admin'
+    : location.pathname.includes('/recruiter')
+    ? '/recruiter'
+    : '/admin';
 
   useEffect(() => {
     fetchData();
@@ -50,12 +47,12 @@ const ManageExamQuestions = () => {
       setLoading(true);
       const [examResponse, questionsResponse] = await Promise.all([
         examService.getExamById(examId!),
-        questionsService.getAllQuestions({ isActive: true, limit: 1000 }),
+        orgAdminQuestionsService.getAllQuestions({ page: 1, limit: 1000 }),
       ]);
 
       const examData = examResponse.data;
       setExam(examData);
-      setAllQuestions(questionsResponse.data.data);
+      setAllQuestions(questionsResponse.data.data || []);
 
       // Set currently selected questions
       const currentQuestionIds = Array.isArray(examData.questions)
@@ -112,7 +109,7 @@ const ManageExamQuestions = () => {
 
       setSuccess('Questions updated successfully!');
       setTimeout(() => {
-        navigate(`/admin/exams/${examId}`);
+        navigate(`${basePath}/exams/${examId}`);
       }, 1500);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update questions');
@@ -122,187 +119,202 @@ const ManageExamQuestions = () => {
   };
 
   const filteredQuestions = allQuestions.filter((q) => {
-    if (typeFilter && q.type !== typeFilter) return false;
-    if (difficultyFilter && q.difficulty !== difficultyFilter) return false;
-    if (categoryFilter && q.category !== categoryFilter) return false;
+    if (typeFilter !== 'all' && q.type !== typeFilter) return false;
+    if (difficultyFilter !== 'all' && q.difficulty !== difficultyFilter) return false;
+    if (categoryFilter && !q.category?.toLowerCase().includes(categoryFilter.toLowerCase())) return false;
     return true;
   });
 
+  const getDifficultyVariant = (difficulty: string): 'default' | 'secondary' | 'success' | 'destructive' => {
+    switch (difficulty.toUpperCase()) {
+      case 'EASY':
+        return 'success';
+      case 'MEDIUM':
+        return 'secondary';
+      case 'HARD':
+      case 'EXPERT':
+        return 'destructive';
+      default:
+        return 'default';
+    }
+  };
+
   if (loading) {
     return (
-      <Container maxWidth="lg">
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-          <CircularProgress />
-        </Box>
-      </Container>
+      <div className="container max-w-6xl mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </div>
     );
   }
 
   if (!exam) {
     return (
-      <Container maxWidth="lg">
-        <Alert severity="error">Exam not found</Alert>
-      </Container>
+      <div className="container max-w-6xl mx-auto px-4 py-8">
+        <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <p>Exam not found</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate(`/admin/exams/${examId}`)}
-            sx={{ mr: 2 }}
-          >
+    <div className="container max-w-6xl mx-auto px-4 py-8">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={() => navigate(`${basePath}/exams/${examId}`)}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          <Typography variant="h4">Manage Questions - {exam.title}</Typography>
-        </Box>
+          <h1 className="text-3xl font-bold">Manage Questions - {exam.title}</h1>
+        </div>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+        {/* Alerts */}
+        {error && (
+          <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
+            <AlertCircle className="h-5 w-5 flex-shrink-0" />
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+        {success && (
+          <div className="flex items-center gap-2 p-4 rounded-lg bg-success/10 border border-success/30 text-success-foreground">
+            <CheckCircle className="h-5 w-5 flex-shrink-0" />
+            <p className="text-sm">{success}</p>
+          </div>
+        )}
 
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Selected: {selectedQuestions.size} questions
-          </Typography>
-          <Divider sx={{ my: 2 }} />
+        {/* Main Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Selected: {selectedQuestions.size} questions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Filter by Type</Label>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="MULTIPLE_CHOICE">Multiple Choice</SelectItem>
+                    <SelectItem value="TRUE_FALSE">True/False</SelectItem>
+                    <SelectItem value="FILL_BLANK">Fill in the Blank</SelectItem>
+                    <SelectItem value="SHORT_ANSWER">Short Answer</SelectItem>
+                    <SelectItem value="ESSAY">Essay</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* Filters */}
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={4}>
-              <TextField
-                select
-                fullWidth
-                label="Filter by Type"
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                size="small"
-              >
-                <MenuItem value="">All Types</MenuItem>
-                <MenuItem value="MULTIPLE_CHOICE">Multiple Choice</MenuItem>
-                <MenuItem value="TRUE_FALSE">True/False</MenuItem>
-                <MenuItem value="FILL_BLANK">Fill in the Blank</MenuItem>
-                <MenuItem value="SHORT_ANSWER">Short Answer</MenuItem>
-                <MenuItem value="ESSAY">Essay</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                select
-                fullWidth
-                label="Filter by Difficulty"
-                value={difficultyFilter}
-                onChange={(e) => setDifficultyFilter(e.target.value)}
-                size="small"
-              >
-                <MenuItem value="">All Difficulties</MenuItem>
-                <MenuItem value="EASY">Easy</MenuItem>
-                <MenuItem value="MEDIUM">Medium</MenuItem>
-                <MenuItem value="HARD">Hard</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label="Filter by Category"
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                size="small"
-                placeholder="Enter category"
-              />
-            </Grid>
-          </Grid>
+              <div className="space-y-2">
+                <Label>Filter by Difficulty</Label>
+                <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Difficulties" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Difficulties</SelectItem>
+                    <SelectItem value="EASY">Easy</SelectItem>
+                    <SelectItem value="MEDIUM">Medium</SelectItem>
+                    <SelectItem value="HARD">Hard</SelectItem>
+                    <SelectItem value="EXPERT">Expert</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* Questions List */}
-          <Box sx={{ maxHeight: '500px', overflowY: 'auto' }}>
-            {filteredQuestions.length === 0 ? (
-              <Typography color="textSecondary">No questions found</Typography>
-            ) : (
-              <Grid container spacing={2}>
-                {filteredQuestions.map((question) => (
-                  <Grid item xs={12} key={question._id}>
-                    <Card
-                      variant="outlined"
-                      sx={{
-                        backgroundColor: selectedQuestions.has(question._id)
-                          ? 'action.selected'
-                          : 'background.paper',
-                      }}
-                    >
-                      <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={selectedQuestions.has(question._id)}
-                                onChange={() => handleToggleQuestion(question._id)}
-                              />
-                            }
-                            label=""
-                            sx={{ mr: 1 }}
-                          />
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body1" gutterBottom sx={{ fontWeight: 500 }}>
-                              {question.text}
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-                              <Chip
-                                label={question.type.replace('_', ' ')}
-                                size="small"
-                                color="primary"
-                                variant="outlined"
-                              />
-                              <Chip
-                                label={question.difficulty}
-                                size="small"
-                                color={
-                                  question.difficulty === 'EASY'
-                                    ? 'success'
-                                    : question.difficulty === 'MEDIUM'
-                                    ? 'warning'
-                                    : 'error'
-                                }
-                              />
-                              <Chip label={`${question.marks} marks`} size="small" color="info" />
-                              {question.negativeMarks > 0 && (
-                                <Chip
-                                  label={`-${question.negativeMarks} negative`}
-                                  size="small"
-                                  color="error"
-                                  variant="outlined"
-                                />
-                              )}
-                              {question.category && (
-                                <Chip label={question.category} size="small" variant="outlined" />
-                              )}
-                            </Box>
-                          </Box>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </Box>
-        </Paper>
+              <div className="space-y-2">
+                <Label htmlFor="category">Filter by Category</Label>
+                <Input
+                  id="category"
+                  placeholder="Enter category"
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                />
+              </div>
+            </div>
 
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+            {/* Questions List */}
+            <div className="max-h-[500px] overflow-y-auto space-y-3">
+              {filteredQuestions.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  No questions found matching your filters
+                </p>
+              ) : (
+                filteredQuestions.map((question) => (
+                  <Card
+                    key={question._id}
+                    className={`cursor-pointer transition-colors ${
+                      selectedQuestions.has(question._id)
+                        ? 'bg-primary/5 border-primary/30'
+                        : 'hover:bg-muted/50'
+                    }`}
+                    onClick={() => handleToggleQuestion(question._id)}
+                  >
+                    <CardContent className="pt-6">
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={selectedQuestions.has(question._id)}
+                          onCheckedChange={() => handleToggleQuestion(question._id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <div className="flex-1 space-y-2">
+                          <p className="font-medium leading-snug">{question.text}</p>
+                          <div className="flex gap-2 flex-wrap">
+                            <Badge variant="outline">
+                              {question.type.replace('_', ' ')}
+                            </Badge>
+                            <Badge variant={getDifficultyVariant(question.difficulty)}>
+                              {question.difficulty}
+                            </Badge>
+                            <Badge variant="secondary">
+                              {question.marks} marks
+                            </Badge>
+                            {question.negativeMarks > 0 && (
+                              <Badge variant="destructive" className="opacity-75">
+                                -{question.negativeMarks} negative
+                              </Badge>
+                            )}
+                            {question.category && (
+                              <Badge variant="outline">{question.category}</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <div className="flex gap-3 justify-end">
           <Button
-            variant="outlined"
-            onClick={() => navigate(`/admin/exams/${examId}`)}
+            variant="outline"
+            onClick={() => navigate(`${basePath}/exams/${examId}`)}
             disabled={saving}
           >
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save Changes'}
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
           </Button>
-        </Box>
-      </Box>
-    </Container>
+        </div>
+      </div>
+    </div>
   );
 };
 

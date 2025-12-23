@@ -1,26 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import {
-  Container,
-  Typography,
-  Paper,
-  Box,
-  Button,
-  Alert,
-  CircularProgress,
-  Grid,
-  Chip,
-  Divider,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import EditIcon from '@mui/icons-material/Edit';
-import AddIcon from '@mui/icons-material/Add';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ArrowLeft, Edit, Plus, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { examService } from '../services/examService';
 import { Exam, ExamStatus } from '../types/exam';
 import BulkStudentUpload from '../components/BulkStudentUpload';
@@ -58,18 +42,17 @@ const ExamDetails = () => {
     }
   };
 
-  const getStatusColor = (status: ExamStatus) => {
+  const getStatusVariant = (status: ExamStatus): 'default' | 'secondary' | 'success' | 'destructive' | 'outline' => {
     switch (status) {
       case ExamStatus.DRAFT:
-        return 'default';
+        return 'secondary';
       case ExamStatus.PUBLISHED:
-        return 'info';
       case ExamStatus.ACTIVE:
         return 'success';
       case ExamStatus.COMPLETED:
-        return 'warning';
+        return 'outline';
       case ExamStatus.ARCHIVED:
-        return 'error';
+        return 'destructive';
       default:
         return 'default';
     }
@@ -92,10 +75,8 @@ const ExamDetails = () => {
       const response = await examService.enrollStudents(examId!, students);
       const { summary, details } = response.data;
 
-      // Log the full response for debugging
       console.log('Enrollment response:', response.data);
 
-      // Show detailed error messages if there are errors
       if (summary.errors > 0) {
         const errorMessages = details.errors.map((err: any) =>
           `${err.name} (${err.email}): ${err.error}`
@@ -107,7 +88,6 @@ const ExamDetails = () => {
         );
       }
 
-      // Show success message
       if (summary.enrolled > 0 || summary.created > 0) {
         setSuccess(
           `Successfully enrolled ${summary.enrolled} students. ` +
@@ -116,7 +96,6 @@ const ExamDetails = () => {
         );
       }
 
-      // Refresh exam data to show updated student count
       fetchExam();
     } catch (err: any) {
       console.error('Enrollment error:', err);
@@ -126,242 +105,226 @@ const ExamDetails = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg">
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-          <CircularProgress />
-        </Box>
-      </Container>
+      <div className="container max-w-6xl mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </div>
     );
   }
 
   if (!exam) {
     return (
-      <Container maxWidth="lg">
-        <Alert severity="error">{error || 'Exam not found'}</Alert>
-      </Container>
+      <div className="container max-w-6xl mx-auto px-4 py-8">
+        <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          <p>{error || 'Exam not found'}</p>
+        </div>
+      </div>
     );
   }
 
   const questions = Array.isArray(exam.questions) ? exam.questions : [];
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Button
-              startIcon={<ArrowBackIcon />}
-              onClick={() => navigate(`${basePath}/exams`)}
-              sx={{ mr: 2 }}
-            >
+    <div className="container max-w-6xl mx-auto px-4 py-8">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => navigate(`${basePath}/exams`)}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
-            <Typography variant="h4">{exam.title}</Typography>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<EditIcon />}
-            onClick={() => navigate(`${basePath}/exams/${examId}/edit`)}
-          >
+            <h1 className="text-3xl font-bold">{exam.title}</h1>
+          </div>
+          <Button onClick={() => navigate(`${basePath}/exams/${examId}/edit`)}>
+            <Edit className="mr-2 h-4 w-4" />
             Manage Questions
           </Button>
-        </Box>
+        </div>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+        {/* Alerts */}
+        {error && (
+          <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
+            <AlertCircle className="h-5 w-5 flex-shrink-0" />
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+        {success && (
+          <div className="flex items-center gap-2 p-4 rounded-lg bg-success/10 border border-success/30 text-success-foreground">
+            <CheckCircle className="h-5 w-5 flex-shrink-0" />
+            <p className="text-sm">{success}</p>
+          </div>
+        )}
 
         {/* Basic Info */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Basic Information
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <Typography variant="body2" color="textSecondary">
-                Exam Code
-              </Typography>
-              <Typography variant="body1">{exam.code}</Typography>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography variant="body2" color="textSecondary">
-                Status
-              </Typography>
-              <Chip label={exam.status} color={getStatusColor(exam.status)} size="small" />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography variant="body2" color="textSecondary">
-                Duration
-              </Typography>
-              <Typography variant="body1">{exam.duration} minutes</Typography>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography variant="body2" color="textSecondary">
-                Questions
-              </Typography>
-              <Typography variant="body1">{questions.length} questions</Typography>
-            </Grid>
-            {exam.description && (
-              <Grid item xs={12}>
-                <Typography variant="body2" color="textSecondary">
-                  Description
-                </Typography>
-                <Typography variant="body1">{exam.description}</Typography>
-              </Grid>
-            )}
-          </Grid>
-        </Paper>
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Exam Code</p>
+                <p className="text-base font-medium">{exam.code}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Status</p>
+                <Badge variant={getStatusVariant(exam.status)}>{exam.status}</Badge>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Duration</p>
+                <p className="text-base font-medium">{exam.duration} minutes</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Questions</p>
+                <p className="text-base font-medium">{questions.length} questions</p>
+              </div>
+              {exam.description && (
+                <div className="md:col-span-2">
+                  <p className="text-sm text-muted-foreground mb-1">Description</p>
+                  <p className="text-base">{exam.description}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Schedule */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Schedule
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <Typography variant="body2" color="textSecondary">
-                Start Date
-              </Typography>
-              <Typography variant="body1">{formatDate(exam.schedule.startDate)}</Typography>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography variant="body2" color="textSecondary">
-                End Date
-              </Typography>
-              <Typography variant="body1">{formatDate(exam.schedule.endDate)}</Typography>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="body2" color="textSecondary">
-                Late Submission
-              </Typography>
-              <Typography variant="body1">
-                {exam.schedule.lateSubmissionAllowed ? 'Allowed' : 'Not Allowed'}
-              </Typography>
-            </Grid>
-          </Grid>
-        </Paper>
+        <Card>
+          <CardHeader>
+            <CardTitle>Schedule</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Start Date</p>
+                <p className="text-base font-medium">{formatDate(exam.schedule.startDate)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">End Date</p>
+                <p className="text-base font-medium">{formatDate(exam.schedule.endDate)}</p>
+              </div>
+              <div className="md:col-span-2">
+                <p className="text-sm text-muted-foreground mb-1">Late Submission</p>
+                <p className="text-base font-medium">
+                  {exam.schedule.lateSubmissionAllowed ? 'Allowed' : 'Not Allowed'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Grading */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Grading Configuration
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <Typography variant="body2" color="textSecondary">
-                Total Marks
-              </Typography>
-              <Typography variant="body1">{exam.grading.totalMarks}</Typography>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography variant="body2" color="textSecondary">
-                Passing Marks
-              </Typography>
-              <Typography variant="body1">{exam.grading.passingMarks}</Typography>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography variant="body2" color="textSecondary">
-                Negative Marking
-              </Typography>
-              <Typography variant="body1">
-                {exam.grading.negativeMarking
-                  ? `Yes (${exam.grading.negativeMarkValue} per wrong answer)`
-                  : 'No'}
-              </Typography>
-            </Grid>
-          </Grid>
-        </Paper>
+        <Card>
+          <CardHeader>
+            <CardTitle>Grading Configuration</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Total Marks</p>
+                <p className="text-base font-medium">{exam.grading.totalMarks}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Passing Marks</p>
+                <p className="text-base font-medium">{exam.grading.passingMarks}</p>
+              </div>
+              <div className="md:col-span-2">
+                <p className="text-sm text-muted-foreground mb-1">Negative Marking</p>
+                <p className="text-base font-medium">
+                  {exam.grading.negativeMarking
+                    ? `Yes (${exam.grading.negativeMarkValue} per wrong answer)`
+                    : 'No'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Enrolled Students */}
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">
-              Enrolled Students ({exam.enrolledStudents?.length || 0})
-            </Typography>
-            <BulkStudentUpload examId={examId!} onUploadComplete={handleStudentUpload} />
-          </Box>
-          <Divider sx={{ mb: 2 }} />
-
-          {(!exam.enrolledStudents || exam.enrolledStudents.length === 0) ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography color="textSecondary" gutterBottom>
-                No students enrolled yet
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Use the "Bulk Upload Students" button to enroll students via Excel/CSV file
-              </Typography>
-            </Box>
-          ) : (
-            <Typography variant="body1" color="textSecondary">
-              {exam.enrolledStudents.length} student{exam.enrolledStudents.length !== 1 ? 's' : ''} enrolled
-            </Typography>
-          )}
-        </Paper>
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Enrolled Students ({exam.enrolledStudents?.length || 0})</CardTitle>
+              <BulkStudentUpload examId={examId!} onUploadComplete={handleStudentUpload} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {(!exam.enrolledStudents || exam.enrolledStudents.length === 0) ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-2">No students enrolled yet</p>
+                <p className="text-sm text-muted-foreground">
+                  Use the "Bulk Upload Students" button to enroll students via Excel/CSV file
+                </p>
+              </div>
+            ) : (
+              <p className="text-muted-foreground">
+                {exam.enrolledStudents.length} student{exam.enrolledStudents.length !== 1 ? 's' : ''} enrolled
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Questions */}
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">Questions ({questions.length})</Typography>
-            <Button
-              variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={() => navigate(`${basePath}/exams/${examId}/edit`)}
-              size="small"
-            >
-              Add Questions
-            </Button>
-          </Box>
-          <Divider sx={{ mb: 2 }} />
-
-          {questions.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography color="textSecondary" gutterBottom>
-                No questions added yet
-              </Typography>
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Questions ({questions.length})</CardTitle>
               <Button
-                variant="contained"
-                startIcon={<AddIcon />}
+                variant="outline"
+                size="sm"
                 onClick={() => navigate(`${basePath}/exams/${examId}/edit`)}
-                sx={{ mt: 2 }}
               >
+                <Plus className="mr-2 h-4 w-4" />
                 Add Questions
               </Button>
-            </Box>
-          ) : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell><strong>#</strong></TableCell>
-                    <TableCell><strong>Question</strong></TableCell>
-                    <TableCell><strong>Type</strong></TableCell>
-                    <TableCell><strong>Difficulty</strong></TableCell>
-                    <TableCell><strong>Marks</strong></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {questions.map((question: any, index) => (
-                    <TableRow key={question._id || index}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>{question.questionText || 'N/A'}</TableCell>
-                      <TableCell>
-                        <Chip label={question.type || 'N/A'} size="small" color="primary" />
-                      </TableCell>
-                      <TableCell>
-                        <Chip label={question.difficulty || 'N/A'} size="small" color="secondary" />
-                      </TableCell>
-                      <TableCell>{question.marks || 0}</TableCell>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {questions.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">No questions added yet</p>
+                <Button onClick={() => navigate(`${basePath}/exams/${examId}/edit`)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Questions
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">#</TableHead>
+                      <TableHead>Question</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Difficulty</TableHead>
+                      <TableHead className="text-right">Marks</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </Paper>
-      </Box>
-    </Container>
+                  </TableHeader>
+                  <TableBody>
+                    {questions.map((question: any, index) => (
+                      <TableRow key={question._id || index}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>{question.questionText || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{question.type || 'N/A'}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{question.difficulty || 'N/A'}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{question.marks || 0}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 
