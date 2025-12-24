@@ -6,6 +6,8 @@ interface User {
   email: string;
   role: 'ADMIN' | 'STUDENT' | 'PROCTOR';
   studentId?: string;
+  organizationId?: string; // Default/current organization
+  organizationIds?: string[]; // All organizations user belongs to
 }
 
 interface AuthState {

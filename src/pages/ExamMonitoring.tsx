@@ -1,20 +1,21 @@
-import { Container, Typography, Paper, Box } from '@mui/material';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const ExamMonitoring = () => {
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Real-time Exam Monitoring
-        </Typography>
+    <div className="container mx-auto max-w-6xl py-8">
+      <h1 className="text-4xl font-bold mb-8">Real-time Exam Monitoring</h1>
 
-        <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-          <Typography color="textSecondary">
+      <Card>
+        <CardHeader>
+          <CardTitle>Live Monitoring Dashboard</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
             Live monitoring dashboard will be implemented here.
-          </Typography>
-        </Paper>
-      </Box>
-    </Container>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

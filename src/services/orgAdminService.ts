@@ -74,6 +74,8 @@ export interface User {
     batch?: string;
   };
   studentId?: string;
+  organizationId?: string; // Default/current organization
+  organizationIds?: string[]; // All organizations user belongs to
 }
 
 export interface UserFilters {

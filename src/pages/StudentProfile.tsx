@@ -1,39 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  Container,
-  Typography,
-  Paper,
-  Box,
-  Grid,
-  Avatar,
-  Chip,
-  CircularProgress,
-  Alert,
-  Divider,
-  Card,
-  CardContent,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Button,
-} from '@mui/material';
-import {
-  Person,
-  Email,
+  User,
+  Mail,
   Phone,
-  School,
-  Work,
-  CalendarToday,
-  Language,
-  LinkedIn,
-  GitHub,
-  EmojiEvents,
+  GraduationCap,
+  Briefcase,
+  Calendar,
+  Globe,
+  Linkedin,
+  Github,
+  Trophy,
   TrendingUp,
   Star,
-  ArrowBack,
-} from '@mui/icons-material';
+  ArrowLeft,
+  Loader2,
+} from 'lucide-react';
 import { useSnackbar } from 'notistack';
 import api from '../services/api';
 
@@ -131,402 +117,336 @@ const StudentProfile = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, textAlign: 'center' }}>
-        <CircularProgress />
-        <Typography sx={{ mt: 2 }}>Loading profile...</Typography>
-      </Container>
+      <div className="container mx-auto max-w-6xl py-8">
+        <div className="flex flex-col items-center justify-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p>Loading profile...</p>
+        </div>
+      </div>
     );
   }
 
   if (error || !profile) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Alert severity="error">{error || 'Profile not found'}</Alert>
+      <div className="container mx-auto max-w-6xl py-8">
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error || 'Profile not found'}</AlertDescription>
+        </Alert>
         <Button
-          variant="outlined"
-          startIcon={<ArrowBack />}
+          variant="outline"
+          className="gap-2"
           onClick={() => navigate('/student')}
-          sx={{ mt: 2 }}
         >
+          <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Button>
-      </Container>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <div className="container mx-auto max-w-6xl py-8">
       {/* Header */}
-      <Box sx={{ mb: 3 }}>
+      <div className="mb-6">
         <Button
-          variant="text"
-          startIcon={<ArrowBack />}
+          variant="ghost"
+          className="gap-2 mb-4"
           onClick={() => navigate('/student')}
-          sx={{ mb: 2 }}
         >
+          <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Button>
-        <Typography variant="h4" gutterBottom>
-          My Profile
-        </Typography>
-      </Box>
+        <h1 className="text-4xl font-bold">My Profile</h1>
+      </div>
 
       {/* Profile Header Card */}
-      <Paper sx={{ p: 4, mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <Avatar
-            src={profile.profileDetails?.profilePicture}
-            sx={{ width: 120, height: 120, bgcolor: 'primary.main', fontSize: 48 }}
-          >
-            {profile.name.charAt(0).toUpperCase()}
-          </Avatar>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h4" gutterBottom>
-              {profile.name}
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
-              <Chip label={profile.role} color="primary" size="small" />
+      <Card className="p-8 mb-6">
+        <div className="flex items-center gap-6">
+          <div className="w-32 h-32 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-5xl font-bold overflow-hidden">
+            {profile.profileDetails?.profilePicture ? (
+              <img
+                src={profile.profileDetails.profilePicture}
+                alt={profile.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              profile.name.charAt(0).toUpperCase()
+            )}
+          </div>
+          <div className="flex-1">
+            <h2 className="text-3xl font-bold mb-2">{profile.name}</h2>
+            <div className="flex gap-2 flex-wrap mb-2">
+              <Badge>{profile.role}</Badge>
               {profile.profileDetails?.college && (
-                <Chip label={profile.profileDetails.college} size="small" />
+                <Badge variant="outline">{profile.profileDetails.college}</Badge>
               )}
               {profile.profileDetails?.graduationYear && (
-                <Chip label={`Class of ${profile.profileDetails.graduationYear}`} size="small" />
+                <Badge variant="outline">Class of {profile.profileDetails.graduationYear}</Badge>
               )}
-            </Box>
-            <Typography variant="body2" color="text.secondary">
+            </div>
+            <p className="text-sm text-muted-foreground">
               Member since {formatDate(profile.createdAt)}
-            </Typography>
-          </Box>
-        </Box>
-      </Paper>
+            </p>
+          </div>
+        </div>
+      </Card>
 
-      <Grid container spacing={3}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Information */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>
-              Personal Information
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            <List>
-              <ListItem>
-                <ListItemIcon>
-                  <Email color="action" />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Email"
-                  secondary={profile.email}
-                />
-              </ListItem>
-              {profile.profileDetails?.phone && (
-                <ListItem>
-                  <ListItemIcon>
-                    <Phone color="action" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Phone"
-                    secondary={profile.profileDetails.phone}
-                  />
-                </ListItem>
-              )}
-              {profile.profileDetails?.dateOfBirth && (
-                <ListItem>
-                  <ListItemIcon>
-                    <CalendarToday color="action" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Date of Birth"
-                    secondary={formatDate(profile.profileDetails.dateOfBirth)}
-                  />
-                </ListItem>
-              )}
-              {profile.profileDetails?.gender && (
-                <ListItem>
-                  <ListItemIcon>
-                    <Person color="action" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Gender"
-                    secondary={profile.profileDetails.gender}
-                  />
-                </ListItem>
-              )}
-            </List>
-          </Paper>
-        </Grid>
+        <Card className="p-6">
+          <h3 className="text-xl font-semibold mb-4">Personal Information</h3>
+          <div className="border-t pt-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <Mail className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Email</p>
+                <p className="text-sm text-muted-foreground">{profile.email}</p>
+              </div>
+            </div>
+            {profile.profileDetails?.phone && (
+              <div className="flex items-center gap-3">
+                <Phone className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Phone</p>
+                  <p className="text-sm text-muted-foreground">{profile.profileDetails.phone}</p>
+                </div>
+              </div>
+            )}
+            {profile.profileDetails?.dateOfBirth && (
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Date of Birth</p>
+                  <p className="text-sm text-muted-foreground">{formatDate(profile.profileDetails.dateOfBirth)}</p>
+                </div>
+              </div>
+            )}
+            {profile.profileDetails?.gender && (
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Gender</p>
+                  <p className="text-sm text-muted-foreground">{profile.profileDetails.gender}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
 
         {/* Academic Information */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>
-              Academic Information
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            <List>
-              {profile.profileDetails?.college && (
-                <ListItem>
-                  <ListItemIcon>
-                    <School color="action" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="College"
-                    secondary={profile.profileDetails.college}
-                  />
-                </ListItem>
-              )}
-              {profile.profileDetails?.university && (
-                <ListItem>
-                  <ListItemIcon>
-                    <School color="action" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="University"
-                    secondary={profile.profileDetails.university}
-                  />
-                </ListItem>
-              )}
-              {profile.profileDetails?.degree && (
-                <ListItem>
-                  <ListItemIcon>
-                    <EmojiEvents color="action" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Degree"
-                    secondary={profile.profileDetails.degree}
-                  />
-                </ListItem>
-              )}
-              {profile.profileDetails?.branch && (
-                <ListItem>
-                  <ListItemIcon>
-                    <Work color="action" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Branch/Major"
-                    secondary={profile.profileDetails.branch}
-                  />
-                </ListItem>
-              )}
-              {profile.profileDetails?.rollNumber && (
-                <ListItem>
-                  <ListItemIcon>
-                    <Person color="action" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Roll Number"
-                    secondary={profile.profileDetails.rollNumber}
-                  />
-                </ListItem>
-              )}
-            </List>
-          </Paper>
-        </Grid>
+        <Card className="p-6">
+          <h3 className="text-xl font-semibold mb-4">Academic Information</h3>
+          <div className="border-t pt-4 space-y-4">
+            {profile.profileDetails?.college && (
+              <div className="flex items-center gap-3">
+                <GraduationCap className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">College</p>
+                  <p className="text-sm text-muted-foreground">{profile.profileDetails.college}</p>
+                </div>
+              </div>
+            )}
+            {profile.profileDetails?.university && (
+              <div className="flex items-center gap-3">
+                <GraduationCap className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">University</p>
+                  <p className="text-sm text-muted-foreground">{profile.profileDetails.university}</p>
+                </div>
+              </div>
+            )}
+            {profile.profileDetails?.degree && (
+              <div className="flex items-center gap-3">
+                <Trophy className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Degree</p>
+                  <p className="text-sm text-muted-foreground">{profile.profileDetails.degree}</p>
+                </div>
+              </div>
+            )}
+            {profile.profileDetails?.branch && (
+              <div className="flex items-center gap-3">
+                <Briefcase className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Branch/Major</p>
+                  <p className="text-sm text-muted-foreground">{profile.profileDetails.branch}</p>
+                </div>
+              </div>
+            )}
+            {profile.profileDetails?.rollNumber && (
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Roll Number</p>
+                  <p className="text-sm text-muted-foreground">{profile.profileDetails.rollNumber}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
 
-        {/* Skill Profile */}
-        {profile.skillProfile && (
-          <Grid item xs={12}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Skill Profile
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={4}>
-                  <Card>
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <Star sx={{ fontSize: 48, color: '#ffd700', mb: 1 }} />
-                      <Typography color="text.secondary" gutterBottom>
-                        Overall Rating
-                      </Typography>
-                      <Typography variant="h3">
-                        {profile.skillProfile.overallRating?.toFixed(1) || 'N/A'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        out of 5.0
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Card>
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <TrendingUp sx={{ fontSize: 48, color: '#2196f3', mb: 1 }} />
-                      <Typography color="text.secondary" gutterBottom>
-                        Assessments Taken
-                      </Typography>
-                      <Typography variant="h3">
-                        {profile.skillProfile.assessmentsTaken || 0}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Card>
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <EmojiEvents sx={{ fontSize: 48, color: '#4caf50', mb: 1 }} />
-                      <Typography color="text.secondary" gutterBottom>
-                        Skills Evaluated
-                      </Typography>
-                      <Typography variant="h3">
-                        {profile.skillProfile.skills?.length || 0}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
+      {/* Skill Profile */}
+      {profile.skillProfile && (
+        <Card className="p-6 mt-6">
+          <h3 className="text-xl font-semibold mb-4">Skill Profile</h3>
+          <div className="border-t pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <Star className="h-12 w-12 text-warning mx-auto mb-2" />
+                  <p className="text-muted-foreground mb-1">Overall Rating</p>
+                  <h3 className="text-4xl font-bold">
+                    {profile.skillProfile.overallRating?.toFixed(1) || 'N/A'}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">out of 5.0</p>
+                </CardContent>
+              </Card>
 
-              {profile.skillProfile.strengths && profile.skillProfile.strengths.length > 0 && (
-                <Box sx={{ mt: 3 }}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Strengths
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {profile.skillProfile.strengths.map((strength, index) => (
-                      <Chip
-                        key={index}
-                        label={strength}
-                        color="success"
-                        size="small"
-                      />
-                    ))}
-                  </Box>
-                </Box>
-              )}
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <TrendingUp className="h-12 w-12 text-primary mx-auto mb-2" />
+                  <p className="text-muted-foreground mb-1">Assessments Taken</p>
+                  <h3 className="text-4xl font-bold">
+                    {profile.skillProfile.assessmentsTaken || 0}
+                  </h3>
+                </CardContent>
+              </Card>
 
-              {profile.skillProfile.weaknesses && profile.skillProfile.weaknesses.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Areas for Improvement
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {profile.skillProfile.weaknesses.map((weakness, index) => (
-                      <Chip
-                        key={index}
-                        label={weakness}
-                        color="warning"
-                        size="small"
-                      />
-                    ))}
-                  </Box>
-                </Box>
-              )}
-            </Paper>
-          </Grid>
-        )}
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <Trophy className="h-12 w-12 text-success mx-auto mb-2" />
+                  <p className="text-muted-foreground mb-1">Skills Evaluated</p>
+                  <h3 className="text-4xl font-bold">
+                    {profile.skillProfile.skills?.length || 0}
+                  </h3>
+                </CardContent>
+              </Card>
+            </div>
 
-        {/* Certifications */}
-        {profile.certifications && profile.certifications.length > 0 && (
-          <Grid item xs={12}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Certifications
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Grid container spacing={2}>
-                {profile.certifications.map((cert, index) => (
-                  <Grid item xs={12} md={6} key={index}>
-                    <Card variant="outlined">
-                      <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                          {cert.name}
-                        </Typography>
-                        {cert.description && (
-                          <Typography variant="body2" color="text.secondary" paragraph>
-                            {cert.description}
-                          </Typography>
-                        )}
-                        {cert.issuedAt && (
-                          <Typography variant="caption" display="block">
-                            Issued: {formatDate(cert.issuedAt)}
-                          </Typography>
-                        )}
-                        {cert.expiresAt && (
-                          <Typography variant="caption" display="block">
-                            Expires: {formatDate(cert.expiresAt)}
-                          </Typography>
-                        )}
-                        {cert.certificateUrl && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            href={cert.certificateUrl}
-                            target="_blank"
-                            sx={{ mt: 1 }}
-                          >
-                            View Certificate
-                          </Button>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </Paper>
-          </Grid>
-        )}
+            {profile.skillProfile.strengths && profile.skillProfile.strengths.length > 0 && (
+              <div className="mb-4">
+                <p className="font-medium mb-2">Strengths</p>
+                <div className="flex gap-2 flex-wrap">
+                  {profile.skillProfile.strengths.map((strength, index) => (
+                    <Badge key={index} variant="success">
+                      {strength}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {/* Social Links */}
-        {(profile.profileDetails?.linkedIn || profile.profileDetails?.github || profile.profileDetails?.portfolio) && (
-          <Grid item xs={12}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Social Links
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                {profile.profileDetails.linkedIn && (
-                  <Button
-                    variant="outlined"
-                    startIcon={<LinkedIn />}
-                    href={profile.profileDetails.linkedIn}
-                    target="_blank"
-                  >
+            {profile.skillProfile.weaknesses && profile.skillProfile.weaknesses.length > 0 && (
+              <div>
+                <p className="font-medium mb-2">Areas for Improvement</p>
+                <div className="flex gap-2 flex-wrap">
+                  {profile.skillProfile.weaknesses.map((weakness, index) => (
+                    <Badge key={index} variant="warning">
+                      {weakness}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Certifications */}
+      {profile.certifications && profile.certifications.length > 0 && (
+        <Card className="p-6 mt-6">
+          <h3 className="text-xl font-semibold mb-4">Certifications</h3>
+          <div className="border-t pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {profile.certifications.map((cert, index) => (
+                <Card key={index} className="border">
+                  <CardContent className="pt-6">
+                    <h4 className="text-lg font-semibold mb-2">{cert.name}</h4>
+                    {cert.description && (
+                      <p className="text-sm text-muted-foreground mb-3">{cert.description}</p>
+                    )}
+                    {cert.issuedAt && (
+                      <p className="text-xs text-muted-foreground">
+                        Issued: {formatDate(cert.issuedAt)}
+                      </p>
+                    )}
+                    {cert.expiresAt && (
+                      <p className="text-xs text-muted-foreground">
+                        Expires: {formatDate(cert.expiresAt)}
+                      </p>
+                    )}
+                    {cert.certificateUrl && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-3"
+                        asChild
+                      >
+                        <a href={cert.certificateUrl} target="_blank" rel="noopener noreferrer">
+                          View Certificate
+                        </a>
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Social Links */}
+      {(profile.profileDetails?.linkedIn || profile.profileDetails?.github || profile.profileDetails?.portfolio) && (
+        <Card className="p-6 mt-6">
+          <h3 className="text-xl font-semibold mb-4">Social Links</h3>
+          <div className="border-t pt-4">
+            <div className="flex gap-3 flex-wrap">
+              {profile.profileDetails.linkedIn && (
+                <Button variant="outline" className="gap-2" asChild>
+                  <a href={profile.profileDetails.linkedIn} target="_blank" rel="noopener noreferrer">
+                    <Linkedin className="h-4 w-4" />
                     LinkedIn
-                  </Button>
-                )}
-                {profile.profileDetails.github && (
-                  <Button
-                    variant="outlined"
-                    startIcon={<GitHub />}
-                    href={profile.profileDetails.github}
-                    target="_blank"
-                  >
+                  </a>
+                </Button>
+              )}
+              {profile.profileDetails.github && (
+                <Button variant="outline" className="gap-2" asChild>
+                  <a href={profile.profileDetails.github} target="_blank" rel="noopener noreferrer">
+                    <Github className="h-4 w-4" />
                     GitHub
-                  </Button>
-                )}
-                {profile.profileDetails.portfolio && (
-                  <Button
-                    variant="outlined"
-                    startIcon={<Language />}
-                    href={profile.profileDetails.portfolio}
-                    target="_blank"
-                  >
+                  </a>
+                </Button>
+              )}
+              {profile.profileDetails.portfolio && (
+                <Button variant="outline" className="gap-2" asChild>
+                  <a href={profile.profileDetails.portfolio} target="_blank" rel="noopener noreferrer">
+                    <Globe className="h-4 w-4" />
                     Portfolio
-                  </Button>
-                )}
-              </Box>
-            </Paper>
-          </Grid>
-        )}
+                  </a>
+                </Button>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
 
-        {/* Skills */}
-        {profile.profileDetails?.skills && profile.profileDetails.skills.length > 0 && (
-          <Grid item xs={12}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Skills
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {profile.profileDetails.skills.map((skill, index) => (
-                  <Chip key={index} label={skill} color="primary" variant="outlined" />
-                ))}
-              </Box>
-            </Paper>
-          </Grid>
-        )}
-      </Grid>
-    </Container>
+      {/* Skills */}
+      {profile.profileDetails?.skills && profile.profileDetails.skills.length > 0 && (
+        <Card className="p-6 mt-6">
+          <h3 className="text-xl font-semibold mb-4">Skills</h3>
+          <div className="border-t pt-4">
+            <div className="flex gap-2 flex-wrap">
+              {profile.profileDetails.skills.map((skill, index) => (
+                <Badge key={index} variant="outline">
+                  {skill}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </Card>
+      )}
+    </div>
   );
 };
 

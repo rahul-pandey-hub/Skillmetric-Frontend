@@ -1,31 +1,30 @@
 import React, { useState } from 'react';
 import {
-  Box,
-  Button,
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  Typography,
-  Alert,
-  LinearProgress,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Paper,
-  Chip,
-  IconButton,
-} from '@mui/material';
+} from '@/components/ui/table';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
-  CloudUpload as UploadIcon,
-  Download as DownloadIcon,
-  Close as CloseIcon,
-  CheckCircle as SuccessIcon,
-  Error as ErrorIcon,
-} from '@mui/icons-material';
+  Upload,
+  Download,
+  CheckCircle,
+  XCircle,
+} from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface StudentData {
@@ -207,168 +206,147 @@ const BulkStudentUpload: React.FC<BulkStudentUploadProps> = ({
 
   return (
     <>
-      <Button
-        variant="contained"
-        startIcon={<UploadIcon />}
-        onClick={handleOpen}
-        color="primary"
-      >
+      <Button onClick={handleOpen} className="gap-2">
+        <Upload className="h-4 w-4" />
         Bulk Upload Students
       </Button>
 
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">Bulk Upload Students</Typography>
-            <IconButton onClick={handleClose} size="small">
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Bulk Upload Students</DialogTitle>
+          </DialogHeader>
 
-        <DialogContent>
-          {/* Instructions */}
-          <Alert severity="info" sx={{ mb: 2 }}>
-            <Typography variant="body2" gutterBottom>
-              <strong>Instructions:</strong>
-            </Typography>
-            <Typography variant="body2" component="div">
-              <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                <li>Upload an Excel (.xlsx, .xls) or CSV file</li>
-                <li>File must contain "Name" and "Email" columns</li>
-                <li>All fields are required (no empty cells)</li>
-                <li>Email addresses must be in valid format</li>
-              </ul>
-            </Typography>
-          </Alert>
-
-          {/* Download Template Button */}
-          <Box sx={{ mb: 3 }}>
-            <Button
-              variant="outlined"
-              startIcon={<DownloadIcon />}
-              onClick={downloadTemplate}
-              size="small"
-            >
-              Download Sample Template
-            </Button>
-          </Box>
-
-          {/* File Upload */}
-          <Box sx={{ mb: 3 }}>
-            <input
-              accept=".xlsx,.xls,.csv"
-              style={{ display: 'none' }}
-              id="bulk-upload-file"
-              type="file"
-              onChange={handleFileChange}
-            />
-            <label htmlFor="bulk-upload-file">
-              <Button
-                variant="outlined"
-                component="span"
-                startIcon={<UploadIcon />}
-                fullWidth
-                sx={{ py: 2 }}
-              >
-                {file ? file.name : 'Choose File'}
-              </Button>
-            </label>
-          </Box>
-
-          {/* Processing */}
-          {processing && (
-            <Box sx={{ mb: 2 }}>
-              <LinearProgress />
-              <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-                Processing file...
-              </Typography>
-            </Box>
-          )}
-
-          {/* Validation Error */}
-          {validationError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {validationError}
+          <div className="space-y-4">
+            {/* Instructions */}
+            <Alert variant="info">
+              <AlertDescription>
+                <div className="space-y-2">
+                  <p className="font-semibold">Instructions:</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Upload an Excel (.xlsx, .xls) or CSV file</li>
+                    <li>File must contain "Name" and "Email" columns</li>
+                    <li>All fields are required (no empty cells)</li>
+                    <li>Email addresses must be in valid format</li>
+                  </ul>
+                </div>
+              </AlertDescription>
             </Alert>
-          )}
 
-          {/* Results Summary */}
-          {students.length > 0 && !processing && (
-            <>
-              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                <Chip
-                  icon={<SuccessIcon />}
-                  label={`${validCount} Valid`}
-                  color="success"
-                  variant="outlined"
-                />
-                {invalidCount > 0 && (
-                  <Chip
-                    icon={<ErrorIcon />}
-                    label={`${invalidCount} Invalid`}
-                    color="error"
-                    variant="outlined"
-                  />
-                )}
-              </Box>
+            {/* Download Template Button */}
+            <div>
+              <Button
+                variant="outline"
+                onClick={downloadTemplate}
+                size="sm"
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Download Sample Template
+              </Button>
+            </div>
 
-              {/* Students Table */}
-              <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 400 }}>
-                <Table size="small" stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Row</TableCell>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Email</TableCell>
-                      <TableCell>Status</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {students.map((student, index) => (
-                      <TableRow
-                        key={index}
-                        sx={{
-                          backgroundColor: student.isValid
-                            ? 'inherit'
-                            : 'rgba(211, 47, 47, 0.1)',
-                        }}
-                      >
-                        <TableCell>{student.rowNumber}</TableCell>
-                        <TableCell>{student.name || '-'}</TableCell>
-                        <TableCell>{student.email || '-'}</TableCell>
-                        <TableCell>
-                          {student.isValid ? (
-                            <Chip label="Valid" color="success" size="small" />
-                          ) : (
-                            <Box>
-                              <Chip label="Invalid" color="error" size="small" />
-                              <Typography variant="caption" color="error" display="block">
-                                {student.errors.join(', ')}
-                              </Typography>
-                            </Box>
-                          )}
-                        </TableCell>
+            {/* File Upload */}
+            <div>
+              <input
+                accept=".xlsx,.xls,.csv"
+                style={{ display: 'none' }}
+                id="bulk-upload-file"
+                type="file"
+                onChange={handleFileChange}
+              />
+              <label htmlFor="bulk-upload-file" className="cursor-pointer">
+                <div className="flex items-center justify-center gap-2 w-full py-6 px-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                  <Upload className="h-4 w-4" />
+                  <span>{file ? file.name : 'Choose File'}</span>
+                </div>
+              </label>
+            </div>
+
+            {/* Processing */}
+            {processing && (
+              <div className="space-y-2">
+                <Progress value={50} className="w-full" />
+                <p className="text-sm text-muted-foreground">Processing file...</p>
+              </div>
+            )}
+
+            {/* Validation Error */}
+            {validationError && (
+              <Alert variant="destructive">
+                <AlertDescription>{validationError}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Results Summary */}
+            {students.length > 0 && !processing && (
+              <>
+                <div className="flex gap-2">
+                  <Badge variant="success" className="gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    {validCount} Valid
+                  </Badge>
+                  {invalidCount > 0 && (
+                    <Badge variant="destructive" className="gap-1">
+                      <XCircle className="h-3 w-3" />
+                      {invalidCount} Invalid
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Students Table */}
+                <Card className="max-h-96 overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Row</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </>
-          )}
-        </DialogContent>
+                    </TableHeader>
+                    <TableBody>
+                      {students.map((student, index) => (
+                        <TableRow
+                          key={index}
+                          className={!student.isValid ? 'bg-destructive/10' : ''}
+                        >
+                          <TableCell>{student.rowNumber}</TableCell>
+                          <TableCell>{student.name || '-'}</TableCell>
+                          <TableCell>{student.email || '-'}</TableCell>
+                          <TableCell>
+                            {student.isValid ? (
+                              <Badge variant="success">Valid</Badge>
+                            ) : (
+                              <div className="space-y-1">
+                                <Badge variant="destructive">Invalid</Badge>
+                                <p className="text-xs text-destructive">
+                                  {student.errors.join(', ')}
+                                </p>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </>
+            )}
+          </div>
 
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handleUpload}
-            disabled={validCount === 0 || processing}
-            color="primary"
-          >
-            Upload {validCount} Student{validCount !== 1 ? 's' : ''}
-          </Button>
-        </DialogActions>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpload}
+              disabled={validCount === 0 || processing}
+            >
+              Upload {validCount} Student{validCount !== 1 ? 's' : ''}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
     </>
   );

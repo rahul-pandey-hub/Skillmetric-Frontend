@@ -1,24 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
-  Container,
-  Typography,
-  Paper,
-  Box,
-  Button,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Chip,
-  IconButton,
-  Alert,
-  CircularProgress,
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, Eye, Pencil } from 'lucide-react';
 import { examService } from '../services/examService';
 import { Exam, ExamStatus } from '../types/exam';
 
@@ -44,20 +38,20 @@ const ExamsList = () => {
     }
   };
 
-  const getStatusColor = (status: ExamStatus) => {
+  const getStatusVariant = (status: ExamStatus): "default" | "secondary" | "destructive" | "outline" | "success" | "warning" => {
     switch (status) {
       case ExamStatus.DRAFT:
-        return 'default';
+        return 'secondary';
       case ExamStatus.PUBLISHED:
-        return 'info';
+        return 'default';
       case ExamStatus.ACTIVE:
         return 'success';
       case ExamStatus.COMPLETED:
         return 'warning';
       case ExamStatus.ARCHIVED:
-        return 'error';
+        return 'destructive';
       default:
-        return 'default';
+        return 'secondary';
     }
   };
 
@@ -73,93 +67,97 @@ const ExamsList = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg">
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-          <CircularProgress />
-        </Box>
-      </Container>
+      <div className="container mx-auto max-w-6xl py-8">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4">Exams</Typography>
-          <Button variant="contained" onClick={() => navigate('/admin/create-exam')}>
-            Create New Exam
+    <div className="container mx-auto max-w-6xl py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-4xl font-bold">Exams</h1>
+        <Button onClick={() => navigate('/admin/create-exam')}>
+          Create New Exam
+        </Button>
+      </div>
+
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {exams.length === 0 ? (
+        <Card className="p-8 text-center">
+          <h2 className="text-2xl font-semibold text-muted-foreground mb-2">
+            No exams found
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            Create your first exam to get started
+          </p>
+          <Button onClick={() => navigate('/admin/create-exam')}>
+            Create Exam
           </Button>
-        </Box>
-
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-        {exams.length === 0 ? (
-          <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
-            <Typography variant="h6" color="textSecondary" gutterBottom>
-              No exams found
-            </Typography>
-            <Typography color="textSecondary" sx={{ mb: 2 }}>
-              Create your first exam to get started
-            </Typography>
-            <Button variant="contained" onClick={() => navigate('/admin/create-exam')}>
-              Create Exam
-            </Button>
-          </Paper>
-        ) : (
-          <TableContainer component={Paper} elevation={3}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell><strong>Title</strong></TableCell>
-                  <TableCell><strong>Code</strong></TableCell>
-                  <TableCell><strong>Duration</strong></TableCell>
-                  <TableCell><strong>Questions</strong></TableCell>
-                  <TableCell><strong>Status</strong></TableCell>
-                  <TableCell><strong>Start Date</strong></TableCell>
-                  <TableCell><strong>Actions</strong></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {exams.map((exam) => (
-                  <TableRow key={exam._id} hover>
-                    <TableCell>{exam.title}</TableCell>
-                    <TableCell>{exam.code}</TableCell>
-                    <TableCell>{exam.duration} min</TableCell>
-                    <TableCell>
-                      {Array.isArray(exam.questions) ? exam.questions.length : 0} questions
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={exam.status}
-                        color={getStatusColor(exam.status)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{formatDate(exam.schedule.startDate)}</TableCell>
-                    <TableCell>
-                      <IconButton
-                        size="small"
+        </Card>
+      ) : (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Code</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Questions</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Start Date</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {exams.map((exam) => (
+                <TableRow key={exam._id}>
+                  <TableCell className="font-medium">{exam.title}</TableCell>
+                  <TableCell>{exam.code}</TableCell>
+                  <TableCell>{exam.duration} min</TableCell>
+                  <TableCell>
+                    {Array.isArray(exam.questions) ? exam.questions.length : 0} questions
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusVariant(exam.status)}>
+                      {exam.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{formatDate(exam.schedule.startDate)}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => navigate(`/admin/exams/${exam._id}`)}
                         title="View Details"
                       >
-                        <VisibilityIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => navigate(`/admin/exams/${exam._id}/edit`)}
                         title="Edit Exam"
                       >
-                        <EditIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-      </Box>
-    </Container>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
+    </div>
   );
 };
 

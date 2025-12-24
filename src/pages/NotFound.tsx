@@ -1,48 +1,37 @@
 import { useNavigate } from 'react-router-dom';
-import { Container, Paper, Typography, Button, Box } from '@mui/material';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { AlertCircle } from 'lucide-react';
 
 const NotFound = () => {
   const navigate = useNavigate();
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Paper elevation={3} sx={{ p: 4, width: '100%', textAlign: 'center' }}>
-          <ErrorOutlineIcon sx={{ fontSize: 80, color: 'error.main', mb: 2 }} />
-          <Typography variant="h3" component="h1" gutterBottom>
-            404
-          </Typography>
-          <Typography variant="h5" component="h2" gutterBottom>
-            Page Not Found
-          </Typography>
-          <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-6 text-center">
+          <AlertCircle className="mx-auto h-20 w-20 text-destructive mb-4" />
+          <h1 className="text-4xl font-bold mb-2">404</h1>
+          <h2 className="text-2xl font-semibold mb-2">Page Not Found</h2>
+          <p className="text-muted-foreground mb-6">
             The page you are looking for does not exist or has been moved.
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+          </p>
+          <div className="flex gap-2 justify-center">
             <Button
-              variant="outlined"
+              variant="outline"
               onClick={() => navigate(-1)}
             >
               Go Back
             </Button>
             <Button
-              variant="contained"
               onClick={() => navigate('/')}
             >
               Go Home
             </Button>
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

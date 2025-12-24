@@ -1,26 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Loader2, TrendingUp, TrendingDown, CheckCircle, Users, Clock, AlertTriangle, BarChart3 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Box,
-  Container,
-  Grid,
-  Paper,
-  Typography,
-  Card,
-  CardContent,
-  Tabs,
-  Tab,
-  CircularProgress,
-  Alert,
-  Chip,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  LinearProgress,
-} from '@mui/material';
+} from '@/components/ui/table';
 import {
   BarChart,
   Bar,
@@ -41,40 +34,9 @@ import {
   PolarRadiusAxis,
   Radar,
 } from 'recharts';
-import {
-  TrendingUp,
-  TrendingDown,
-  CheckCircle,
-  Cancel,
-  People,
-  Timer,
-  Warning,
-  Assessment,
-} from '@mui/icons-material';
 import { getCompleteAnalytics, CompleteAnalytics } from '../services/analyticsService';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d'];
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`analytics-tabpanel-${index}`}
-      aria-labelledby={`analytics-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
-    </div>
-  );
-}
 
 const ExamAnalytics: React.FC = () => {
   const { examId } = useParams<{ examId: string }>();
@@ -82,7 +44,6 @@ const ExamAnalytics: React.FC = () => {
   const [analytics, setAnalytics] = useState<CompleteAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tabValue, setTabValue] = useState(0);
 
   useEffect(() => {
     if (examId) {
@@ -103,489 +64,447 @@ const ExamAnalytics: React.FC = () => {
     }
   };
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
   if (loading) {
     return (
-      <Container>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-          <CircularProgress />
-        </Box>
-      </Container>
+      <div className="container mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Container>
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error}
+      <div className="container mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+        <Alert variant="destructive" className="mt-2">
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
-      </Container>
+      </div>
     );
   }
 
   if (!analytics) {
     return (
-      <Container>
-        <Alert severity="info" sx={{ mt: 2 }}>
-          No analytics data available
+      <div className="container mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
+        <Alert className="mt-2 border-blue-500 bg-blue-50">
+          <AlertDescription className="text-blue-900">No analytics data available</AlertDescription>
         </Alert>
-      </Container>
+      </div>
     );
   }
 
   const { exam, questions, categories } = analytics;
 
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'EASY':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'MEDIUM':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'HARD':
+        return 'bg-red-100 text-red-800 border-red-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
+
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <div className="container mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-4">
       {/* Header */}
-      <Box mb={4}>
-        <Typography variant="h4" gutterBottom>
-          📊 Exam Analytics
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
+      <div className="mb-4">
+        <h1 className="text-3xl font-bold tracking-tight">Exam Analytics</h1>
+        <h2 className="text-xl text-muted-foreground mt-1">
           {exam.examTitle} ({exam.examCode})
-        </Typography>
-        <Chip
-          label={exam.status}
-          color={exam.status === 'COMPLETED' ? 'success' : 'primary'}
-          sx={{ mt: 1 }}
-        />
-      </Box>
+        </h2>
+        <Badge
+          className={`mt-2 ${exam.status === 'COMPLETED' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-blue-100 text-blue-800 border-blue-300'}`}
+          variant="outline"
+        >
+          {exam.status}
+        </Badge>
+      </div>
 
       {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange}>
-          <Tab label="Overview" />
-          <Tab label="Question Analysis" />
-          <Tab label="Category Breakdown" />
-        </Tabs>
-      </Box>
+      <Tabs defaultValue="overview" className="mb-4">
+        <TabsList className="mb-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="questions">Question Analysis</TabsTrigger>
+          <TabsTrigger value="categories">Category Breakdown</TabsTrigger>
+        </TabsList>
 
-      {/* Overview Tab */}
-      <TabPanel value={tabValue} index={0}>
-        {/* Stats Cards */}
-        <Grid container spacing={3} mb={4}>
-          <Grid item xs={12} sm={6} md={3}>
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-4">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Typography color="text.secondary" variant="body2">
-                      Completion Rate
-                    </Typography>
-                    <Typography variant="h4">
-                      {exam.participation.completionRate.toFixed(1)}%
-                    </Typography>
-                  </Box>
-                  <People sx={{ fontSize: 40, color: 'primary.main' }} />
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                  value={exam.participation.completionRate}
-                  sx={{ mt: 2 }}
-                />
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Completion Rate</p>
+                    <p className="text-3xl font-bold">{exam.participation.completionRate.toFixed(1)}%</p>
+                  </div>
+                  <Users className="h-10 w-10 text-primary" />
+                </div>
+                <Progress value={exam.participation.completionRate} className="mt-2" />
               </CardContent>
             </Card>
-          </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
             <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Typography color="text.secondary" variant="body2">
-                      Pass Rate
-                    </Typography>
-                    <Typography variant="h4">{exam.passFailStats.passRate.toFixed(1)}%</Typography>
-                  </Box>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Pass Rate</p>
+                    <p className="text-3xl font-bold">{exam.passFailStats.passRate.toFixed(1)}%</p>
+                  </div>
                   {exam.passFailStats.passRate >= 60 ? (
-                    <CheckCircle sx={{ fontSize: 40, color: 'success.main' }} />
+                    <CheckCircle className="h-10 w-10 text-green-600" />
                   ) : (
-                    <TrendingDown sx={{ fontSize: 40, color: 'error.main' }} />
+                    <TrendingDown className="h-10 w-10 text-red-600" />
                   )}
-                </Box>
+                </div>
               </CardContent>
             </Card>
-          </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
             <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Typography color="text.secondary" variant="body2">
-                      Average Score
-                    </Typography>
-                    <Typography variant="h4">
-                      {exam.scores.averageScore.toFixed(1)}/{exam.scores.totalResults > 0 ? exam.scores.scoreRanges.reduce((max, r) => Math.max(max, parseInt(r.range.split('-')[1]) || 0), 0) : 100}
-                    </Typography>
-                  </Box>
-                  <Assessment sx={{ fontSize: 40, color: 'info.main' }} />
-                </Box>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Average Score</p>
+                    <p className="text-3xl font-bold">
+                      {exam.scores.averageScore.toFixed(1)}/
+                      {exam.scores.totalResults > 0
+                        ? exam.scores.scoreRanges.reduce((max, r) => Math.max(max, parseInt(r.range.split('-')[1]) || 0), 0)
+                        : 100}
+                    </p>
+                  </div>
+                  <BarChart3 className="h-10 w-10 text-blue-600" />
+                </div>
               </CardContent>
             </Card>
-          </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
             <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Typography color="text.secondary" variant="body2">
-                      Avg Duration
-                    </Typography>
-                    <Typography variant="h4">{exam.timeStats.averageDuration} min</Typography>
-                  </Box>
-                  <Timer sx={{ fontSize: 40, color: 'warning.main' }} />
-                </Box>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Avg Duration</p>
+                    <p className="text-3xl font-bold">{exam.timeStats.averageDuration} min</p>
+                  </div>
+                  <Clock className="h-10 w-10 text-orange-600" />
+                </div>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </div>
 
-        {/* Charts Row 1 */}
-        <Grid container spacing={3} mb={4}>
-          {/* Score Distribution */}
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Score Distribution
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={exam.scores.scoreRanges}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="range" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="count" fill="#8884d8" name="Students" />
-                </BarChart>
-              </ResponsiveContainer>
-            </Paper>
-          </Grid>
-
-          {/* Pass/Fail Pie Chart */}
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Pass/Fail Distribution
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: 'Passed', value: exam.passFailStats.totalPassed },
-                      { name: 'Failed', value: exam.passFailStats.totalFailed },
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(entry) => `${entry.name}: ${entry.value}`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    <Cell fill="#00C49F" />
-                    <Cell fill="#FF8042" />
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* Charts Row 2 */}
-        <Grid container spacing={3} mb={4}>
-          {/* Time Analysis */}
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Time Distribution
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={exam.timeStats.durationRanges}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="range" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="count" fill="#82ca9d" name="Students" />
-                </BarChart>
-              </ResponsiveContainer>
-            </Paper>
-          </Grid>
-
-          {/* Violations */}
-          {exam.violations.totalViolations > 0 && (
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  <Warning color="error" sx={{ verticalAlign: 'middle', mr: 1 }} />
-                  Violation Analysis
-                </Typography>
-                <Box mb={2}>
-                  <Typography variant="body2" color="text.secondary">
-                    Total Violations: {exam.violations.totalViolations}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Violation Rate: {exam.violations.violationRate.toFixed(1)}%
-                  </Typography>
-                </Box>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart
-                    data={Object.entries(exam.violations.violationTypes).map(([type, count]) => ({
-                      type,
-                      count,
-                    }))}
-                  >
+          {/* Charts Row 1 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Score Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Score Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={exam.scores.scoreRanges}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="type" />
+                    <XAxis dataKey="range" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="count" fill="#ff6b6b" name="Count" />
+                    <Legend />
+                    <Bar dataKey="count" fill="#8884d8" name="Students" />
                   </BarChart>
                 </ResponsiveContainer>
-              </Paper>
-            </Grid>
+              </CardContent>
+            </Card>
+
+            {/* Pass/Fail Pie Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Pass/Fail Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Passed', value: exam.passFailStats.totalPassed },
+                        { name: 'Failed', value: exam.passFailStats.totalFailed },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(entry) => `${entry.name}: ${entry.value}`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      <Cell fill="#00C49F" />
+                      <Cell fill="#FF8042" />
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Charts Row 2 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Time Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Time Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={exam.timeStats.durationRanges}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="range" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="count" fill="#82ca9d" name="Students" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Violations */}
+            {exam.violations.totalViolations > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
+                    Violation Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-4">
+                    <p className="text-sm text-muted-foreground">
+                      Total Violations: {exam.violations.totalViolations}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Violation Rate: {exam.violations.violationRate.toFixed(1)}%
+                    </p>
+                  </div>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart
+                      data={Object.entries(exam.violations.violationTypes).map(([type, count]) => ({
+                        type,
+                        count,
+                      }))}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="type" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#ff6b6b" name="Count" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Shortlisting Stats */}
+          {exam.shortlisting.enabled && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Shortlisting Results</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Shortlisted</p>
+                    <p className="text-2xl font-bold">{exam.shortlisting.totalShortlisted}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Shortlisting Rate</p>
+                    <p className="text-2xl font-bold">{exam.shortlisting.shortlistingRate.toFixed(1)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Avg Score (Shortlisted)</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {exam.shortlisting.averageScoreShortlisted.toFixed(1)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Avg Score (Not Shortlisted)</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {exam.shortlisting.averageScoreNotShortlisted.toFixed(1)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
-        </Grid>
+        </TabsContent>
 
-        {/* Shortlisting Stats */}
-        {exam.shortlisting.enabled && (
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  Shortlisting Results
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Shortlisted
-                      </Typography>
-                      <Typography variant="h5">{exam.shortlisting.totalShortlisted}</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Shortlisting Rate
-                      </Typography>
-                      <Typography variant="h5">
-                        {exam.shortlisting.shortlistingRate.toFixed(1)}%
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Avg Score (Shortlisted)
-                      </Typography>
-                      <Typography variant="h5" color="success.main">
-                        {exam.shortlisting.averageScoreShortlisted.toFixed(1)}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Avg Score (Not Shortlisted)
-                      </Typography>
-                      <Typography variant="h5" color="error.main">
-                        {exam.shortlisting.averageScoreNotShortlisted.toFixed(1)}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Paper>
-            </Grid>
-          </Grid>
-        )}
-      </TabPanel>
-
-      {/* Question Analysis Tab */}
-      <TabPanel value={tabValue} index={1}>
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Question Performance Analysis
-          </Typography>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            Questions with success rate &gt;90% are too easy, &lt;30% are too hard
-          </Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableRow>
-                    <TableCell>Question</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Category</TableCell>
-                    <TableCell>Difficulty</TableCell>
-                    <TableCell align="right">Attempts</TableCell>
-                    <TableCell align="right">Success Rate</TableCell>
-                    <TableCell align="right">Avg Time (s)</TableCell>
-                    <TableCell>Status</TableCell>
-                  </TableRow>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {questions.questions.map((q) => (
-                  <TableRow
-                    key={q.questionId}
-                    sx={{ backgroundColor: q.problematic ? '#fff3cd' : 'inherit' }}
-                  >
-                    <TableCell>
-                      <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
-                        {q.questionText}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{q.questionType}</TableCell>
-                    <TableCell>{q.category}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={q.difficulty}
-                        size="small"
-                        color={
-                          q.difficulty === 'EASY'
-                            ? 'success'
-                            : q.difficulty === 'HARD'
-                            ? 'error'
-                            : 'default'
-                        }
-                      />
-                    </TableCell>
-                    <TableCell align="right">{q.totalAttempts}</TableCell>
-                    <TableCell align="right">
-                      <Box display="flex" alignItems="center" justifyContent="flex-end">
-                        {q.successRate.toFixed(1)}%
-                        <LinearProgress
-                          variant="determinate"
-                          value={q.successRate}
-                          sx={{ width: 60, ml: 1 }}
-                          color={
-                            q.successRate > 90
-                              ? 'success'
-                              : q.successRate < 30
-                              ? 'error'
-                              : 'primary'
-                          }
-                        />
-                      </Box>
-                    </TableCell>
-                    <TableCell align="right">{q.averageTime}</TableCell>
-                    <TableCell>
-                      {q.problematic ? (
-                        <Chip
-                          icon={<Warning />}
-                          label={q.problematicReason}
-                          size="small"
-                          color="warning"
-                        />
-                      ) : (
-                        <Chip icon={<CheckCircle />} label="OK" size="small" color="success" />
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-      </TabPanel>
-
-      {/* Category Breakdown Tab */}
-      <TabPanel value={tabValue} index={2}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Category Performance Radar
-              </Typography>
-              <ResponsiveContainer width="100%" height={400}>
-                <RadarChart data={categories.categories}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="category" />
-                  <PolarRadiusAxis angle={90} domain={[0, 100]} />
-                  <Radar
-                    name="Average Accuracy"
-                    dataKey="averageAccuracy"
-                    stroke="#8884d8"
-                    fill="#8884d8"
-                    fillOpacity={0.6}
-                  />
-                  <Tooltip />
-                  <Legend />
-                </RadarChart>
-              </ResponsiveContainer>
-            </Paper>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Category Statistics
-              </Typography>
-              {categories.weakAreas.length > 0 && (
-                <Alert severity="warning" sx={{ mb: 2 }}>
-                  <Typography variant="body2">
-                    <strong>Weak Areas:</strong> {categories.weakAreas.join(', ')}
-                  </Typography>
-                </Alert>
-              )}
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
+        {/* Question Analysis Tab */}
+        <TabsContent value="questions">
+          <Card>
+            <CardHeader>
+              <CardTitle>Question Performance Analysis</CardTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                Questions with success rate &gt;90% are too easy, &lt;30% are too hard
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell>Category</TableCell>
-                      <TableCell align="right">Questions</TableCell>
-                      <TableCell align="right">Avg Score</TableCell>
-                      <TableCell align="right">Accuracy</TableCell>
+                      <TableHead>Question</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Difficulty</TableHead>
+                      <TableHead className="text-right">Attempts</TableHead>
+                      <TableHead className="text-right">Success Rate</TableHead>
+                      <TableHead className="text-right">Avg Time (s)</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  </TableHead>
+                  </TableHeader>
                   <TableBody>
-                    {categories.categories.map((cat) => (
-                      <TableRow key={cat.category}>
+                    {questions.questions.map((q) => (
+                      <TableRow
+                        key={q.questionId}
+                        className={q.problematic ? 'bg-yellow-50' : ''}
+                      >
+                        <TableCell className="max-w-xs">
+                          <div className="truncate">{q.questionText}</div>
+                        </TableCell>
+                        <TableCell>{q.questionType}</TableCell>
+                        <TableCell>{q.category}</TableCell>
                         <TableCell>
-                          <strong>{cat.category}</strong>
+                          <Badge variant="outline" className={getDifficultyColor(q.difficulty)}>
+                            {q.difficulty}
+                          </Badge>
                         </TableCell>
-                        <TableCell align="right">{cat.totalQuestions}</TableCell>
-                        <TableCell align="right">
-                          {cat.averageScore.toFixed(1)} / {cat.totalQuestions}
-                        </TableCell>
-                        <TableCell align="right">
-                          <Box display="flex" alignItems="center" justifyContent="flex-end">
-                            {cat.averageAccuracy.toFixed(1)}%
-                            <LinearProgress
-                              variant="determinate"
-                              value={cat.averageAccuracy}
-                              sx={{ width: 80, ml: 1 }}
-                              color={
-                                cat.averageAccuracy >= 70
-                                  ? 'success'
-                                  : cat.averageAccuracy >= 50
-                                  ? 'warning'
-                                  : 'error'
-                              }
+                        <TableCell className="text-right">{q.totalAttempts}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <span>{q.successRate.toFixed(1)}%</span>
+                            <Progress
+                              value={q.successRate}
+                              className={`w-16 ${
+                                q.successRate > 90
+                                  ? '[&>div]:bg-green-500'
+                                  : q.successRate < 30
+                                  ? '[&>div]:bg-red-500'
+                                  : '[&>div]:bg-blue-500'
+                              }`}
                             />
-                          </Box>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">{q.averageTime}</TableCell>
+                        <TableCell>
+                          {q.problematic ? (
+                            <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              {q.problematicReason}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              OK
+                            </Badge>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              </TableContainer>
-            </Paper>
-          </Grid>
-        </Grid>
-      </TabPanel>
-    </Container>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Category Breakdown Tab */}
+        <TabsContent value="categories">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Category Performance Radar</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={400}>
+                  <RadarChart data={categories.categories}>
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="category" />
+                    <PolarRadiusAxis angle={90} domain={[0, 100]} />
+                    <Radar
+                      name="Average Accuracy"
+                      dataKey="averageAccuracy"
+                      stroke="#8884d8"
+                      fill="#8884d8"
+                      fillOpacity={0.6}
+                    />
+                    <Tooltip />
+                    <Legend />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Category Statistics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {categories.weakAreas.length > 0 && (
+                  <Alert className="mb-4 border-yellow-500 bg-yellow-50">
+                    <AlertDescription className="text-yellow-900">
+                      <strong>Weak Areas:</strong> {categories.weakAreas.join(', ')}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Category</TableHead>
+                        <TableHead className="text-right">Questions</TableHead>
+                        <TableHead className="text-right">Avg Score</TableHead>
+                        <TableHead className="text-right">Accuracy</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {categories.categories.map((cat) => (
+                        <TableRow key={cat.category}>
+                          <TableCell>
+                            <strong>{cat.category}</strong>
+                          </TableCell>
+                          <TableCell className="text-right">{cat.totalQuestions}</TableCell>
+                          <TableCell className="text-right">
+                            {cat.averageScore.toFixed(1)} / {cat.totalQuestions}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <span>{cat.averageAccuracy.toFixed(1)}%</span>
+                              <Progress
+                                value={cat.averageAccuracy}
+                                className={`w-20 ${
+                                  cat.averageAccuracy >= 70
+                                    ? '[&>div]:bg-green-500'
+                                    : cat.averageAccuracy >= 50
+                                    ? '[&>div]:bg-yellow-500'
+                                    : '[&>div]:bg-red-500'
+                                }`}
+                              />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

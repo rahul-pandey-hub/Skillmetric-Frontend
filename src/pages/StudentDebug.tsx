@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Container, Typography, Paper, Box, CircularProgress, Button } from '@mui/material';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 
@@ -39,48 +41,56 @@ const StudentDebug = () => {
   }, []);
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Student Debug Page
-        </Typography>
+    <div className="container mx-auto max-w-6xl py-8">
+      <h1 className="text-4xl font-bold mb-8">Student Debug Page</h1>
 
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Current User Info
-          </Typography>
-          <pre>{JSON.stringify(user, null, 2)}</pre>
-        </Paper>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Current User Info</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <pre className="text-sm overflow-auto">{JSON.stringify(user, null, 2)}</pre>
+        </CardContent>
+      </Card>
 
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Enrollment Debug Data
-          </Typography>
-          <Button onClick={fetchDebugData} variant="outlined" sx={{ mb: 2 }}>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Enrollment Debug Data</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={fetchDebugData} variant="outline" className="mb-4">
             Refresh Debug Data
           </Button>
           {loading ? (
-            <CircularProgress />
+            <div className="flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <span>Loading...</span>
+            </div>
           ) : (
-            <pre>{JSON.stringify(debugData, null, 2)}</pre>
+            <pre className="text-sm overflow-auto">{JSON.stringify(debugData, null, 2)}</pre>
           )}
-        </Paper>
+        </CardContent>
+      </Card>
 
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Exams API Response
-          </Typography>
-          <Button onClick={fetchExamsData} variant="outlined" sx={{ mb: 2 }}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Exams API Response</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={fetchExamsData} variant="outline" className="mb-4">
             Refresh Exams Data
           </Button>
           {loading ? (
-            <CircularProgress />
+            <div className="flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <span>Loading...</span>
+            </div>
           ) : (
-            <pre>{JSON.stringify(examsData, null, 2)}</pre>
+            <pre className="text-sm overflow-auto">{JSON.stringify(examsData, null, 2)}</pre>
           )}
-        </Paper>
-      </Box>
-    </Container>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

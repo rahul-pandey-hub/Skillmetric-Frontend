@@ -1,48 +1,37 @@
 import { useNavigate } from 'react-router-dom';
-import { Container, Paper, Typography, Button, Box } from '@mui/material';
-import BlockIcon from '@mui/icons-material/Block';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ShieldAlert } from 'lucide-react';
 
 const Unauthorized = () => {
   const navigate = useNavigate();
 
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Paper elevation={3} sx={{ p: 4, width: '100%', textAlign: 'center' }}>
-          <BlockIcon sx={{ fontSize: 80, color: 'warning.main', mb: 2 }} />
-          <Typography variant="h3" component="h1" gutterBottom>
-            403
-          </Typography>
-          <Typography variant="h5" component="h2" gutterBottom>
-            Access Denied
-          </Typography>
-          <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-6 text-center">
+          <ShieldAlert className="mx-auto h-20 w-20 text-warning mb-4" />
+          <h1 className="text-4xl font-bold mb-2">403</h1>
+          <h2 className="text-2xl font-semibold mb-2">Access Denied</h2>
+          <p className="text-muted-foreground mb-6">
             You do not have permission to access this page.
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+          </p>
+          <div className="flex gap-2 justify-center">
             <Button
-              variant="outlined"
+              variant="outline"
               onClick={() => navigate(-1)}
             >
               Go Back
             </Button>
             <Button
-              variant="contained"
               onClick={() => navigate('/')}
             >
               Go Home
             </Button>
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

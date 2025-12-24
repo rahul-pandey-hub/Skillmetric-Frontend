@@ -686,7 +686,7 @@ const StudentExamTaking = () => {
 
         {/* Hidden webcam for proctoring */}
         {examData.proctoringSettings.webcamRequired && (
-          <div className="hidden">
+          <div>
             <Webcam
               ref={webcamRef}
               audio={false}

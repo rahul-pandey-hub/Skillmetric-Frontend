@@ -1,31 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  Container,
-  Typography,
-  Paper,
-  Box,
-  Grid,
-  Button,
-  Chip,
-  Card,
-  CardContent,
-  CircularProgress,
-  Alert,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-} from '@mui/material';
+} from '@/components/ui/table';
 import {
   CheckCircle,
-  Cancel,
-  EmojiEvents,
-  Visibility,
-  Assessment,
-} from '@mui/icons-material';
+  XCircle,
+  Trophy,
+  Eye,
+  FileText,
+  Loader2,
+} from 'lucide-react';
 import { useSnackbar } from 'notistack';
 import api from '../services/api';
 
@@ -97,50 +91,51 @@ const StudentExamHistory = () => {
     });
   };
 
-  const getStatusChip = (status: string) => {
-    const statusConfig = {
-      PUBLISHED: { label: 'Published', color: 'success' as const },
-      GRADED: { label: 'Graded', color: 'info' as const },
-      PENDING: { label: 'Under Review', color: 'warning' as const },
-      EVALUATING: { label: 'Evaluating', color: 'default' as const },
+  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" | "success" | "warning" => {
+    const statusConfig: Record<string, "default" | "secondary" | "destructive" | "outline" | "success" | "warning"> = {
+      PUBLISHED: 'success',
+      GRADED: 'default',
+      PENDING: 'warning',
+      EVALUATING: 'secondary',
     };
-    const config = statusConfig[status as keyof typeof statusConfig] || { label: status, color: 'default' as const };
-    return <Chip label={config.label} color={config.color} size="small" />;
+    return statusConfig[status] || 'secondary';
   };
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, textAlign: 'center' }}>
-        <CircularProgress />
-        <Typography sx={{ mt: 2 }}>Loading exam history...</Typography>
-      </Container>
+      <div className="container mx-auto max-w-6xl py-8">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="ml-4">Loading exam history...</p>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Alert severity="error">{error}</Alert>
-      </Container>
+      <div className="container mx-auto max-w-6xl py-8">
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   if (results.length === 0) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Assessment sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
-          <Typography variant="h5" gutterBottom>
-            No Exam History
-          </Typography>
-          <Typography color="text.secondary" paragraph>
+      <div className="container mx-auto max-w-6xl py-8">
+        <Card className="p-8 text-center">
+          <FileText className="h-20 w-20 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold mb-2">No Exam History</h2>
+          <p className="text-muted-foreground mb-4">
             You haven't taken any exams yet.
-          </Typography>
-          <Button variant="contained" onClick={() => navigate('/student')}>
+          </p>
+          <Button onClick={() => navigate('/student')}>
             Browse Available Exams
           </Button>
-        </Paper>
-      </Container>
+        </Card>
+      </div>
     );
   }
 
@@ -150,160 +145,144 @@ const StudentExamHistory = () => {
   const averageScore = results.reduce((sum, r) => sum + (r.score?.percentage || 0), 0) / totalExams;
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <div className="container mx-auto max-w-6xl py-8">
       {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Exam History
-        </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
+      <div className="mb-6">
+        <h1 className="text-4xl font-bold mb-2">Exam History</h1>
+        <p className="text-muted-foreground">
           View all your past exam attempts and results
-        </Typography>
-      </Box>
+        </p>
+      </div>
 
       {/* Statistics */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Assessment sx={{ fontSize: 40, color: '#2196f3', mb: 1 }} />
-              <Typography color="text.secondary" gutterBottom>
-                Total Exams
-              </Typography>
-              <Typography variant="h3">{totalExams}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <CheckCircle sx={{ fontSize: 40, color: '#4caf50', mb: 1 }} />
-              <Typography color="text.secondary" gutterBottom>
-                Passed
-              </Typography>
-              <Typography variant="h3">{passedExams}</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {((passedExams / totalExams) * 100).toFixed(0)}% pass rate
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <EmojiEvents sx={{ fontSize: 40, color: '#ffd700', mb: 1 }} />
-              <Typography color="text.secondary" gutterBottom>
-                Average Score
-              </Typography>
-              <Typography variant="h3">{averageScore.toFixed(1)}%</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <FileText className="h-10 w-10 text-primary mx-auto mb-2" />
+            <p className="text-muted-foreground mb-1">Total Exams</p>
+            <h2 className="text-4xl font-bold">{totalExams}</h2>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <CheckCircle className="h-10 w-10 text-success mx-auto mb-2" />
+            <p className="text-muted-foreground mb-1">Passed</p>
+            <h2 className="text-4xl font-bold">{passedExams}</h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              {((passedExams / totalExams) * 100).toFixed(0)}% pass rate
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <Trophy className="h-10 w-10 text-warning mx-auto mb-2" />
+            <p className="text-muted-foreground mb-1">Average Score</p>
+            <h2 className="text-4xl font-bold">{averageScore.toFixed(1)}%</h2>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Results Table */}
-      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <TableContainer>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell><strong>Exam</strong></TableCell>
-                <TableCell align="center"><strong>Status</strong></TableCell>
-                <TableCell align="center"><strong>Score</strong></TableCell>
-                <TableCell align="center"><strong>Percentage</strong></TableCell>
-                <TableCell align="center"><strong>Result</strong></TableCell>
-                <TableCell align="center"><strong>Rank</strong></TableCell>
-                <TableCell align="center"><strong>Date</strong></TableCell>
-                <TableCell align="center"><strong>Actions</strong></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {results.map((result) => (
-                <TableRow key={result._id} hover>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="medium">
-                      {result.exam.title}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {result.exam.code}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    {getStatusChip(result.status)}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2" fontWeight="medium">
-                      {result.score?.obtained || 0} / {result.score?.total || 0}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Typography
-                      variant="body2"
-                      fontWeight="bold"
-                      sx={{
-                        color: result.score?.percentage >= 70 ? 'success.main' :
-                               result.score?.percentage >= 40 ? 'warning.main' : 'error.main'
-                      }}
-                    >
-                      {result.score?.percentage?.toFixed(1) || 0}%
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    {result.score?.passed ? (
-                      <Chip
-                        icon={<CheckCircle />}
-                        label="PASSED"
-                        color="success"
-                        size="small"
-                      />
-                    ) : (
-                      <Chip
-                        icon={<Cancel />}
-                        label="FAILED"
-                        color="error"
-                        size="small"
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2">
-                      {result.rank ? `#${result.rank}` : 'N/A'}
-                    </Typography>
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Exam</TableHead>
+              <TableHead className="text-center">Status</TableHead>
+              <TableHead className="text-center">Score</TableHead>
+              <TableHead className="text-center">Percentage</TableHead>
+              <TableHead className="text-center">Result</TableHead>
+              <TableHead className="text-center">Rank</TableHead>
+              <TableHead className="text-center">Date</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {results.map((result) => (
+              <TableRow key={result._id}>
+                <TableCell>
+                  <div>
+                    <p className="font-medium">{result.exam.title}</p>
+                    <p className="text-xs text-muted-foreground">{result.exam.code}</p>
+                  </div>
+                </TableCell>
+                <TableCell className="text-center">
+                  <Badge variant={getStatusVariant(result.status)}>
+                    {result.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-center">
+                  <p className="font-medium">
+                    {result.score?.obtained || 0} / {result.score?.total || 0}
+                  </p>
+                </TableCell>
+                <TableCell className="text-center">
+                  <p
+                    className={`font-bold ${
+                      result.score?.percentage >= 70
+                        ? 'text-success'
+                        : result.score?.percentage >= 40
+                        ? 'text-warning'
+                        : 'text-destructive'
+                    }`}
+                  >
+                    {result.score?.percentage?.toFixed(1) || 0}%
+                  </p>
+                </TableCell>
+                <TableCell className="text-center">
+                  {result.score?.passed ? (
+                    <Badge variant="success" className="gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      PASSED
+                    </Badge>
+                  ) : (
+                    <Badge variant="destructive" className="gap-1">
+                      <XCircle className="h-3 w-3" />
+                      FAILED
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-center">
+                  <div>
+                    <p>{result.rank ? `#${result.rank}` : 'N/A'}</p>
                     {result.percentile && (
-                      <Typography variant="caption" color="text.secondary">
+                      <p className="text-xs text-muted-foreground">
                         ({result.percentile.toFixed(0)}th)
-                      </Typography>
+                      </p>
                     )}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2">
-                      {result.submittedAt ? formatDate(result.submittedAt) : 'N/A'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Visibility />}
-                      onClick={() => navigate(`/student/results/${result.exam._id}`)}
-                    >
-                      View
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+                  </div>
+                </TableCell>
+                <TableCell className="text-center">
+                  <p className="text-sm">
+                    {result.submittedAt ? formatDate(result.submittedAt) : 'N/A'}
+                  </p>
+                </TableCell>
+                <TableCell className="text-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => navigate(`/student/results/${result.exam._id}`)}
+                  >
+                    <Eye className="h-4 w-4" />
+                    View
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
 
       {/* Back Button */}
-      <Box sx={{ mt: 3, textAlign: 'center' }}>
-        <Button variant="outlined" onClick={() => navigate('/student')}>
+      <div className="mt-6 text-center">
+        <Button variant="outline" onClick={() => navigate('/student')}>
           Back to Dashboard
         </Button>
-      </Box>
-    </Container>
+      </div>
+    </div>
   );
 };
 

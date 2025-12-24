@@ -1,27 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Container,
-  Typography,
-  Paper,
-  Box,
-  TextField,
-  Button,
-  Grid,
-  FormControlLabel,
-  Switch,
-  MenuItem,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Alert,
-  Divider,
-  Checkbox,
-  Card,
-  CardContent,
-  Chip,
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { examService } from '../services/examService';
 import { questionsService } from '../services/questionsService';
 import { Question } from '../types/question';
@@ -216,477 +216,499 @@ const CreateExam = () => {
     }
   };
 
-  return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Create New Exam
-        </Typography>
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'EASY':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'MEDIUM':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'HARD':
+        return 'bg-red-100 text-red-800 border-red-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
 
-        {error && <Alert severity="error" sx={{ mt: 2, mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mt: 2, mb: 2 }}>{success}</Alert>}
+  return (
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="py-4">
+        <h1 className="text-3xl font-bold tracking-tight mb-4">Create New Exam</h1>
+
+        {error && (
+          <Alert variant="destructive" className="mt-2 mb-2">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        {success && (
+          <Alert className="mt-2 mb-2 border-green-500 bg-green-50 text-green-900">
+            <AlertDescription>{success}</AlertDescription>
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit}>
           {/* Basic Information */}
-          <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Basic Information
-            </Typography>
-            <Divider sx={{ mb: 3 }} />
-
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Exam Title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                  helperText="E.g., Data Structures Final Exam"
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Exam Code"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  required
-                  helperText="Unique code for this exam (e.g., DS-FINAL-2024)"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  multiline
-                  rows={3}
-                  helperText="Brief description of the exam"
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Duration (minutes)"
-                  type="number"
-                  value={duration}
-                  onChange={(e) => setDuration(Number(e.target.value))}
-                  required
-                  inputProps={{ min: 1 }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Status"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                >
-                  <MenuItem value="DRAFT">Draft</MenuItem>
-                  <MenuItem value="PUBLISHED">Published</MenuItem>
-                  <MenuItem value="ACTIVE">Active</MenuItem>
-                  <MenuItem value="COMPLETED">Completed</MenuItem>
-                  <MenuItem value="ARCHIVED">Archived</MenuItem>
-                </TextField>
-              </Grid>
-            </Grid>
-          </Paper>
+          <Card className="mt-3">
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="border-t pt-4"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="title" className="required">Exam Title</Label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    E.g., Data Structures Final Exam
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="code" className="required">Exam Code</Label>
+                  <Input
+                    id="code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    required
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Unique code for this exam (e.g., DS-FINAL-2024)
+                  </p>
+                </div>
+                <div className="md:col-span-2">
+                  <Label htmlFor="description">Description</Label>
+                  <textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    className="w-full mt-1.5 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Brief description of the exam
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="duration" className="required">Duration (minutes)</Label>
+                  <Input
+                    id="duration"
+                    type="number"
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                    required
+                    min={1}
+                    className="mt-1.5"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DRAFT">Draft</SelectItem>
+                      <SelectItem value="PUBLISHED">Published</SelectItem>
+                      <SelectItem value="ACTIVE">Active</SelectItem>
+                      <SelectItem value="COMPLETED">Completed</SelectItem>
+                      <SelectItem value="ARCHIVED">Archived</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Schedule */}
-          <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Schedule
-            </Typography>
-            <Divider sx={{ mb: 3 }} />
-
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Start Date & Time"
-                  type="datetime-local"
-                  value={schedule.startDate}
-                  onChange={(e) => handleScheduleChange('startDate', e.target.value)}
-                  required
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="End Date & Time"
-                  type="datetime-local"
-                  value={schedule.endDate}
-                  onChange={(e) => handleScheduleChange('endDate', e.target.value)}
-                  required
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
+          <Card className="mt-3">
+            <CardHeader>
+              <CardTitle>Schedule</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="border-t pt-4"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="startDate" className="required">Start Date & Time</Label>
+                  <Input
+                    id="startDate"
+                    type="datetime-local"
+                    value={schedule.startDate}
+                    onChange={(e) => handleScheduleChange('startDate', e.target.value)}
+                    required
+                    className="mt-1.5"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endDate" className="required">End Date & Time</Label>
+                  <Input
+                    id="endDate"
+                    type="datetime-local"
+                    value={schedule.endDate}
+                    onChange={(e) => handleScheduleChange('endDate', e.target.value)}
+                    required
+                    className="mt-1.5"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <div className="flex items-center space-x-2">
                     <Switch
+                      id="lateSubmission"
                       checked={schedule.lateSubmissionAllowed}
-                      onChange={(e) => handleScheduleChange('lateSubmissionAllowed', e.target.checked)}
+                      onCheckedChange={(checked) => handleScheduleChange('lateSubmissionAllowed', checked)}
                     />
-                  }
-                  label="Allow Late Submission"
-                />
-              </Grid>
-            </Grid>
-          </Paper>
+                    <Label htmlFor="lateSubmission" className="cursor-pointer">
+                      Allow Late Submission
+                    </Label>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Grading */}
-          <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Grading Configuration
-            </Typography>
-            <Divider sx={{ mb: 3 }} />
-
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Total Marks"
-                  type="number"
-                  value={grading.totalMarks}
-                  onChange={(e) => handleGradingChange('totalMarks', Number(e.target.value))}
-                  required
-                  inputProps={{ min: 0 }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Passing Marks"
-                  type="number"
-                  value={grading.passingMarks}
-                  onChange={(e) => handleGradingChange('passingMarks', Number(e.target.value))}
-                  required
-                  inputProps={{ min: 0 }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={grading.negativeMarking}
-                      onChange={(e) => handleGradingChange('negativeMarking', e.target.checked)}
-                    />
-                  }
-                  label="Enable Negative Marking"
-                />
-              </Grid>
-              {grading.negativeMarking && (
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Negative Mark Value"
+          <Card className="mt-3">
+            <CardHeader>
+              <CardTitle>Grading Configuration</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="border-t pt-4"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="totalMarks" className="required">Total Marks</Label>
+                  <Input
+                    id="totalMarks"
                     type="number"
-                    value={grading.negativeMarkValue}
-                    onChange={(e) => handleGradingChange('negativeMarkValue', Number(e.target.value))}
-                    inputProps={{ min: 0, step: 0.25 }}
-                    helperText="Marks to deduct per wrong answer"
+                    value={grading.totalMarks}
+                    onChange={(e) => handleGradingChange('totalMarks', Number(e.target.value))}
+                    required
+                    min={0}
+                    className="mt-1.5"
                   />
-                </Grid>
-              )}
-            </Grid>
-          </Paper>
+                </div>
+                <div>
+                  <Label htmlFor="passingMarks" className="required">Passing Marks</Label>
+                  <Input
+                    id="passingMarks"
+                    type="number"
+                    value={grading.passingMarks}
+                    onChange={(e) => handleGradingChange('passingMarks', Number(e.target.value))}
+                    required
+                    min={0}
+                    className="mt-1.5"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="negativeMarking"
+                      checked={grading.negativeMarking}
+                      onCheckedChange={(checked) => handleGradingChange('negativeMarking', checked)}
+                    />
+                    <Label htmlFor="negativeMarking" className="cursor-pointer">
+                      Enable Negative Marking
+                    </Label>
+                  </div>
+                </div>
+                {grading.negativeMarking && (
+                  <div>
+                    <Label htmlFor="negativeMarkValue">Negative Mark Value</Label>
+                    <Input
+                      id="negativeMarkValue"
+                      type="number"
+                      value={grading.negativeMarkValue}
+                      onChange={(e) => handleGradingChange('negativeMarkValue', Number(e.target.value))}
+                      min={0}
+                      step={0.25}
+                      className="mt-1.5"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      Marks to deduct per wrong answer
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Proctoring Settings */}
-          <Accordion sx={{ mt: 3 }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6">Proctoring Settings</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <FormControlLabel
-                    control={
+          <Accordion type="single" collapsible className="mt-3 border rounded-lg">
+            <AccordionItem value="proctoring">
+              <AccordionTrigger className="px-4 text-lg font-semibold">
+                Proctoring Settings
+              </AccordionTrigger>
+              <AccordionContent className="px-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <div className="flex items-center space-x-2">
                       <Switch
+                        id="proctoringEnabled"
                         checked={proctoringSettings.enabled}
-                        onChange={(e) => handleProctoringChange('enabled', e.target.checked)}
+                        onCheckedChange={(checked) => handleProctoringChange('enabled', checked)}
                       />
-                    }
-                    label="Enable Proctoring"
-                  />
-                </Grid>
-                {proctoringSettings.enabled && (
-                  <>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label="Violation Warning Limit"
-                        type="number"
-                        value={proctoringSettings.violationWarningLimit}
-                        onChange={(e) => handleProctoringChange('violationWarningLimit', Number(e.target.value))}
-                        inputProps={{ min: 0 }}
-                        helperText="Number of warnings before action"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={proctoringSettings.webcamRequired}
-                            onChange={(e) => handleProctoringChange('webcamRequired', e.target.checked)}
-                          />
-                        }
-                        label="Webcam Required"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={proctoringSettings.screenRecording}
-                            onChange={(e) => handleProctoringChange('screenRecording', e.target.checked)}
-                          />
-                        }
-                        label="Screen Recording"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={proctoringSettings.tabSwitchDetection}
-                            onChange={(e) => handleProctoringChange('tabSwitchDetection', e.target.checked)}
-                          />
-                        }
-                        label="Tab Switch Detection"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={proctoringSettings.copyPasteDetection}
-                            onChange={(e) => handleProctoringChange('copyPasteDetection', e.target.checked)}
-                          />
-                        }
-                        label="Copy/Paste Detection"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={proctoringSettings.rightClickDisabled}
-                            onChange={(e) => handleProctoringChange('rightClickDisabled', e.target.checked)}
-                          />
-                        }
-                        label="Disable Right Click"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={proctoringSettings.devToolsDetection}
-                            onChange={(e) => handleProctoringChange('devToolsDetection', e.target.checked)}
-                          />
-                        }
-                        label="Dev Tools Detection"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={proctoringSettings.fullscreenRequired}
-                            onChange={(e) => handleProctoringChange('fullscreenRequired', e.target.checked)}
-                          />
-                        }
-                        label="Fullscreen Required"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={proctoringSettings.autoSubmitOnViolation}
-                            onChange={(e) => handleProctoringChange('autoSubmitOnViolation', e.target.checked)}
-                          />
-                        }
-                        label="Auto Submit on Violation"
-                      />
-                    </Grid>
-                  </>
-                )}
-              </Grid>
-            </AccordionDetails>
+                      <Label htmlFor="proctoringEnabled" className="cursor-pointer">
+                        Enable Proctoring
+                      </Label>
+                    </div>
+                  </div>
+                  {proctoringSettings.enabled && (
+                    <>
+                      <div>
+                        <Label htmlFor="violationWarningLimit">Violation Warning Limit</Label>
+                        <Input
+                          id="violationWarningLimit"
+                          type="number"
+                          value={proctoringSettings.violationWarningLimit}
+                          onChange={(e) => handleProctoringChange('violationWarningLimit', Number(e.target.value))}
+                          min={0}
+                          className="mt-1.5"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1.5">
+                          Number of warnings before action
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="webcamRequired"
+                          checked={proctoringSettings.webcamRequired}
+                          onCheckedChange={(checked) => handleProctoringChange('webcamRequired', checked)}
+                        />
+                        <Label htmlFor="webcamRequired" className="cursor-pointer">
+                          Webcam Required
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="screenRecording"
+                          checked={proctoringSettings.screenRecording}
+                          onCheckedChange={(checked) => handleProctoringChange('screenRecording', checked)}
+                        />
+                        <Label htmlFor="screenRecording" className="cursor-pointer">
+                          Screen Recording
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="tabSwitchDetection"
+                          checked={proctoringSettings.tabSwitchDetection}
+                          onCheckedChange={(checked) => handleProctoringChange('tabSwitchDetection', checked)}
+                        />
+                        <Label htmlFor="tabSwitchDetection" className="cursor-pointer">
+                          Tab Switch Detection
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="copyPasteDetection"
+                          checked={proctoringSettings.copyPasteDetection}
+                          onCheckedChange={(checked) => handleProctoringChange('copyPasteDetection', checked)}
+                        />
+                        <Label htmlFor="copyPasteDetection" className="cursor-pointer">
+                          Copy/Paste Detection
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="rightClickDisabled"
+                          checked={proctoringSettings.rightClickDisabled}
+                          onCheckedChange={(checked) => handleProctoringChange('rightClickDisabled', checked)}
+                        />
+                        <Label htmlFor="rightClickDisabled" className="cursor-pointer">
+                          Disable Right Click
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="devToolsDetection"
+                          checked={proctoringSettings.devToolsDetection}
+                          onCheckedChange={(checked) => handleProctoringChange('devToolsDetection', checked)}
+                        />
+                        <Label htmlFor="devToolsDetection" className="cursor-pointer">
+                          Dev Tools Detection
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="fullscreenRequired"
+                          checked={proctoringSettings.fullscreenRequired}
+                          onCheckedChange={(checked) => handleProctoringChange('fullscreenRequired', checked)}
+                        />
+                        <Label htmlFor="fullscreenRequired" className="cursor-pointer">
+                          Fullscreen Required
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="autoSubmitOnViolation"
+                          checked={proctoringSettings.autoSubmitOnViolation}
+                          onCheckedChange={(checked) => handleProctoringChange('autoSubmitOnViolation', checked)}
+                        />
+                        <Label htmlFor="autoSubmitOnViolation" className="cursor-pointer">
+                          Auto Submit on Violation
+                        </Label>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
           </Accordion>
 
           {/* Questions Selection */}
-          <Accordion sx={{ mt: 2 }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6">
+          <Accordion type="single" collapsible className="mt-2 border rounded-lg">
+            <AccordionItem value="questions">
+              <AccordionTrigger className="px-4 text-lg font-semibold">
                 Select Questions ({selectedQuestions.size} selected)
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              {loadingQuestions ? (
-                <Typography color="textSecondary">Loading questions...</Typography>
-              ) : allQuestions.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 2 }}>
-                  <Typography color="textSecondary" gutterBottom>
-                    No questions available
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    onClick={() => navigate('/admin/questions/create')}
-                    sx={{ mt: 1 }}
-                  >
-                    Create Questions First
-                  </Button>
-                </Box>
-              ) : (
-                <Box sx={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  <Grid container spacing={2}>
-                    {allQuestions.map((question) => (
-                      <Grid item xs={12} key={question._id}>
+              </AccordionTrigger>
+              <AccordionContent className="px-4">
+                {loadingQuestions ? (
+                  <p className="text-muted-foreground">Loading questions...</p>
+                ) : allQuestions.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground mb-2">
+                      No questions available
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => navigate('/admin/questions/create')}
+                    >
+                      Create Questions First
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="max-h-96 overflow-y-auto">
+                    <div className="space-y-2">
+                      {allQuestions.map((question) => (
                         <Card
-                          variant="outlined"
-                          sx={{
-                            backgroundColor: selectedQuestions.has(question._id)
-                              ? 'action.selected'
-                              : 'background.paper',
-                          }}
+                          key={question._id}
+                          className={selectedQuestions.has(question._id) ? 'bg-accent' : ''}
                         >
-                          <CardContent>
-                            <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                              <FormControlLabel
-                                control={
-                                  <Checkbox
-                                    checked={selectedQuestions.has(question._id)}
-                                    onChange={() => handleToggleQuestion(question._id)}
-                                  />
-                                }
-                                label=""
-                                sx={{ mr: 1 }}
+                          <CardContent className="p-4">
+                            <div className="flex items-start">
+                              <Checkbox
+                                id={`question-${question._id}`}
+                                checked={selectedQuestions.has(question._id)}
+                                onCheckedChange={() => handleToggleQuestion(question._id)}
+                                className="mt-1 mr-3"
                               />
-                              <Box sx={{ flex: 1 }}>
-                                <Typography variant="body1" gutterBottom sx={{ fontWeight: 500 }}>
+                              <div className="flex-1">
+                                <label
+                                  htmlFor={`question-${question._id}`}
+                                  className="text-sm font-medium cursor-pointer"
+                                >
                                   {question.text}
-                                </Typography>
-                                <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-                                  <Chip
-                                    label={question.type.replace('_', ' ')}
-                                    size="small"
-                                    color="primary"
-                                    variant="outlined"
-                                  />
-                                  <Chip
-                                    label={question.difficulty}
-                                    size="small"
-                                    color={
-                                      question.difficulty === 'EASY'
-                                        ? 'success'
-                                        : question.difficulty === 'MEDIUM'
-                                        ? 'warning'
-                                        : 'error'
-                                    }
-                                  />
-                                  <Chip label={`${question.marks} marks`} size="small" color="info" />
+                                </label>
+                                <div className="flex gap-2 mt-2 flex-wrap">
+                                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
+                                    {question.type.replace('_', ' ')}
+                                  </Badge>
+                                  <Badge variant="outline" className={getDifficultyColor(question.difficulty)}>
+                                    {question.difficulty}
+                                  </Badge>
+                                  <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-300">
+                                    {question.marks} marks
+                                  </Badge>
                                   {question.negativeMarks > 0 && (
-                                    <Chip
-                                      label={`-${question.negativeMarks} negative`}
-                                      size="small"
-                                      color="error"
-                                      variant="outlined"
-                                    />
+                                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">
+                                      -{question.negativeMarks} negative
+                                    </Badge>
                                   )}
                                   {question.category && (
-                                    <Chip label={question.category} size="small" variant="outlined" />
+                                    <Badge variant="outline">
+                                      {question.category}
+                                    </Badge>
                                   )}
-                                </Box>
-                              </Box>
-                            </Box>
+                                </div>
+                              </div>
+                            </div>
                           </CardContent>
                         </Card>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Box>
-              )}
-            </AccordionDetails>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
           </Accordion>
 
           {/* Exam Settings */}
-          <Accordion sx={{ mt: 2 }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6">Exam Settings</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={settings.shuffleQuestions}
-                        onChange={(e) => handleSettingsChange('shuffleQuestions', e.target.checked)}
-                      />
-                    }
-                    label="Shuffle Questions"
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={settings.shuffleOptions}
-                        onChange={(e) => handleSettingsChange('shuffleOptions', e.target.checked)}
-                      />
-                    }
-                    label="Shuffle Options"
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={settings.showResultsImmediately}
-                        onChange={(e) => handleSettingsChange('showResultsImmediately', e.target.checked)}
-                      />
-                    }
-                    label="Show Results Immediately"
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={settings.allowReview}
-                        onChange={(e) => handleSettingsChange('allowReview', e.target.checked)}
-                      />
-                    }
-                    label="Allow Review"
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Attempts Allowed"
-                    type="number"
-                    value={settings.attemptsAllowed}
-                    onChange={(e) => handleSettingsChange('attemptsAllowed', Number(e.target.value))}
-                    inputProps={{ min: 1 }}
-                    helperText="Number of attempts allowed per student"
-                  />
-                </Grid>
-              </Grid>
-            </AccordionDetails>
+          <Accordion type="single" collapsible className="mt-2 border rounded-lg">
+            <AccordionItem value="settings">
+              <AccordionTrigger className="px-4 text-lg font-semibold">
+                Exam Settings
+              </AccordionTrigger>
+              <AccordionContent className="px-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="shuffleQuestions"
+                      checked={settings.shuffleQuestions}
+                      onCheckedChange={(checked) => handleSettingsChange('shuffleQuestions', checked)}
+                    />
+                    <Label htmlFor="shuffleQuestions" className="cursor-pointer">
+                      Shuffle Questions
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="shuffleOptions"
+                      checked={settings.shuffleOptions}
+                      onCheckedChange={(checked) => handleSettingsChange('shuffleOptions', checked)}
+                    />
+                    <Label htmlFor="shuffleOptions" className="cursor-pointer">
+                      Shuffle Options
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="showResultsImmediately"
+                      checked={settings.showResultsImmediately}
+                      onCheckedChange={(checked) => handleSettingsChange('showResultsImmediately', checked)}
+                    />
+                    <Label htmlFor="showResultsImmediately" className="cursor-pointer">
+                      Show Results Immediately
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="allowReview"
+                      checked={settings.allowReview}
+                      onCheckedChange={(checked) => handleSettingsChange('allowReview', checked)}
+                    />
+                    <Label htmlFor="allowReview" className="cursor-pointer">
+                      Allow Review
+                    </Label>
+                  </div>
+                  <div>
+                    <Label htmlFor="attemptsAllowed">Attempts Allowed</Label>
+                    <Input
+                      id="attemptsAllowed"
+                      type="number"
+                      value={settings.attemptsAllowed}
+                      onChange={(e) => handleSettingsChange('attemptsAllowed', Number(e.target.value))}
+                      min={1}
+                      className="mt-1.5"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      Number of attempts allowed per student
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
           </Accordion>
 
           {/* Action Buttons */}
-          <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+          <div className="mt-4 flex gap-2 justify-end">
             <Button
-              variant="outlined"
-              size="large"
+              type="button"
+              variant="outline"
+              size="lg"
               onClick={() => navigate('/admin/dashboard')}
               disabled={loading}
             >
@@ -694,16 +716,15 @@ const CreateExam = () => {
             </Button>
             <Button
               type="submit"
-              variant="contained"
-              size="large"
+              size="lg"
               disabled={loading}
             >
               {loading ? 'Creating...' : 'Create Exam'}
             </Button>
-          </Box>
+          </div>
         </form>
-      </Box>
-    </Container>
+      </div>
+    </div>
   );
 };
 

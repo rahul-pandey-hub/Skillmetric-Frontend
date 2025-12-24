@@ -1,14 +1,8 @@
 import React from 'react';
-import {
-  Box,
-  Typography,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  TextField,
-  Paper,
-  Chip,
-} from '@mui/material';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Question, QuestionType } from '../types/question';
 
 interface QuestionRendererProps {
@@ -35,16 +29,12 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
       const blanks = question.text.match(/_+/g) || [];
 
       return (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+        <div className="flex flex-wrap items-center gap-2">
           {parts.map((part, index) => (
             <React.Fragment key={index}>
-              <Typography component="span" variant="body1">
-                {part}
-              </Typography>
+              <span className="text-base">{part}</span>
               {index < blanks.length && (
-                <TextField
-                  size="small"
-                  variant="outlined"
+                <Input
                   value={Array.isArray(answer) ? answer[index] || '' : answer || ''}
                   onChange={(e) => {
                     if (Array.isArray(answer)) {
@@ -56,81 +46,69 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                     }
                   }}
                   disabled={isReview}
-                  sx={{ minWidth: '150px' }}
+                  className="min-w-[150px] inline-block"
                   placeholder="Your answer"
                 />
               )}
             </React.Fragment>
           ))}
-        </Box>
+        </div>
       );
     }
 
-    return (
-      <Typography variant="body1" sx={{ mb: 3 }}>
-        {question.text}
-      </Typography>
-    );
+    return <p className="text-base mb-4">{question.text}</p>;
   };
 
   const renderAnswerSection = () => {
     switch (question.type) {
       case QuestionType.MULTIPLE_CHOICE:
         return (
-          <RadioGroup
-            value={answer || ''}
-            onChange={(e) => onAnswerChange(e.target.value)}
-          >
+          <div className="space-y-2">
             {question.options.map((option, index) => {
               const isCorrect = showCorrectAnswer && option.id === question.correctAnswer;
               const isSelected = answer === option.id;
               const isWrong = showCorrectAnswer && isSelected && !isCorrect;
 
               return (
-                <Paper
+                <Card
                   key={option.id}
-                  elevation={isSelected ? 3 : 1}
-                  sx={{
-                    p: 2,
-                    mb: 1,
-                    border: isCorrect
-                      ? '2px solid green'
+                  className={`p-4 cursor-pointer transition-all ${
+                    isSelected ? 'shadow-md' : ''
+                  } ${
+                    isCorrect
+                      ? 'border-2 border-success bg-success/10'
                       : isWrong
-                      ? '2px solid red'
-                      : 'none',
-                    backgroundColor: isCorrect
-                      ? 'rgba(76, 175, 80, 0.1)'
-                      : isWrong
-                      ? 'rgba(244, 67, 54, 0.1)'
-                      : 'inherit',
-                  }}
+                      ? 'border-2 border-destructive bg-destructive/10'
+                      : ''
+                  }`}
+                  onClick={() => !isReview && onAnswerChange(option.id)}
                 >
-                  <FormControlLabel
-                    value={option.id}
-                    control={<Radio disabled={isReview} />}
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography>
-                          {String.fromCharCode(65 + index)}. {option.text}
-                        </Typography>
-                        {isCorrect && showCorrectAnswer && (
-                          <Chip label="Correct" color="success" size="small" />
-                        )}
-                      </Box>
-                    }
-                  />
-                </Paper>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      checked={isSelected}
+                      onChange={() => !isReview && onAnswerChange(option.id)}
+                      disabled={isReview}
+                      className="h-4 w-4"
+                    />
+                    <Label className="flex items-center gap-2 cursor-pointer flex-1">
+                      <span>
+                        {String.fromCharCode(65 + index)}. {option.text}
+                      </span>
+                      {isCorrect && showCorrectAnswer && (
+                        <Badge variant="success">Correct</Badge>
+                      )}
+                    </Label>
+                  </div>
+                </Card>
               );
             })}
-          </RadioGroup>
+          </div>
         );
 
       case QuestionType.TRUE_FALSE:
         return (
-          <RadioGroup
-            value={answer !== undefined ? String(answer) : ''}
-            onChange={(e) => onAnswerChange(e.target.value === 'true')}
-          >
+          <div className="space-y-2">
             {question.options.map((option) => {
               const optionValue = option.id === 'true';
               const isCorrect = showCorrectAnswer && question.correctAnswer === optionValue;
@@ -138,40 +116,38 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               const isWrong = showCorrectAnswer && isSelected && !isCorrect;
 
               return (
-                <Paper
+                <Card
                   key={option.id}
-                  elevation={isSelected ? 3 : 1}
-                  sx={{
-                    p: 2,
-                    mb: 1,
-                    border: isCorrect
-                      ? '2px solid green'
+                  className={`p-4 cursor-pointer transition-all ${
+                    isSelected ? 'shadow-md' : ''
+                  } ${
+                    isCorrect
+                      ? 'border-2 border-success bg-success/10'
                       : isWrong
-                      ? '2px solid red'
-                      : 'none',
-                    backgroundColor: isCorrect
-                      ? 'rgba(76, 175, 80, 0.1)'
-                      : isWrong
-                      ? 'rgba(244, 67, 54, 0.1)'
-                      : 'inherit',
-                  }}
+                      ? 'border-2 border-destructive bg-destructive/10'
+                      : ''
+                  }`}
+                  onClick={() => !isReview && onAnswerChange(optionValue)}
                 >
-                  <FormControlLabel
-                    value={option.id}
-                    control={<Radio disabled={isReview} />}
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography>{option.text}</Typography>
-                        {isCorrect && showCorrectAnswer && (
-                          <Chip label="Correct" color="success" size="small" />
-                        )}
-                      </Box>
-                    }
-                  />
-                </Paper>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      checked={isSelected}
+                      onChange={() => !isReview && onAnswerChange(optionValue)}
+                      disabled={isReview}
+                      className="h-4 w-4"
+                    />
+                    <Label className="flex items-center gap-2 cursor-pointer flex-1">
+                      <span>{option.text}</span>
+                      {isCorrect && showCorrectAnswer && (
+                        <Badge variant="success">Correct</Badge>
+                      )}
+                    </Label>
+                  </div>
+                </Card>
               );
             })}
-          </RadioGroup>
+          </div>
         );
 
       case QuestionType.FILL_BLANK:
@@ -180,69 +156,60 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
 
       case QuestionType.SHORT_ANSWER:
         return (
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            variant="outlined"
+          <textarea
+            className="w-full min-h-[100px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             value={answer || ''}
             onChange={(e) => onAnswerChange(e.target.value)}
             placeholder="Type your answer here..."
             disabled={isReview}
+            rows={4}
           />
         );
 
       case QuestionType.ESSAY:
         return (
-          <TextField
-            fullWidth
-            multiline
-            rows={8}
-            variant="outlined"
+          <textarea
+            className="w-full min-h-[200px] p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             value={answer || ''}
             onChange={(e) => onAnswerChange(e.target.value)}
             placeholder="Write your essay here..."
             disabled={isReview}
+            rows={8}
           />
         );
 
       default:
-        return <Typography>Unsupported question type</Typography>;
+        return <p>Unsupported question type</p>;
     }
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+    <Card className="p-6 mb-4">
       {/* Question Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">Question {questionNumber}</Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Chip
-            label={question.type.replace('_', ' ')}
-            color="primary"
-            size="small"
-            variant="outlined"
-          />
-          <Chip
-            label={`${question.marks} marks`}
-            color="info"
-            size="small"
-          />
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Question {questionNumber}</h3>
+        <div className="flex gap-2">
+          <Badge variant="outline">
+            {question.type.replace('_', ' ')}
+          </Badge>
+          <Badge variant="default">
+            {question.marks} marks
+          </Badge>
           {question.difficulty && (
-            <Chip
-              label={question.difficulty}
-              color={
+            <Badge
+              variant={
                 question.difficulty === 'EASY'
                   ? 'success'
                   : question.difficulty === 'MEDIUM'
                   ? 'warning'
-                  : 'error'
+                  : 'destructive'
               }
-              size="small"
-            />
+            >
+              {question.difficulty}
+            </Badge>
           )}
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {/* Question Text */}
       {renderQuestionText()}
@@ -252,14 +219,14 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
 
       {/* Show explanation if in review mode */}
       {isReview && showCorrectAnswer && question.explanation && (
-        <Paper sx={{ p: 2, mt: 2, backgroundColor: 'rgba(33, 150, 243, 0.1)' }}>
-          <Typography variant="subtitle2" color="primary" gutterBottom>
+        <Card className="mt-4 p-4 bg-primary/10 border-primary/20">
+          <p className="text-sm font-semibold text-primary mb-2">
             Explanation:
-          </Typography>
-          <Typography variant="body2">{question.explanation}</Typography>
-        </Paper>
+          </p>
+          <p className="text-sm">{question.explanation}</p>
+        </Card>
       )}
-    </Paper>
+    </Card>
   );
 };
 

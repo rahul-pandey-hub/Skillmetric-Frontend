@@ -1,41 +1,27 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  Box,
-  Container,
-  Grid,
-  Paper,
-  Typography,
-  Card,
-  CardContent,
-  Chip,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  CircularProgress,
-  Alert,
-  Badge,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Avatar,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
+} from '@/components/ui/table';
 import {
-  FiberManualRecord,
-  People,
+  Circle,
+  Users,
   CheckCircle,
-  HourglassEmpty,
-  Warning,
-  Visibility,
-  Refresh,
-} from '@mui/icons-material';
+  Clock,
+  AlertTriangle,
+  Eye,
+  RefreshCw,
+  Loader2,
+} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import {
   getLiveExamStats,
@@ -85,7 +71,6 @@ const LiveExamMonitoring: React.FC = () => {
     // Listen for violation alerts
     monitoringWs.onViolationAlert((violation) => {
       console.log('🚨 Violation Alert:', violation);
-      // You can add a notification here
     });
 
     // Listen for errors
@@ -112,359 +97,296 @@ const LiveExamMonitoring: React.FC = () => {
     return `${hours}h ${minutes}m ${secs}s`;
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" | "success" | "warning" => {
     switch (status) {
       case 'IN_PROGRESS':
-        return 'primary';
+        return 'default';
       case 'COMPLETED':
         return 'success';
       case 'ACTIVE':
         return 'warning';
       default:
-        return 'default';
+        return 'secondary';
     }
   };
 
   if (loading && !stats) {
     return (
-      <Container>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-          <CircularProgress />
-        </Box>
-      </Container>
+      <div className="container mx-auto max-w-7xl py-8">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
     );
   }
 
   if (error && !stats) {
     return (
-      <Container>
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error}
+      <div className="container mx-auto max-w-7xl py-8">
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
-      </Container>
+      </div>
     );
   }
 
   if (!stats) {
     return (
-      <Container>
-        <Alert severity="info" sx={{ mt: 2 }}>
-          No monitoring data available
+      <div className="container mx-auto max-w-7xl py-8">
+        <Alert>
+          <AlertDescription>No monitoring data available</AlertDescription>
         </Alert>
-      </Container>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <div className="container mx-auto max-w-7xl py-8">
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-        <Box>
-          <Typography variant="h4" gutterBottom>
-            🔴 Live Exam Monitoring
-          </Typography>
-          <Typography variant="h6" color="text.secondary">
-            {stats.examTitle}
-          </Typography>
-          <Box display="flex" gap={1} mt={1}>
-            <Chip label={stats.status} color={getStatusColor(stats.status)} size="small" />
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">🔴 Live Exam Monitoring</h1>
+          <h2 className="text-xl text-muted-foreground">{stats.examTitle}</h2>
+          <div className="flex gap-2 mt-2">
+            <Badge variant={getStatusVariant(stats.status)}>{stats.status}</Badge>
             {isLive && (
-              <Chip
-                icon={<FiberManualRecord />}
-                label="LIVE"
-                color="error"
-                size="small"
-                sx={{ animation: 'pulse 2s infinite' }}
-              />
+              <Badge variant="destructive" className="gap-1 animate-pulse">
+                <Circle className="h-3 w-3 fill-current" />
+                LIVE
+              </Badge>
             )}
-          </Box>
-        </Box>
-        <Box>
-          <Tooltip title="Refresh">
-            <IconButton onClick={handleRefresh} size="large">
-              <Refresh />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
+          </div>
+        </div>
+        <div>
+          <Button variant="outline" size="icon" onClick={handleRefresh} title="Refresh">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
       {/* Time Remaining */}
       {stats.schedule.timeRemaining !== undefined && stats.schedule.timeRemaining > 0 && (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Typography variant="h6">
-            ⏱️ Time Remaining: {formatTimeRemaining(stats.schedule.timeRemaining)}
-          </Typography>
+        <Alert className="mb-6">
+          <AlertDescription>
+            <h3 className="text-lg font-semibold">
+              ⏱️ Time Remaining: {formatTimeRemaining(stats.schedule.timeRemaining)}
+            </h3>
+          </AlertDescription>
         </Alert>
       )}
 
       {/* Stats Cards */}
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    Total Enrolled
-                  </Typography>
-                  <Typography variant="h4">{stats.participation.totalEnrolled}</Typography>
-                </Box>
-                <People sx={{ fontSize: 40, color: 'primary.main' }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Enrolled</p>
+                <h3 className="text-3xl font-bold">{stats.participation.totalEnrolled}</h3>
+              </div>
+              <Users className="h-10 w-10 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ borderLeft: '4px solid #2196f3' }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    In Progress
-                  </Typography>
-                  <Typography variant="h4" color="primary">
-                    {stats.participation.totalInProgress}
-                  </Typography>
-                </Box>
-                <HourglassEmpty sx={{ fontSize: 40, color: 'primary.main' }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card className="border-l-4 border-l-primary">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">In Progress</p>
+                <h3 className="text-3xl font-bold text-primary">
+                  {stats.participation.totalInProgress}
+                </h3>
+              </div>
+              <Clock className="h-10 w-10 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ borderLeft: '4px solid #4caf50' }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    Submitted
-                  </Typography>
-                  <Typography variant="h4" color="success.main">
-                    {stats.participation.totalSubmitted}
-                  </Typography>
-                </Box>
-                <CheckCircle sx={{ fontSize: 40, color: 'success.main' }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+        <Card className="border-l-4 border-l-success">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Submitted</p>
+                <h3 className="text-3xl font-bold text-success">
+                  {stats.participation.totalSubmitted}
+                </h3>
+              </div>
+              <CheckCircle className="h-10 w-10 text-success" />
+            </div>
+          </CardContent>
+        </Card>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ borderLeft: '4px solid #f44336' }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="text.secondary" variant="body2">
-                    Violations
-                  </Typography>
-                  <Typography variant="h4" color="error">
-                    {stats.violations.totalViolations}
-                  </Typography>
-                </Box>
-                <Warning sx={{ fontSize: 40, color: 'error.main' }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+        <Card className="border-l-4 border-l-destructive">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Violations</p>
+                <h3 className="text-3xl font-bold text-destructive">
+                  {stats.violations.totalViolations}
+                </h3>
+              </div>
+              <AlertTriangle className="h-10 w-10 text-destructive" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      <Grid container spacing={3}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Live Students */}
-        <Grid item xs={12} lg={8}>
-          <Paper sx={{ p: 3, height: '600px', overflow: 'auto' }}>
-            <Typography variant="h6" gutterBottom>
+        <div className="lg:col-span-2">
+          <Card className="p-6">
+            <h3 className="text-xl font-semibold mb-4">
               👥 Students Currently Taking Exam ({stats.liveStudents.length})
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            {stats.liveStudents.length === 0 ? (
-              <Alert severity="info">No students are currently taking the exam</Alert>
-            ) : (
-              <TableContainer>
-                <Table size="small" stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Student</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Time Elapsed</TableCell>
-                      <TableCell>Warnings</TableCell>
-                      <TableCell>Last Activity</TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {stats.liveStudents.map((student) => (
-                      <TableRow key={student.studentId}>
-                        <TableCell>
-                          <Box display="flex" alignItems="center">
-                            <Avatar sx={{ width: 32, height: 32, mr: 1, bgcolor: 'primary.main' }}>
-                              {student.studentName?.charAt(0) || 'S'}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="body2">{student.studentName || 'Unknown'}</Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {student.studentEmail}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={student.status}
-                            size="small"
-                            color={getStatusColor(student.status)}
-                            icon={<FiberManualRecord />}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {Math.floor(student.timeElapsed / 60)} min
-                        </TableCell>
-                        <TableCell>
-                          {student.warningCount > 0 ? (
-                            <Badge badgeContent={student.warningCount} color="error">
-                              <Warning color="error" />
-                            </Badge>
-                          ) : (
-                            <Chip label="None" size="small" color="success" />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="caption">
-                            {student.lastActivity
-                              ? formatDistanceToNow(new Date(student.lastActivity), { addSuffix: true })
-                              : 'N/A'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Tooltip title="View Details">
-                            <IconButton size="small">
-                              <Visibility fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </TableCell>
+            </h3>
+            <div className="border-t pt-4">
+              {stats.liveStudents.length === 0 ? (
+                <Alert>
+                  <AlertDescription>No students are currently taking the exam</AlertDescription>
+                </Alert>
+              ) : (
+                <div className="max-h-[600px] overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Student</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Time Elapsed</TableHead>
+                        <TableHead>Warnings</TableHead>
+                        <TableHead>Last Activity</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-          </Paper>
-        </Grid>
+                    </TableHeader>
+                    <TableBody>
+                      {stats.liveStudents.map((student) => (
+                        <TableRow key={student.studentId}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+                                {student.studentName?.charAt(0) || 'S'}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">{student.studentName || 'Unknown'}</p>
+                                <p className="text-xs text-muted-foreground">{student.studentEmail}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusVariant(student.status)} className="gap-1">
+                              <Circle className="h-2 w-2 fill-current" />
+                              {student.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{Math.floor(student.timeElapsed / 60)} min</TableCell>
+                          <TableCell>
+                            {student.warningCount > 0 ? (
+                              <Badge variant="destructive" className="gap-1">
+                                <AlertTriangle className="h-3 w-3" />
+                                {student.warningCount}
+                              </Badge>
+                            ) : (
+                              <Badge variant="success">None</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <p className="text-xs">
+                              {student.lastActivity
+                                ? formatDistanceToNow(new Date(student.lastActivity), { addSuffix: true })
+                                : 'N/A'}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="icon" title="View Details">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
 
         {/* Recent Activity & Violations */}
-        <Grid item xs={12} lg={4}>
+        <div className="space-y-6">
           {/* Recent Activity */}
-          <Paper sx={{ p: 2, mb: 3, maxHeight: '300px', overflow: 'auto' }}>
-            <Typography variant="h6" gutterBottom>
-              📝 Recent Activity
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            <List dense>
+          <Card className="p-4">
+            <h3 className="text-lg font-semibold mb-4">📝 Recent Activity</h3>
+            <div className="border-t pt-4 max-h-[300px] overflow-auto space-y-3">
               {stats.recentActivity.slice(0, 10).map((activity, index) => (
-                <ListItem key={index}>
-                  <ListItemAvatar>
-                    <Avatar
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        bgcolor:
-                          activity.action === 'STARTED'
-                            ? 'primary.main'
-                            : activity.action === 'SUBMITTED'
-                            ? 'success.main'
-                            : 'error.main',
-                      }}
-                    >
-                      {activity.action === 'STARTED' ? (
-                        <People fontSize="small" />
-                      ) : activity.action === 'SUBMITTED' ? (
-                        <CheckCircle fontSize="small" />
-                      ) : (
-                        <Warning fontSize="small" />
-                      )}
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={`${activity.studentName || 'Student'} - ${activity.action}`}
-                    secondary={
-                      <>
-                        {activity.details}
-                        <br />
-                        <Typography variant="caption" color="text.secondary">
-                          {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
-                        </Typography>
-                      </>
-                    }
-                  />
-                </ListItem>
+                <div key={index} className="flex items-start gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      activity.action === 'STARTED'
+                        ? 'bg-primary text-primary-foreground'
+                        : activity.action === 'SUBMITTED'
+                        ? 'bg-success text-success-foreground'
+                        : 'bg-destructive text-destructive-foreground'
+                    }`}
+                  >
+                    {activity.action === 'STARTED' ? (
+                      <Users className="h-4 w-4" />
+                    ) : activity.action === 'SUBMITTED' ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">
+                      {activity.studentName || 'Student'} - {activity.action}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{activity.details}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                    </p>
+                  </div>
+                </div>
               ))}
-            </List>
-          </Paper>
+            </div>
+          </Card>
 
           {/* Recent Violations */}
           {stats.violations.recentViolations.length > 0 && (
-            <Paper sx={{ p: 2, maxHeight: '280px', overflow: 'auto' }}>
-              <Typography variant="h6" gutterBottom>
-                🚨 Recent Violations
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              <List dense>
+            <Card className="p-4">
+              <h3 className="text-lg font-semibold mb-4">🚨 Recent Violations</h3>
+              <div className="border-t pt-4 max-h-[280px] overflow-auto space-y-3">
                 {stats.violations.recentViolations.map((violation, index) => (
-                  <ListItem key={index}>
-                    <ListItemAvatar>
-                      <Avatar sx={{ width: 32, height: 32, bgcolor: 'error.main' }}>
-                        <Warning fontSize="small" />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={
-                        <Box>
-                          <Chip label={violation.type} size="small" color="error" sx={{ mr: 1 }} />
-                          <Chip
-                            label={violation.severity}
-                            size="small"
-                            variant="outlined"
-                            color={
-                              violation.severity === 'HIGH'
-                                ? 'error'
-                                : violation.severity === 'MEDIUM'
-                                ? 'warning'
-                                : 'default'
-                            }
-                          />
-                        </Box>
-                      }
-                      secondary={
-                        <>
-                          {violation.studentName || 'Unknown Student'}
-                          <br />
-                          <Typography variant="caption" color="text.secondary">
-                            {formatDistanceToNow(new Date(violation.timestamp), { addSuffix: true })}
-                          </Typography>
-                        </>
-                      }
-                    />
-                  </ListItem>
+                  <div key={index} className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center flex-shrink-0">
+                      <AlertTriangle className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex gap-2 mb-1">
+                        <Badge variant="destructive">{violation.type}</Badge>
+                        <Badge
+                          variant={
+                            violation.severity === 'HIGH'
+                              ? 'destructive'
+                              : violation.severity === 'MEDIUM'
+                              ? 'warning'
+                              : 'secondary'
+                          }
+                        >
+                          {violation.severity}
+                        </Badge>
+                      </div>
+                      <p className="text-sm">{violation.studentName || 'Unknown Student'}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(violation.timestamp), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </div>
                 ))}
-              </List>
-            </Paper>
+              </div>
+            </Card>
           )}
-        </Grid>
-      </Grid>
-
-      {/* Live indicator CSS */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.5;
-          }
-        }
-      `}</style>
-    </Container>
+        </div>
+      </div>
+    </div>
   );
 };
 

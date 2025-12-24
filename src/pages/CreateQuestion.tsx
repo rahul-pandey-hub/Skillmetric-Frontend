@@ -1,29 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import {
-  Container,
-  Box,
-  Typography,
-  Button,
-  Paper,
-  Grid,
-  TextField,
-  MenuItem,
-  Alert,
-  Divider,
-  IconButton,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  FormLabel,
-  Chip,
-} from '@mui/material';
-import {
-  ArrowBack as ArrowBackIcon,
-  Add as AddIcon,
-  Delete as DeleteIcon,
-} from '@mui/icons-material';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import questionsService from '../services/questionsService';
 import { QuestionType, DifficultyLevel, QuestionOption } from '../types/question';
 
@@ -261,339 +251,368 @@ const CreateQuestion: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="py-4">
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <IconButton onClick={() => navigate('/admin/questions')} sx={{ mr: 2 }}>
-            <ArrowBackIcon />
-          </IconButton>
-          <Box>
-            <Typography variant="h4" gutterBottom>
-              Create New Question
-            </Typography>
-            <Typography variant="subtitle1" color="textSecondary">
-              Add a new question to your question bank
-            </Typography>
-          </Box>
-        </Box>
+        <div className="flex items-center mb-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/admin/questions')}
+            className="mr-2"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Create New Question</h1>
+            <p className="text-muted-foreground mt-1">Add a new question to your question bank</p>
+          </div>
+        </div>
 
         {/* Alerts */}
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
+          <Alert variant="destructive" className="mb-3">
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
         {success && (
-          <Alert severity="success" sx={{ mb: 3 }}>
-            {success}
+          <Alert className="mb-3 border-green-500 bg-green-50 text-green-900">
+            <AlertDescription>{success}</AlertDescription>
           </Alert>
         )}
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
           {/* Basic Info */}
-          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Basic Information
-            </Typography>
-            <Divider sx={{ mb: 3 }} />
-
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
+          <Card className="mb-3">
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="text" className="required">Question Text</Label>
+                <textarea
+                  id="text"
                   required
-                  multiline
                   rows={4}
-                  label="Question Text"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  helperText={`${text.length}/2000 characters (minimum 10)`}
-                  error={text.length > 0 && text.length < 10}
+                  className="w-full mt-1.5 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
-              </Grid>
+                <p className={`text-xs mt-1.5 ${text.length > 0 && text.length < 10 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                  {text.length}/2000 characters (minimum 10)
+                </p>
+              </div>
 
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  required
-                  select
-                  label="Question Type"
-                  value={type}
-                  onChange={(e) => setType(e.target.value as QuestionType)}
-                >
-                  {Object.values(QuestionType).map((qType) => (
-                    <MenuItem key={qType} value={qType}>
-                      {qType.replace('_', ' ')}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="type" className="required">Question Type</Label>
+                  <Select value={type} onValueChange={(value) => setType(value as QuestionType)}>
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(QuestionType).map((qType) => (
+                        <SelectItem key={qType} value={qType}>
+                          {qType.replace('_', ' ')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  required
-                  select
-                  label="Difficulty Level"
-                  value={difficulty}
-                  onChange={(e) => setDifficulty(e.target.value as DifficultyLevel)}
-                >
-                  {Object.values(DifficultyLevel).map((level) => (
-                    <MenuItem key={level} value={level}>
-                      {level}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
+                <div>
+                  <Label htmlFor="difficulty" className="required">Difficulty Level</Label>
+                  <Select value={difficulty} onValueChange={(value) => setDifficulty(value as DifficultyLevel)}>
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(DifficultyLevel).map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label="Category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  helperText="e.g., Geography, Mathematics"
-                />
-              </Grid>
-            </Grid>
-          </Paper>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Input
+                    id="category"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="e.g., Geography, Mathematics"
+                    className="mt-1.5"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Answer Options - Dynamic based on question type */}
           {(type === QuestionType.MULTIPLE_CHOICE || type === QuestionType.TRUE_FALSE) && (
-            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">
-                  Answer Options
-                </Typography>
-                {type === QuestionType.MULTIPLE_CHOICE && (
-                  <Button
-                    variant="outlined"
-                    startIcon={<AddIcon />}
-                    onClick={handleAddOption}
-                    size="small"
-                  >
-                    Add Option
-                  </Button>
-                )}
-              </Box>
-              <Divider sx={{ mb: 3 }} />
-
-              <FormControl component="fieldset" fullWidth>
-                <FormLabel component="legend" sx={{ mb: 2 }}>
+            <Card className="mb-3">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Answer Options</CardTitle>
+                  {type === QuestionType.MULTIPLE_CHOICE && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddOption}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Option
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
                   {type === QuestionType.TRUE_FALSE
                     ? 'Select the correct answer'
                     : 'Select the correct answer and manage options'}
-                </FormLabel>
-                <RadioGroup>
+                </p>
+                <div className="space-y-4">
                   {options.map((option, index) => (
-                    <Box
-                      key={option.id}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        mb: 2,
-                      }}
-                    >
-                      <FormControlLabel
-                        value={option.id}
-                        control={
-                          <Radio
-                            checked={option.isCorrect}
-                            onChange={() => handleCorrectAnswerChange(index)}
-                          />
-                        }
-                        label={`${String.fromCharCode(65 + index)}.`}
-                        sx={{ minWidth: 60 }}
-                      />
-                      <TextField
-                        fullWidth
-                        required
-                        label={`Option ${index + 1}`}
-                        value={option.text}
-                        onChange={(e) => handleOptionChange(index, e.target.value)}
-                        helperText={`${option.text.length}/500 characters`}
-                        error={option.text.length > 500}
-                        disabled={type === QuestionType.TRUE_FALSE}
-                      />
+                    <div key={option.id} className="flex items-start gap-4">
+                      <div className="flex items-center h-10">
+                        <input
+                          type="radio"
+                          id={`option-${option.id}`}
+                          name="correctAnswer"
+                          checked={option.isCorrect}
+                          onChange={() => handleCorrectAnswerChange(index)}
+                          className="h-4 w-4 text-primary border-gray-300 focus:ring-2 focus:ring-primary"
+                        />
+                        <label htmlFor={`option-${option.id}`} className="ml-2 text-sm font-medium min-w-[40px]">
+                          {String.fromCharCode(65 + index)}.
+                        </label>
+                      </div>
+                      <div className="flex-1">
+                        <Input
+                          required
+                          value={option.text}
+                          onChange={(e) => handleOptionChange(index, e.target.value)}
+                          placeholder={`Option ${index + 1}`}
+                          disabled={type === QuestionType.TRUE_FALSE}
+                        />
+                        <p className={`text-xs mt-1.5 ${option.text.length > 500 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                          {option.text.length}/500 characters
+                        </p>
+                      </div>
                       {type === QuestionType.MULTIPLE_CHOICE && options.length > 2 && (
-                        <IconButton
-                          color="error"
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleRemoveOption(index)}
-                          aria-label="delete option"
+                          className="text-destructive hover:text-destructive"
                         >
-                          <DeleteIcon />
-                        </IconButton>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       )}
-                    </Box>
+                    </div>
                   ))}
-                </RadioGroup>
-              </FormControl>
-            </Paper>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Fill in the Blank */}
           {type === QuestionType.FILL_BLANK && (
-            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Fill in the Blank Answer
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
+            <Card className="mb-3">
+              <CardHeader>
+                <CardTitle>Fill in the Blank Answer</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Alert className="border-blue-500 bg-blue-50">
+                  <AlertDescription className="text-blue-900">
+                    Use underscores (_____) in the question text to indicate where the blank spaces should be.
+                    For example: "The capital of France is _____."
+                  </AlertDescription>
+                </Alert>
 
-              <Alert severity="info" sx={{ mb: 3 }}>
-                Use underscores (_____) in the question text to indicate where the blank spaces should be.
-                For example: "The capital of France is _____."
-              </Alert>
-
-              <TextField
-                fullWidth
-                required
-                label="Correct Answer"
-                value={fillBlankAnswer}
-                onChange={(e) => setFillBlankAnswer(e.target.value)}
-                helperText="Enter the correct answer that should fill the blank"
-                placeholder="e.g., Paris"
-              />
-            </Paper>
+                <div>
+                  <Label htmlFor="fillBlankAnswer" className="required">Correct Answer</Label>
+                  <Input
+                    id="fillBlankAnswer"
+                    required
+                    value={fillBlankAnswer}
+                    onChange={(e) => setFillBlankAnswer(e.target.value)}
+                    placeholder="e.g., Paris"
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Enter the correct answer that should fill the blank
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Short Answer */}
           {type === QuestionType.SHORT_ANSWER && (
-            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Short Answer
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
+            <Card className="mb-3">
+              <CardHeader>
+                <CardTitle>Short Answer</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Alert className="border-blue-500 bg-blue-50">
+                  <AlertDescription className="text-blue-900">
+                    Provide a model answer for the short answer question. This will be used for reference during grading.
+                  </AlertDescription>
+                </Alert>
 
-              <Alert severity="info" sx={{ mb: 3 }}>
-                Provide a model answer for the short answer question. This will be used for reference during grading.
-              </Alert>
-
-              <TextField
-                fullWidth
-                required
-                multiline
-                rows={4}
-                label="Model Answer"
-                value={shortAnswer}
-                onChange={(e) => setShortAnswer(e.target.value)}
-                helperText="Enter the expected short answer"
-                placeholder="Write the expected answer here..."
-              />
-            </Paper>
+                <div>
+                  <Label htmlFor="shortAnswer" className="required">Model Answer</Label>
+                  <textarea
+                    id="shortAnswer"
+                    required
+                    rows={4}
+                    value={shortAnswer}
+                    onChange={(e) => setShortAnswer(e.target.value)}
+                    placeholder="Write the expected answer here..."
+                    className="w-full mt-1.5 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Enter the expected short answer
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Essay Type */}
           {type === QuestionType.ESSAY && (
-            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Essay Question
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-
-              <Alert severity="info">
-                Essay questions require manual grading. No predefined correct answer is needed.
-                Students will provide a detailed written response that needs to be evaluated by an instructor.
-              </Alert>
-            </Paper>
+            <Card className="mb-3">
+              <CardHeader>
+                <CardTitle>Essay Question</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Alert className="border-blue-500 bg-blue-50">
+                  <AlertDescription className="text-blue-900">
+                    Essay questions require manual grading. No predefined correct answer is needed.
+                    Students will provide a detailed written response that needs to be evaluated by an instructor.
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            </Card>
           )}
 
           {/* Scoring */}
-          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Scoring
-            </Typography>
-            <Divider sx={{ mb: 3 }} />
+          <Card className="mb-3">
+            <CardHeader>
+              <CardTitle>Scoring</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="marks" className="required">Marks</Label>
+                  <Input
+                    id="marks"
+                    type="number"
+                    required
+                    min={0.5}
+                    step={0.5}
+                    value={marks}
+                    onChange={(e) => setMarks(parseFloat(e.target.value))}
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Marks awarded for correct answer (minimum 0.5)
+                  </p>
+                </div>
 
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  required
-                  type="number"
-                  label="Marks"
-                  value={marks}
-                  onChange={(e) => setMarks(parseFloat(e.target.value))}
-                  inputProps={{ min: 0.5, step: 0.5 }}
-                  helperText="Marks awarded for correct answer (minimum 0.5)"
-                />
-              </Grid>
+                <div>
+                  <Label htmlFor="negativeMarks">Negative Marks</Label>
+                  <Input
+                    id="negativeMarks"
+                    type="number"
+                    min={0}
+                    step={0.25}
+                    value={negativeMarks}
+                    onChange={(e) => setNegativeMarks(parseFloat(e.target.value))}
+                    className="mt-1.5"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Marks deducted for incorrect answer
+                  </p>
+                </div>
+              </div>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Negative Marks"
-                  value={negativeMarks}
-                  onChange={(e) => setNegativeMarks(parseFloat(e.target.value))}
-                  inputProps={{ min: 0, step: 0.25 }}
-                  helperText="Marks deducted for incorrect answer"
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  multiline
+              <div>
+                <Label htmlFor="explanation">Explanation (Optional)</Label>
+                <textarea
+                  id="explanation"
                   rows={3}
-                  label="Explanation (Optional)"
                   value={explanation}
                   onChange={(e) => setExplanation(e.target.value)}
-                  helperText={`${explanation.length}/1000 characters`}
-                  error={explanation.length > 1000}
+                  className="w-full mt-1.5 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
-              </Grid>
-            </Grid>
-          </Paper>
+                <p className={`text-xs mt-1.5 ${explanation.length > 1000 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                  {explanation.length}/1000 characters
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Tags */}
-          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Tags (Optional)
-            </Typography>
-            <Divider sx={{ mb: 3 }} />
-
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-              <TextField
-                fullWidth
-                label="Add Tag"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                helperText="Press Enter to add tag"
-              />
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={handleAddTag}
-                disabled={!tagInput.trim()}
-              >
-                Add
-              </Button>
-            </Box>
-
-            {tags.length > 0 && (
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {tags.map((tag) => (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    onDelete={() => handleDeleteTag(tag)}
-                    color="primary"
-                    variant="outlined"
+          <Card className="mb-3">
+            <CardHeader>
+              <CardTitle>Tags (Optional)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                    placeholder="Add tag and press Enter"
                   />
-                ))}
-              </Box>
-            )}
-          </Paper>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Press Enter to add tag
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAddTag}
+                  disabled={!tagInput.trim()}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add
+                </Button>
+              </div>
+
+              {tags.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {tags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => handleDeleteTag(tag)}
+                    >
+                      {tag}
+                      <span className="ml-1 text-xs">&times;</span>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Actions */}
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+          <div className="flex gap-2 justify-end">
             <Button
-              variant="outlined"
-              size="large"
+              type="button"
+              variant="outline"
+              size="lg"
               onClick={() => navigate('/admin/questions')}
               disabled={loading}
             >
@@ -601,16 +620,15 @@ const CreateQuestion: React.FC = () => {
             </Button>
             <Button
               type="submit"
-              variant="contained"
-              size="large"
+              size="lg"
               disabled={loading}
             >
               {loading ? 'Creating...' : 'Create Question'}
             </Button>
-          </Box>
+          </div>
         </form>
-      </Box>
-    </Container>
+      </div>
+    </div>
   );
 };
 

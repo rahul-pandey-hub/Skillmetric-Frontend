@@ -1,29 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Container,
-  Typography,
-  Paper,
-  Box,
-  Grid,
-  Button,
-  Chip,
-  Card,
-  CardContent,
-  CircularProgress,
-  Alert,
-  Divider,
-  LinearProgress,
-} from '@mui/material';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import {
   CheckCircle,
-  Cancel,
-  EmojiEvents,
+  XCircle,
+  Trophy,
   TrendingUp,
-  Warning,
-  ArrowBack,
+  AlertTriangle,
+  ArrowLeft,
   Info,
-} from '@mui/icons-material';
+  Loader2,
+} from 'lucide-react';
 import { useSnackbar } from 'notistack';
 import api from '../services/api';
 
@@ -137,353 +128,304 @@ const StudentResults = () => {
   };
 
   const getGrade = (percentage: number) => {
-    if (percentage >= 90) return { grade: 'A+', color: '#4caf50' };
-    if (percentage >= 80) return { grade: 'A', color: '#66bb6a' };
-    if (percentage >= 70) return { grade: 'B+', color: '#9ccc65' };
-    if (percentage >= 60) return { grade: 'B', color: '#ffeb3b' };
-    if (percentage >= 50) return { grade: 'C', color: '#ff9800' };
-    return { grade: 'F', color: '#f44336' };
+    if (percentage >= 90) return { grade: 'A+', color: 'text-success' };
+    if (percentage >= 80) return { grade: 'A', color: 'text-success' };
+    if (percentage >= 70) return { grade: 'B+', color: 'text-success' };
+    if (percentage >= 60) return { grade: 'B', color: 'text-warning' };
+    if (percentage >= 50) return { grade: 'C', color: 'text-warning' };
+    return { grade: 'F', color: 'text-destructive' };
   };
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, textAlign: 'center' }}>
-        <CircularProgress />
-        <Typography sx={{ mt: 2 }}>Loading your results...</Typography>
-      </Container>
+      <div className="container mx-auto max-w-6xl py-8">
+        <div className="flex flex-col items-center justify-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p>Loading your results...</p>
+        </div>
+      </div>
     );
   }
 
   if (error || !result) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error || 'Result not found'}
+      <div className="container mx-auto max-w-6xl py-8">
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error || 'Result not found'}</AlertDescription>
         </Alert>
         <Button
-          variant="outlined"
-          startIcon={<ArrowBack />}
+          variant="outline"
+          className="gap-2"
           onClick={() => navigate('/student')}
         >
+          <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Button>
-      </Container>
+      </div>
     );
   }
 
   const gradeInfo = getGrade(result.score.percentage);
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <div className="container mx-auto max-w-6xl py-8">
       {/* Header */}
-      <Box sx={{ mb: 3 }}>
+      <div className="mb-6">
         <Button
-          variant="text"
-          startIcon={<ArrowBack />}
+          variant="ghost"
+          className="gap-2 mb-4"
           onClick={() => navigate('/student')}
-          sx={{ mb: 2 }}
         >
+          <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Button>
-        <Typography variant="h4" gutterBottom>
-          Exam Result
-        </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
+        <h1 className="text-4xl font-bold mb-2">Exam Result</h1>
+        <p className="text-muted-foreground">
           {result.exam.title} ({result.exam.code})
-        </Typography>
-      </Box>
+        </p>
+      </div>
 
       {/* Result Status Banner */}
-      <Paper
-        sx={{
-          p: 4,
-          mb: 3,
-          background: result.score.passed
-            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-            : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-          color: 'white',
-          textAlign: 'center',
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+      <Card className={`p-8 mb-6 text-center ${
+        result.score.passed
+          ? 'bg-gradient-to-br from-purple-500 to-purple-700 text-white'
+          : 'bg-gradient-to-br from-red-500 to-pink-600 text-white'
+      }`}>
+        <div className="flex items-center justify-center mb-4">
           {result.score.passed ? (
-            <CheckCircle sx={{ fontSize: 64, mr: 2 }} />
+            <CheckCircle className="h-16 w-16 mr-4" />
           ) : (
-            <Cancel sx={{ fontSize: 64, mr: 2 }} />
+            <XCircle className="h-16 w-16 mr-4" />
           )}
-          <Typography variant="h3" component="div">
+          <h2 className="text-4xl font-bold">
             {result.score.passed ? 'PASSED' : 'NOT PASSED'}
-          </Typography>
-        </Box>
-        <Typography variant="h6">
+          </h2>
+        </div>
+        <p className="text-xl">
           {result.status === 'PUBLISHED'
             ? 'Your results have been published'
             : 'Under Evaluation'}
-        </Typography>
-      </Paper>
+        </p>
+      </Card>
 
       {/* Score Overview */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography color="text.secondary" gutterBottom>
-                Your Score
-              </Typography>
-              <Typography variant="h3" component="div">
-                {result.score.obtained}
-              </Typography>
-              <Typography color="text.secondary">
-                out of {result.score.total}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography color="text.secondary" gutterBottom>
-                Percentage
-              </Typography>
-              <Typography
-                variant="h3"
-                component="div"
-                sx={{ color: gradeInfo.color }}
-              >
-                {result.score.percentage.toFixed(1)}%
-              </Typography>
-              <Chip
-                label={`Grade: ${gradeInfo.grade}`}
-                sx={{
-                  mt: 1,
-                  bgcolor: gradeInfo.color,
-                  color: 'white',
-                  fontWeight: 'bold',
-                }}
-              />
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <EmojiEvents sx={{ fontSize: 40, color: '#ffd700', mb: 1 }} />
-              <Typography color="text.secondary" gutterBottom>
-                Rank
-              </Typography>
-              <Typography variant="h3" component="div">
-                {result.ranking?.rank || 'N/A'}
-              </Typography>
-              <Typography color="text.secondary">
-                out of {result.ranking?.outOf || 0}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <TrendingUp sx={{ fontSize: 40, color: '#2196f3', mb: 1 }} />
-              <Typography color="text.secondary" gutterBottom>
-                Percentile
-              </Typography>
-              <Typography variant="h3" component="div">
-                {result.ranking?.percentile?.toFixed(0) || 'N/A'}
-              </Typography>
-              <Typography color="text.secondary">percentile</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <p className="text-muted-foreground mb-2">Your Score</p>
+            <h3 className="text-4xl font-bold">{result.score.obtained}</h3>
+            <p className="text-muted-foreground">out of {result.score.total}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <p className="text-muted-foreground mb-2">Percentage</p>
+            <h3 className={`text-4xl font-bold ${gradeInfo.color}`}>
+              {result.score.percentage.toFixed(1)}%
+            </h3>
+            <Badge className="mt-2" variant="secondary">
+              Grade: {gradeInfo.grade}
+            </Badge>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <Trophy className="h-10 w-10 text-warning mx-auto mb-2" />
+            <p className="text-muted-foreground mb-2">Rank</p>
+            <h3 className="text-4xl font-bold">{result.ranking?.rank || 'N/A'}</h3>
+            <p className="text-muted-foreground">out of {result.ranking?.outOf || 0}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <TrendingUp className="h-10 w-10 text-primary mx-auto mb-2" />
+            <p className="text-muted-foreground mb-2">Percentile</p>
+            <h3 className="text-4xl font-bold">{result.ranking?.percentile?.toFixed(0) || 'N/A'}</h3>
+            <p className="text-muted-foreground">percentile</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Shortlisting Status */}
       {result.ranking?.isShortlisted !== undefined && (
         <Alert
-          severity={result.ranking.isShortlisted ? 'success' : 'info'}
-          sx={{ mb: 3 }}
-          icon={result.ranking.isShortlisted ? <CheckCircle /> : <Info />}
+          variant={result.ranking.isShortlisted ? 'success' : 'info'}
+          className="mb-6"
         >
-          <Typography variant="h6" gutterBottom>
-            {result.ranking.isShortlisted
-              ? '🎉 Congratulations! You are shortlisted (Top 15%)'
-              : 'You are not shortlisted for the next round'}
-          </Typography>
-          {result.ranking.isShortlisted && (
-            <Typography variant="body2">
-              Next Round Information will be shared via email. Please check your inbox regularly.
-            </Typography>
-          )}
+          <AlertDescription>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">
+                {result.ranking.isShortlisted
+                  ? '🎉 Congratulations! You are shortlisted (Top 15%)'
+                  : 'You are not shortlisted for the next round'}
+              </h3>
+              {result.ranking.isShortlisted && (
+                <p className="text-sm">
+                  Next Round Information will be shared via email. Please check your inbox regularly.
+                </p>
+              )}
+            </div>
+          </AlertDescription>
         </Alert>
       )}
 
       {/* Performance Analysis */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Performance Analysis
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">Attempted</Typography>
-                <Typography variant="body2" fontWeight="bold">
-                  {result.analysis.attempted} / {result.analysis.attempted + result.analysis.unanswered}
-                </Typography>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={(result.analysis.attempted / (result.analysis.attempted + result.analysis.unanswered)) * 100}
-                sx={{ height: 10, borderRadius: 5 }}
-              />
-            </Box>
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">Correct Answers</Typography>
-                <Typography variant="body2" fontWeight="bold" color="success.main">
-                  {result.analysis.correct}
-                </Typography>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={(result.analysis.correct / result.analysis.attempted) * 100}
-                color="success"
-                sx={{ height: 10, borderRadius: 5 }}
-              />
-            </Box>
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">Incorrect Answers</Typography>
-                <Typography variant="body2" fontWeight="bold" color="error.main">
-                  {result.analysis.incorrect}
-                </Typography>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={(result.analysis.incorrect / result.analysis.attempted) * 100}
-                color="error"
-                sx={{ height: 10, borderRadius: 5 }}
-              />
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                <Typography>Accuracy</Typography>
-                <Typography fontWeight="bold">{result.analysis.accuracy.toFixed(1)}%</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                <Typography>Time Taken</Typography>
-                <Typography fontWeight="bold">{formatDuration(result.analysis.timeSpent)}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                <Typography>Unanswered</Typography>
-                <Typography fontWeight="bold">{result.analysis.unanswered}</Typography>
-              </Box>
-            </Box>
-          </Grid>
-        </Grid>
-      </Paper>
+      <Card className="p-6 mb-6">
+        <h2 className="text-2xl font-semibold mb-4">Performance Analysis</h2>
+        <div className="border-t pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between mb-2">
+                  <p className="text-sm">Attempted</p>
+                  <p className="text-sm font-bold">
+                    {result.analysis.attempted} / {result.analysis.attempted + result.analysis.unanswered}
+                  </p>
+                </div>
+                <Progress
+                  value={(result.analysis.attempted / (result.analysis.attempted + result.analysis.unanswered)) * 100}
+                  className="h-3"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-2">
+                  <p className="text-sm">Correct Answers</p>
+                  <p className="text-sm font-bold text-success">
+                    {result.analysis.correct}
+                  </p>
+                </div>
+                <Progress
+                  value={(result.analysis.correct / result.analysis.attempted) * 100}
+                  className="h-3 bg-success/20"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-2">
+                  <p className="text-sm">Incorrect Answers</p>
+                  <p className="text-sm font-bold text-destructive">
+                    {result.analysis.incorrect}
+                  </p>
+                </div>
+                <Progress
+                  value={(result.analysis.incorrect / result.analysis.attempted) * 100}
+                  className="h-3 bg-destructive/20"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex justify-between p-4 bg-muted rounded-lg">
+                <p>Accuracy</p>
+                <p className="font-bold">{result.analysis.accuracy.toFixed(1)}%</p>
+              </div>
+              <div className="flex justify-between p-4 bg-muted rounded-lg">
+                <p>Time Taken</p>
+                <p className="font-bold">{formatDuration(result.analysis.timeSpent)}</p>
+              </div>
+              <div className="flex justify-between p-4 bg-muted rounded-lg">
+                <p>Unanswered</p>
+                <p className="font-bold">{result.analysis.unanswered}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* Proctoring Report */}
       {result.proctoringReport && (
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Proctoring Report
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Warning sx={{ mr: 1, color: result.proctoringReport.totalViolations > 0 ? 'warning.main' : 'success.main' }} />
-                <Typography>
+        <Card className="p-6 mb-6">
+          <h2 className="text-2xl font-semibold mb-4">Proctoring Report</h2>
+          <div className="border-t pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className={`h-5 w-5 ${
+                  result.proctoringReport.totalViolations > 0 ? 'text-warning' : 'text-success'
+                }`} />
+                <p>
                   Total Violations: <strong>{result.proctoringReport.totalViolations}</strong>
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography>
-                Warnings Issued: <strong>{result.proctoringReport.warningsIssued}</strong>
-              </Typography>
-            </Grid>
-            {result.proctoringReport.autoSubmitted && (
-              <Grid item xs={12}>
-                <Alert severity="warning">
-                  This exam was auto-submitted due to violation limit exceeded.
-                </Alert>
-              </Grid>
-            )}
-          </Grid>
-        </Paper>
+                </p>
+              </div>
+              <div>
+                <p>
+                  Warnings Issued: <strong>{result.proctoringReport.warningsIssued}</strong>
+                </p>
+              </div>
+              {result.proctoringReport.autoSubmitted && (
+                <div className="col-span-2">
+                  <Alert variant="warning">
+                    <AlertDescription>
+                      This exam was auto-submitted due to violation limit exceeded.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
       )}
 
       {/* Submission Details */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Submission Details
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        <Grid container spacing={2}>
-          {result.session && (
-            <>
-              <Grid item xs={12} md={6}>
-                <Typography color="text.secondary">Started At</Typography>
-                <Typography fontWeight="medium">{formatDate(result.session.startTime)}</Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography color="text.secondary">Submitted At</Typography>
-                <Typography fontWeight="medium">{formatDate(result.session.submittedAt)}</Typography>
-              </Grid>
-            </>
-          )}
-          {result.publishedAt && (
-            <Grid item xs={12} md={6}>
-              <Typography color="text.secondary">Published At</Typography>
-              <Typography fontWeight="medium">{formatDate(result.publishedAt)}</Typography>
-            </Grid>
-          )}
-        </Grid>
-      </Paper>
+      <Card className="p-6 mb-6">
+        <h2 className="text-2xl font-semibold mb-4">Submission Details</h2>
+        <div className="border-t pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {result.session && (
+              <>
+                <div>
+                  <p className="text-muted-foreground">Started At</p>
+                  <p className="font-medium">{formatDate(result.session.startTime)}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Submitted At</p>
+                  <p className="font-medium">{formatDate(result.session.submittedAt)}</p>
+                </div>
+              </>
+            )}
+            {result.publishedAt && (
+              <div>
+                <p className="text-muted-foreground">Published At</p>
+                <p className="font-medium">{formatDate(result.publishedAt)}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
 
       {/* Next Steps */}
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Next Steps
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        {result.ranking?.isShortlisted ? (
-          <Box>
-            <Typography variant="body1" gutterBottom>
-              ✅ You have been shortlisted for the next round!
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              • Check your email for interview schedule and details
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              • Prepare using the resources provided in the email
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              • Stay tuned for further communication from the recruitment team
-            </Typography>
-          </Box>
-        ) : (
-          <Box>
-            <Typography variant="body1" gutterBottom>
-              Thank you for taking the assessment!
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              • Review your performance and identify areas for improvement
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              • Practice more to enhance your skills
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              • Look out for more opportunities in the future
-            </Typography>
-          </Box>
-        )}
-      </Paper>
-    </Container>
+      <Card className="p-6">
+        <h2 className="text-2xl font-semibold mb-4">Next Steps</h2>
+        <div className="border-t pt-4">
+          {result.ranking?.isShortlisted ? (
+            <div className="space-y-2">
+              <p className="font-medium">
+                ✅ You have been shortlisted for the next round!
+              </p>
+              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                <li>Check your email for interview schedule and details</li>
+                <li>Prepare using the resources provided in the email</li>
+                <li>Stay tuned for further communication from the recruitment team</li>
+              </ul>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="font-medium">
+                Thank you for taking the assessment!
+              </p>
+              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                <li>Review your performance and identify areas for improvement</li>
+                <li>Practice more to enhance your skills</li>
+                <li>Look out for more opportunities in the future</li>
+              </ul>
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
   );
 };
 
