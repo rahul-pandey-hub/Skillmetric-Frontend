@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as faceapi from 'face-api.js';
 
 interface FaceProctoringProps {
-  onWarning: (type: 'FACE_NOT_DETECTED' | 'MULTIPLE_FACES') => void;
+  onWarning: (type: 'NO_FACE' | 'MULTIPLE_FACES') => void;
   onCameraError: (error: string) => void;
 }
 
@@ -82,7 +82,7 @@ const FaceProctoring: React.FC<FaceProctoringProps> = ({ onWarning, onCameraErro
           if (!noFaceTimeoutRef.current) {
             noFaceTimeoutRef.current = setTimeout(() => {
               console.warn("WARNING: Face not detected.");
-              onWarning('FACE_NOT_DETECTED');
+              onWarning('NO_FACE');
             }, 3000); // 3-second grace period
           }
         } else {
@@ -141,4 +141,4 @@ const overlayStyle: React.CSSProperties = {
   borderRadius: '6px'
 };
 
-export default FaceProctoring;
+export default React.memo(FaceProctoring);

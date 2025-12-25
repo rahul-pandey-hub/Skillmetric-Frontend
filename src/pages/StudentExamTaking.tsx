@@ -11,7 +11,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useSnackbar } from 'notistack';
-import Webcam from 'react-webcam';
+import FaceProctoring from '../components/proctoring/FaceProctoring';
 import { useAuthStore } from '../store/authStore';
 import socketService from '../services/socket';
 import api from '../services/api';
@@ -78,7 +78,6 @@ const StudentExamTaking = () => {
   const [warningMessage, setWarningMessage] = useState('');
 
   // Refs
-  const webcamRef = useRef<Webcam>(null);
   const socket = useRef<any>(null);
   const timerRef = useRef<any>(null);
   const autoSaveRef = useRef<any>(null);
@@ -294,6 +293,19 @@ const StudentExamTaking = () => {
     }
   }, [examData]);
 
+  // Face detection callbacks
+  const handleFaceWarning = useCallback((type: 'NO_FACE' | 'MULTIPLE_FACES') => {
+    const messages = {
+      NO_FACE: 'Face not detected! Please ensure your face is visible in the camera.',
+      MULTIPLE_FACES: 'Multiple faces detected! Only you should be visible during the exam.'
+    };
+    reportViolation(type, { message: messages[type] });
+  }, [reportViolation]);
+
+  const handleCameraError = useCallback((error: string) => {
+    enqueueSnackbar(error, { variant: 'error' });
+  }, [enqueueSnackbar]);
+
   // Enter fullscreen
   const enterFullscreen = () => {
     document.documentElement.requestFullscreen().catch((err) => {
@@ -491,11 +503,11 @@ const StudentExamTaking = () => {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-start">
           {/* Question panel */}
           <div className="lg:col-span-3">
-            <Card className="shadow-lg">
-              <CardContent className="p-6 min-h-[500px]">
+            <Card className="shadow-lg h-full">
+              <CardContent className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
                     <h2 className="text-xl font-bold mb-2">Question {currentQuestionIndex + 1}</h2>
@@ -635,8 +647,8 @@ const StudentExamTaking = () => {
           </div>
 
           {/* Question navigator */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-24 shadow-lg">
+          <div className="lg:col-span-1 space-y-4">
+            <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle className="text-lg">Questions</CardTitle>
               </CardHeader>
@@ -681,20 +693,32 @@ const StudentExamTaking = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Camera Feed */}
+            {examData.proctoringSettings.webcamRequired && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                    Camera Feed
+                    <Badge variant="destructive" className="ml-auto text-xs">REC</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+                    <FaceProctoring
+                      onWarning={handleFaceWarning}
+                      onCameraError={handleCameraError}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600 mt-2 text-center">
+                    Keep your face visible at all times - AI proctoring active
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
-
-        {/* Hidden webcam for proctoring */}
-        {examData.proctoringSettings.webcamRequired && (
-          <div>
-            <Webcam
-              ref={webcamRef}
-              audio={false}
-              screenshotFormat="image/jpeg"
-              videoConstraints={{ facingMode: 'user' }}
-            />
-          </div>
-        )}
 
         {/* Submit confirmation dialog */}
         <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
