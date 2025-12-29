@@ -5,6 +5,9 @@ export interface Exam {
   description?: string;
   duration: number;
   status: ExamStatus;
+  category?: ExamCategory;
+  accessMode?: ExamAccessMode;
+  organizationId?: string;
   createdBy: string | {
     _id: string;
     name: string;
@@ -16,6 +19,8 @@ export interface Exam {
   schedule: Schedule;
   grading: Grading;
   settings: ExamSettings;
+  invitationSettings?: InvitationSettings;
+  recruitmentResultSettings?: RecruitmentResultSettings;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -95,4 +100,116 @@ export interface RemoveQuestionsDto {
 export interface ExamsResponse {
   data: Exam[];
   total: number;
+}
+
+export enum ExamCategory {
+  INTERNAL_ASSESSMENT = 'INTERNAL_ASSESSMENT',
+  RECRUITMENT = 'RECRUITMENT',
+  GENERAL_ASSESSMENT = 'GENERAL_ASSESSMENT',
+}
+
+export enum ExamAccessMode {
+  ENROLLMENT_BASED = 'ENROLLMENT_BASED',
+  INVITATION_BASED = 'INVITATION_BASED',
+  HYBRID = 'HYBRID',
+}
+
+export interface InvitationSettings {
+  linkValidityDays: number;
+  allowMultipleAccess: boolean;
+  maxAccessCount: number;
+  autoExpireOnSubmit: boolean;
+  sendReminderEmails: boolean;
+  reminderBeforeDays: number;
+}
+
+export interface RecruitmentResultSettings {
+  showScoreToCandidate: boolean;
+  showRankToCandidate: boolean;
+  showOnlyConfirmation: boolean;
+  candidateResultMessage?: string;
+  recruiterCanExport: boolean;
+}
+
+export enum InvitationStatus {
+  PENDING = 'PENDING',
+  ACCESSED = 'ACCESSED',
+  STARTED = 'STARTED',
+  COMPLETED = 'COMPLETED',
+  EXPIRED = 'EXPIRED',
+  REVOKED = 'REVOKED',
+}
+
+export interface ExamInvitation {
+  _id: string;
+  invitationToken: string;
+  examId: string | Exam;
+  organizationId: string;
+  candidateEmail: string;
+  candidateName: string;
+  candidatePhone?: string;
+  status: InvitationStatus;
+  expiresAt: string;
+  accessCount: number;
+  sessionId?: string;
+  resultId?: string;
+  invitedBy: string;
+  invitationNote?: string;
+  firstAccessedAt?: string;
+  examStartedAt?: string;
+  examCompletedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SendInvitationsDto {
+  candidates: Array<{
+    email: string;
+    name: string;
+    phone?: string;
+  }>;
+  invitationNote?: string;
+  validityDays?: number;
+}
+
+export interface InvitationResponse {
+  valid: boolean;
+  exam: {
+    title: string;
+    description?: string;
+    duration: number;
+    totalQuestions: number;
+  };
+  candidate: {
+    name: string;
+    email: string;
+  };
+  expiresAt: string;
+  status: InvitationStatus;
+  canStart: boolean;
+}
+
+export interface RecruitmentResult {
+  invitationId: string;
+  candidateName: string;
+  candidateEmail: string;
+  candidatePhone?: string;
+  status: InvitationStatus;
+  score?: number;
+  percentage?: number;
+  rank?: number;
+  submittedAt?: string;
+  shortlisted?: boolean;
+}
+
+export interface RecruitmentResultsResponse {
+  data: RecruitmentResult[];
+  total: number;
+  stats: {
+    totalInvited: number;
+    completed: number;
+    pending: number;
+    expired: number;
+    averageScore?: number;
+  };
 }

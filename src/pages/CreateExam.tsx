@@ -25,6 +25,7 @@ import {
 import { examService } from '../services/examService';
 import { questionsService } from '../services/questionsService';
 import { Question } from '../types/question';
+import { ExamCategory, ExamAccessMode } from '../types/exam';
 
 interface ProctoringSettings {
   enabled: boolean;
@@ -116,6 +117,38 @@ const CreateExam = () => {
     attemptsAllowed: 1,
   });
 
+  // New: Category and Access Mode
+  const [category, setCategory] = useState<ExamCategory>(ExamCategory.GENERAL_ASSESSMENT);
+  const [accessMode, setAccessMode] = useState<ExamAccessMode>(ExamAccessMode.ENROLLMENT_BASED);
+
+  // Auto-set accessMode based on category
+  useEffect(() => {
+    if (category === ExamCategory.RECRUITMENT) {
+      setAccessMode(ExamAccessMode.INVITATION_BASED);
+    } else {
+      setAccessMode(ExamAccessMode.ENROLLMENT_BASED);
+    }
+  }, [category]);
+
+  // New: Invitation Settings (for INVITATION_BASED or HYBRID)
+  const [invitationSettings, setInvitationSettings] = useState({
+    linkValidityDays: 7,
+    allowMultipleAccess: true,
+    maxAccessCount: 10,
+    autoExpireOnSubmit: true,
+    sendReminderEmails: true,
+    reminderBeforeDays: 1,
+  });
+
+  // New: Recruitment Result Settings (for RECRUITMENT category)
+  const [recruitmentResultSettings, setRecruitmentResultSettings] = useState({
+    showScoreToCandidate: false,
+    showRankToCandidate: false,
+    showOnlyConfirmation: true,
+    candidateResultMessage: 'Thank you for completing the assessment. Your responses have been submitted successfully.',
+    recruiterCanExport: true,
+  });
+
   const handleProctoringChange = (field: keyof ProctoringSettings, value: boolean | number) => {
     setProctoringSettings({ ...proctoringSettings, [field]: value });
   };
@@ -184,12 +217,14 @@ const CreateExam = () => {
     }
 
     try {
-      const examData = {
+      const examData: any = {
         title,
         code,
         description,
         duration,
         status,
+        category,
+        accessMode,
         proctoringSettings,
         schedule: {
           startDate: new Date(schedule.startDate).toISOString(),
@@ -200,6 +235,16 @@ const CreateExam = () => {
         settings,
         questions: Array.from(selectedQuestions),
       };
+
+      // Add invitation settings if access mode supports it
+      if (accessMode === ExamAccessMode.INVITATION_BASED || accessMode === ExamAccessMode.HYBRID) {
+        examData.invitationSettings = invitationSettings;
+      }
+
+      // Add recruitment result settings if category is RECRUITMENT
+      if (category === ExamCategory.RECRUITMENT) {
+        examData.recruitmentResultSettings = recruitmentResultSettings;
+      }
 
       const response = await examService.createExam(examData);
       setSuccess('Exam created successfully!');
@@ -321,6 +366,226 @@ const CreateExam = () => {
                   </Select>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Exam Type & Access */}
+          <Card className="mt-3">
+            <CardHeader>
+              <CardTitle>Exam Type & Access</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="border-t pt-4"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="category">Exam Category</Label>
+                  <Select value={category} onValueChange={(value) => setCategory(value as ExamCategory)}>
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ExamCategory.INTERNAL_ASSESSMENT}>
+                        Internal Assessment
+                      </SelectItem>
+                      <SelectItem value={ExamCategory.RECRUITMENT}>
+                        Recruitment
+                      </SelectItem>
+                      <SelectItem value={ExamCategory.GENERAL_ASSESSMENT}>
+                        General Assessment
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    {category === ExamCategory.INTERNAL_ASSESSMENT && 'For internal employees/students'}
+                    {category === ExamCategory.RECRUITMENT && 'For recruitment candidates (one-time access)'}
+                    {category === ExamCategory.GENERAL_ASSESSMENT && 'For registered external candidates'}
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="accessMode">Access Mode</Label>
+                  <Select value={accessMode} onValueChange={(value) => setAccessMode(value as ExamAccessMode)}>
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ExamAccessMode.ENROLLMENT_BASED}>
+                        Enrollment Based
+                      </SelectItem>
+                      <SelectItem value={ExamAccessMode.INVITATION_BASED}>
+                        Invitation Based
+                      </SelectItem>
+                      <SelectItem value={ExamAccessMode.HYBRID}>
+                        Hybrid (Both)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    {accessMode === ExamAccessMode.ENROLLMENT_BASED && 'Students must be enrolled'}
+                    {accessMode === ExamAccessMode.INVITATION_BASED && 'Access via unique invitation links'}
+                    {accessMode === ExamAccessMode.HYBRID && 'Both enrollment and invitation allowed'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Invitation Settings */}
+              {(accessMode === ExamAccessMode.INVITATION_BASED || accessMode === ExamAccessMode.HYBRID) && (
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-semibold text-sm mb-4 text-blue-900">Invitation Settings</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="linkValidityDays">Link Validity (Days)</Label>
+                      <Input
+                        id="linkValidityDays"
+                        type="number"
+                        min={1}
+                        max={365}
+                        value={invitationSettings.linkValidityDays}
+                        onChange={(e) => setInvitationSettings({
+                          ...invitationSettings,
+                          linkValidityDays: Number(e.target.value)
+                        })}
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="maxAccessCount">Max Access Count</Label>
+                      <Input
+                        id="maxAccessCount"
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={invitationSettings.maxAccessCount}
+                        onChange={(e) => setInvitationSettings({
+                          ...invitationSettings,
+                          maxAccessCount: Number(e.target.value)
+                        })}
+                        className="mt-1.5"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="allowMultipleAccess">Allow Multiple Access</Label>
+                      <Switch
+                        id="allowMultipleAccess"
+                        checked={invitationSettings.allowMultipleAccess}
+                        onCheckedChange={(checked) => setInvitationSettings({
+                          ...invitationSettings,
+                          allowMultipleAccess: checked
+                        })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="autoExpireOnSubmit">Auto-expire on Submit</Label>
+                      <Switch
+                        id="autoExpireOnSubmit"
+                        checked={invitationSettings.autoExpireOnSubmit}
+                        onCheckedChange={(checked) => setInvitationSettings({
+                          ...invitationSettings,
+                          autoExpireOnSubmit: checked
+                        })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="sendReminderEmails">Send Reminder Emails</Label>
+                      <Switch
+                        id="sendReminderEmails"
+                        checked={invitationSettings.sendReminderEmails}
+                        onCheckedChange={(checked) => setInvitationSettings({
+                          ...invitationSettings,
+                          sendReminderEmails: checked
+                        })}
+                      />
+                    </div>
+                    {invitationSettings.sendReminderEmails && (
+                      <div>
+                        <Label htmlFor="reminderBeforeDays">Reminder Before (Days)</Label>
+                        <Input
+                          id="reminderBeforeDays"
+                          type="number"
+                          min={1}
+                          max={30}
+                          value={invitationSettings.reminderBeforeDays}
+                          onChange={(e) => setInvitationSettings({
+                            ...invitationSettings,
+                            reminderBeforeDays: Number(e.target.value)
+                          })}
+                          className="mt-1.5"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Recruitment Result Settings */}
+              {category === ExamCategory.RECRUITMENT && (
+                <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                  <h4 className="font-semibold text-sm mb-4 text-purple-900">Recruitment Result Settings</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label htmlFor="showScoreToCandidate">Show Score to Candidate</Label>
+                        <p className="text-xs text-muted-foreground">Display score immediately after submission</p>
+                      </div>
+                      <Switch
+                        id="showScoreToCandidate"
+                        checked={recruitmentResultSettings.showScoreToCandidate}
+                        onCheckedChange={(checked) => setRecruitmentResultSettings({
+                          ...recruitmentResultSettings,
+                          showScoreToCandidate: checked,
+                          showOnlyConfirmation: !checked,
+                        })}
+                      />
+                    </div>
+                    {recruitmentResultSettings.showScoreToCandidate && (
+                      <div className="flex items-center justify-between pl-4">
+                        <div>
+                          <Label htmlFor="showRankToCandidate">Show Rank to Candidate</Label>
+                          <p className="text-xs text-muted-foreground">Display rank among all candidates</p>
+                        </div>
+                        <Switch
+                          id="showRankToCandidate"
+                          checked={recruitmentResultSettings.showRankToCandidate}
+                          onCheckedChange={(checked) => setRecruitmentResultSettings({
+                            ...recruitmentResultSettings,
+                            showRankToCandidate: checked
+                          })}
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <Label htmlFor="candidateResultMessage">Result Confirmation Message</Label>
+                      <textarea
+                        id="candidateResultMessage"
+                        value={recruitmentResultSettings.candidateResultMessage}
+                        onChange={(e) => setRecruitmentResultSettings({
+                          ...recruitmentResultSettings,
+                          candidateResultMessage: e.target.value
+                        })}
+                        rows={3}
+                        className="w-full mt-1.5 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                        placeholder="Thank you for completing the assessment..."
+                      />
+                      <p className="text-xs text-muted-foreground mt-1.5">
+                        Message shown to candidates after submission
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label htmlFor="recruiterCanExport">Allow Recruiter Export</Label>
+                        <p className="text-xs text-muted-foreground">Recruiters can export results as CSV</p>
+                      </div>
+                      <Switch
+                        id="recruiterCanExport"
+                        checked={recruitmentResultSettings.recruiterCanExport}
+                        onCheckedChange={(checked) => setRecruitmentResultSettings({
+                          ...recruitmentResultSettings,
+                          recruiterCanExport: checked
+                        })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

@@ -56,10 +56,13 @@ interface ExamData {
 }
 
 const StudentExamTaking = () => {
-  const { examId } = useParams();
+  const { examId, token } = useParams<{ examId?: string; token?: string }>();
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const { user } = useAuthStore();
+
+  // Check if this is invitation-based access
+  const isInvitationBased = !!token;
 
   // Exam state
   const [examData, setExamData] = useState<ExamData | null>(null);
@@ -108,11 +111,34 @@ const StudentExamTaking = () => {
 
   const startExam = async () => {
     try {
-      const response = await api.post(`/student/exams/${examId}/start`);
-      const data: ExamData = response.data;
+      let data: ExamData;
+
+      if (isInvitationBased) {
+        // For invitation-based access, data is already loaded when starting exam
+        const invitationToken = localStorage.getItem('invitationToken');
+        const sessionId = localStorage.getItem('invitationSessionId');
+        const examDataStr = localStorage.getItem('invitationExamData');
+
+        if (!invitationToken || !sessionId || !examDataStr) {
+          enqueueSnackbar('Session expired. Please use the invitation link again.', { variant: 'error' });
+          navigate(`/exam/invitation/${token}`);
+          return;
+        }
+
+        // Use temporary JWT for API calls
+        api.defaults.headers.common['Authorization'] = `Bearer ${invitationToken}`;
+
+        data = JSON.parse(examDataStr);
+      } else {
+        // Regular student exam start
+        const response = await api.post(`/student/exams/${examId}/start`);
+        data = response.data;
+      }
 
       console.log('🔍 Exam Started - Full Response:', data);
       console.log('🔒 Proctoring Settings:', data.proctoringSettings);
+      console.log('📝 Questions:', data.questions);
+      console.log('🎯 Is Invitation Based:', isInvitationBased);
 
       setExamData(data);
 
@@ -126,10 +152,8 @@ const StudentExamTaking = () => {
         setupProctoring(data);
       }
 
-      // Enter fullscreen if required
-      if (data.proctoringSettings.fullscreenRequired) {
-        enterFullscreen();
-      }
+      // Note: Fullscreen will be requested when user clicks first question
+      // Browser security doesn't allow automatic fullscreen without user gesture
 
       setLoading(false);
       enqueueSnackbar('Exam started successfully', { variant: 'success' });
@@ -142,12 +166,19 @@ const StudentExamTaking = () => {
   };
 
   const setupProctoring = (data: ExamData) => {
-    socket.current = socketService.connect('proctoring');
+    // For invitation-based access, connect with temporary token
+    if (isInvitationBased) {
+      const invitationToken = localStorage.getItem('invitationToken');
+      socket.current = socketService.connect('proctoring', invitationToken);
+    } else {
+      socket.current = socketService.connect('proctoring');
+    }
 
     socket.current.emit('start-exam', {
       sessionId: data.sessionId,
       examId: data.exam._id,
-      studentId: user?.id,
+      studentId: user?.id || null, // null for invitation-based access
+      accessSource: isInvitationBased ? 'INVITATION' : 'ENROLLMENT',
     });
 
     socket.current.on('warning', (warningData: any) => {
@@ -442,6 +473,24 @@ const StudentExamTaking = () => {
 
   if (!examData) {
     return null;
+  }
+
+  if (!examData.questions || examData.questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="p-8 max-w-md">
+          <CardHeader>
+            <CardTitle className="text-red-600">No Questions Available</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">
+              This exam has no questions. Please contact the administrator.
+            </p>
+            <Button onClick={() => navigate(-1)}>Go Back</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const currentQuestion = examData.questions[currentQuestionIndex];

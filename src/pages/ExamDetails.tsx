@@ -6,8 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowLeft, Edit, Plus, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { examService } from '../services/examService';
-import { Exam, ExamStatus } from '../types/exam';
+import { Exam, ExamStatus, ExamAccessMode, ExamCategory } from '../types/exam';
 import BulkStudentUpload from '../components/BulkStudentUpload';
+import InvitationManagement from '../components/InvitationManagement';
 
 const ExamDetails = () => {
   const { examId } = useParams<{ examId: string }>();
@@ -34,6 +35,9 @@ const ExamDetails = () => {
     try {
       setLoading(true);
       const response = await examService.getExamById(examId!);
+      console.log('Exam data received:', response.data);
+      console.log('Access Mode:', response.data.accessMode);
+      console.log('Category:', response.data.category);
       setExam(response.data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load exam');
@@ -137,11 +141,30 @@ const ExamDetails = () => {
               Back
             </Button>
             <h1 className="text-3xl font-bold">{exam.title}</h1>
+            {exam.category && (
+              <Badge variant={exam.category === ExamCategory.RECRUITMENT ? 'default' : 'secondary'}>
+                {exam.category === ExamCategory.RECRUITMENT
+                  ? 'Recruitment'
+                  : exam.category === ExamCategory.INTERNAL_ASSESSMENT
+                  ? 'Internal Assessment'
+                  : 'General Assessment'}
+              </Badge>
+            )}
           </div>
-          <Button onClick={() => navigate(`${basePath}/exams/${examId}/edit`)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Manage Questions
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate(`${basePath}/exams/${examId}/results`)}>
+              View Results & Analytics
+            </Button>
+            {exam.category === ExamCategory.RECRUITMENT && (
+              <Button variant="outline" onClick={() => navigate(`${basePath}/exams/${examId}/recruitment-results`)}>
+                View Recruitment Results
+              </Button>
+            )}
+            <Button onClick={() => navigate(`${basePath}/exams/${examId}/edit`)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Manage Questions
+            </Button>
+          </div>
         </div>
 
         {/* Alerts */}
@@ -181,6 +204,18 @@ const ExamDetails = () => {
                 <p className="text-sm text-muted-foreground mb-1">Questions</p>
                 <p className="text-base font-medium">{questions.length} questions</p>
               </div>
+              {exam.accessMode && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Access Mode</p>
+                  <Badge variant="outline">
+                    {exam.accessMode === ExamAccessMode.ENROLLMENT_BASED
+                      ? 'Enrollment Based'
+                      : exam.accessMode === ExamAccessMode.INVITATION_BASED
+                      ? 'Invitation Based'
+                      : 'Hybrid (Both)'}
+                  </Badge>
+                </div>
+              )}
               {exam.description && (
                 <div className="md:col-span-2">
                   <p className="text-sm text-muted-foreground mb-1">Description</p>
@@ -243,29 +278,40 @@ const ExamDetails = () => {
           </CardContent>
         </Card>
 
-        {/* Enrolled Students */}
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Enrolled Students ({exam.enrolledStudents?.length || 0})</CardTitle>
-              <BulkStudentUpload examId={examId!} onUploadComplete={handleStudentUpload} />
-            </div>
-          </CardHeader>
-          <CardContent>
-            {(!exam.enrolledStudents || exam.enrolledStudents.length === 0) ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-2">No students enrolled yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Use the "Bulk Upload Students" button to enroll students via Excel/CSV file
-                </p>
+        {/* Enrolled Students - Show only for enrollment-based exams */}
+        {(exam.accessMode === ExamAccessMode.ENROLLMENT_BASED || exam.accessMode === ExamAccessMode.HYBRID || !exam.accessMode) && (
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle>Enrolled Students ({exam.enrolledStudents?.length || 0})</CardTitle>
+                <BulkStudentUpload examId={examId!} onUploadComplete={handleStudentUpload} />
               </div>
-            ) : (
-              <p className="text-muted-foreground">
-                {exam.enrolledStudents.length} student{exam.enrolledStudents.length !== 1 ? 's' : ''} enrolled
-              </p>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent>
+              {(!exam.enrolledStudents || exam.enrolledStudents.length === 0) ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-2">No students enrolled yet</p>
+                  <p className="text-sm text-muted-foreground">
+                    Use the "Bulk Upload Students" button to enroll students via Excel/CSV file
+                  </p>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">
+                  {exam.enrolledStudents.length} student{exam.enrolledStudents.length !== 1 ? 's' : ''} enrolled
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Invitation Management - Show only for invitation-based exams */}
+        {(exam.accessMode === ExamAccessMode.INVITATION_BASED || exam.accessMode === ExamAccessMode.HYBRID) && (
+          <InvitationManagement
+            examId={examId!}
+            examTitle={exam.title}
+            onInvitationsSent={fetchExam}
+          />
+        )}
 
         {/* Questions */}
         <Card>

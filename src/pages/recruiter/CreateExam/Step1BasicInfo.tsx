@@ -3,11 +3,21 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ExamFormData } from './index';
+import { ExamCategory, ExamAccessMode } from '@/types/exam';
 
 interface Step1Props {
   data: ExamFormData;
   updateData: (data: Partial<ExamFormData>) => void;
 }
+
+// Auto-set accessMode based on category
+const handleCategoryChange = (category: string, updateData: (data: Partial<ExamFormData>) => void) => {
+  const accessMode = category === 'RECRUITMENT'
+    ? ExamAccessMode.INVITATION_BASED
+    : ExamAccessMode.ENROLLMENT_BASED;
+
+  updateData({ category, accessMode });
+};
 
 export default function Step1BasicInfo({ data, updateData }: Step1Props) {
   return (
@@ -56,21 +66,31 @@ export default function Step1BasicInfo({ data, updateData }: Step1Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <Label htmlFor="type">Exam Type</Label>
+          <Label htmlFor="category">Exam Category *</Label>
           <Select
-            value={data.type}
-            onValueChange={(value) => updateData({ type: value })}
+            value={data.category}
+            onValueChange={(value) => handleCategoryChange(value, updateData)}
           >
             <SelectTrigger className="mt-2">
-              <SelectValue placeholder="Select type" />
+              <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ASSESSMENT">Assessment</SelectItem>
-              <SelectItem value="PRACTICE">Practice Test</SelectItem>
-              <SelectItem value="CERTIFICATION">Certification</SelectItem>
-              <SelectItem value="MOCK_TEST">Mock Test</SelectItem>
+              <SelectItem value={ExamCategory.INTERNAL_ASSESSMENT}>
+                Internal Assessment
+              </SelectItem>
+              <SelectItem value={ExamCategory.RECRUITMENT}>
+                Recruitment
+              </SelectItem>
+              <SelectItem value={ExamCategory.GENERAL_ASSESSMENT}>
+                General Assessment
+              </SelectItem>
             </SelectContent>
           </Select>
+          <p className="text-xs text-gray-500 mt-1">
+            {data.category === ExamCategory.RECRUITMENT && 'One-time invitation link access'}
+            {data.category === ExamCategory.INTERNAL_ASSESSMENT && 'For registered employees only'}
+            {data.category === ExamCategory.GENERAL_ASSESSMENT && 'For registered students only'}
+          </p>
         </div>
 
         <div>

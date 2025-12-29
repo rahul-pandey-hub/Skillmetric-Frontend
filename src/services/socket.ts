@@ -3,8 +3,9 @@ import { io, Socket } from 'socket.io-client';
 class SocketService {
   private socket: Socket | null = null;
 
-  connect(namespace: string = 'proctoring'): Socket {
-    const token = localStorage.getItem('accessToken');
+  connect(namespace: string = 'proctoring', customToken?: string): Socket {
+    // Use custom token if provided (for invitation-based access), otherwise use regular accessToken
+    const token = customToken || localStorage.getItem('accessToken');
 
     this.socket = io(`http://localhost:3000/${namespace}`, {
       query: {

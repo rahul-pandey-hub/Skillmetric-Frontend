@@ -18,6 +18,8 @@ export interface ExamFormData {
   code: string;
   description: string;
   type: string;
+  category: string;
+  accessMode: string;
   duration: number;
   totalMarks: number;
   passingPercentage: number;
@@ -86,6 +88,8 @@ export default function CreateExam() {
     code: '',
     description: '',
     type: 'ASSESSMENT',
+    category: 'GENERAL_ASSESSMENT',
+    accessMode: 'ENROLLMENT_BASED',
     duration: 60,
     totalMarks: 100,
     passingPercentage: 40,
@@ -172,6 +176,8 @@ export default function CreateExam() {
         description: formData.description || undefined,
         duration: formData.duration,
         status: 'PUBLISHED',
+        category: formData.category,
+        accessMode: formData.accessMode,
         questions: formData.questions,
         proctoringSettings: {
           enabled: formData.proctoringSettings.enabled,
@@ -204,6 +210,26 @@ export default function CreateExam() {
           attemptsAllowed: formData.settings.attemptsAllowed,
         },
       };
+
+      // Add invitation settings for recruitment exams
+      if (formData.category === 'RECRUITMENT') {
+        examData.invitationSettings = {
+          linkValidityDays: 7,
+          allowMultipleAccess: true,
+          maxAccessCount: 10,
+          autoExpireOnSubmit: true,
+          sendReminderEmails: false,
+          reminderBeforeDays: 1,
+        };
+
+        examData.recruitmentResultSettings = {
+          showScoreToCandidate: false,
+          showRankToCandidate: false,
+          showOnlyConfirmation: true,
+          candidateResultMessage: 'Thank you for completing the assessment. We will contact you soon.',
+          recruiterCanExport: true,
+        };
+      }
 
       await createExamMutation.mutateAsync(examData);
       navigate('/recruiter/exams');

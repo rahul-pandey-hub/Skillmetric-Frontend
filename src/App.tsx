@@ -16,6 +16,9 @@ import { lazy, Suspense } from 'react';
 
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
+const InvitationExamAccess = lazy(() => import('./pages/InvitationExamAccess'));
+const RecruitmentResults = lazy(() => import('./pages/recruiter/RecruitmentResults'));
+const ExamResults = lazy(() => import('./pages/recruiter/ExamResults'));
 const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
 const StudentResults = lazy(() => import('./pages/StudentResults'));
 const StudentExamHistory = lazy(() => import('./pages/StudentExamHistory'));
@@ -63,6 +66,8 @@ function App() {
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/exam/invitation/:token" element={<InvitationExamAccess />} />
+        <Route path="/exam/invitation/:token/take" element={<StudentExamTaking />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
@@ -84,6 +89,8 @@ function App() {
               <Route path="exams" element={<ExamsList />} />
               <Route path="exams/:examId" element={<ExamDetails />} />
               <Route path="exams/:examId/edit" element={<ManageExamQuestions />} />
+              <Route path="exams/:examId/recruitment-results" element={<RecruitmentResults />} />
+              <Route path="exams/:examId/results" element={<ExamResults />} />
               <Route path="create-exam" element={<CreateExam />} />
               <Route path="bulk-enrollment" element={<BulkEnrollment />} />
               <Route path="monitoring" element={<LiveMonitoring />} />
@@ -113,6 +120,11 @@ function App() {
               <Route path="exams/create" element={<CreateExam />} />
               <Route path="exams/:examId" element={<ExamDetails />} />
               <Route path="exams/:examId/edit" element={<ManageExamQuestions />} />
+              <Route path="exams/:examId/recruitment-results" element={<RecruitmentResults />} />
+              <Route path="exams/:examId/results" element={<ExamResults />} />
+              <Route path="bulk-enrollment" element={<BulkEnrollment />} />
+              <Route path="monitoring" element={<LiveMonitoring />} />
+              <Route path="monitoring/:examId" element={<LiveMonitoring />} />
             </Route>
 
             {/* Student Routes */}
