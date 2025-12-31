@@ -62,9 +62,8 @@ export default function DashboardLayout() {
       case 'STUDENT':
         return [
           { name: 'Dashboard', href: '/student', icon: LayoutDashboard },
-          { name: 'My Assessments', href: '/student/exams', icon: ClipboardList },
+          { name: 'My Exams', href: '/student', icon: ClipboardList },
           { name: 'Exam History', href: '/student/history', icon: FileText },
-          { name: 'Results', href: '/student/results', icon: BarChart3 },
           { name: 'Profile', href: '/student/profile', icon: Settings },
         ];
       case 'SUPER_ADMIN':

@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ExamFormData } from './index';
-import { Search, Plus, Trash2, FileText, Loader2 } from 'lucide-react';
+import { Search, Plus, Trash2, FileText, Loader2, Sparkles } from 'lucide-react';
 import { orgAdminQuestionsService } from '@/services/orgAdminQuestionsService';
 
 interface Step2Props {
@@ -103,10 +103,23 @@ export default function Step2Questions({ data, updateData }: Step2Props) {
             <option value="system-design">System Design</option>
           </select>
         </div>
-        <Button variant="outline">
-          <Plus className="w-4 h-4 mr-2" />
-          Create New
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => window.open('/org-admin/questions/create', '_blank')}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Manually
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => window.open('/org-admin/ai-generate', '_blank')}
+            className="border-purple-300 text-purple-700 hover:bg-purple-50"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            Create with AI
+          </Button>
+        </div>
       </div>
 
       <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">

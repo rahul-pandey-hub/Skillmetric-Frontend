@@ -35,9 +35,6 @@ const ExamDetails = () => {
     try {
       setLoading(true);
       const response = await examService.getExamById(examId!);
-      console.log('Exam data received:', response.data);
-      console.log('Access Mode:', response.data.accessMode);
-      console.log('Category:', response.data.category);
       setExam(response.data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load exam');
@@ -78,8 +75,6 @@ const ExamDetails = () => {
       setSuccess('');
       const response = await examService.enrollStudents(examId!, students);
       const { summary, details } = response.data;
-
-      console.log('Enrollment response:', response.data);
 
       if (summary.errors > 0) {
         const errorMessages = details.errors.map((err: any) =>
@@ -128,7 +123,10 @@ const ExamDetails = () => {
     );
   }
 
-  const questions = Array.isArray(exam.questions) ? exam.questions : [];
+  // Filter out null/undefined questions (deleted questions that are still referenced)
+  const questions = Array.isArray(exam.questions)
+    ? exam.questions.filter((q: any) => q != null && typeof q === 'object')
+    : [];
 
   return (
     <div className="container max-w-6xl mx-auto px-4 py-8">
@@ -350,19 +348,29 @@ const ExamDetails = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {questions.map((question: any, index) => (
-                      <TableRow key={question._id || index}>
-                        <TableCell className="font-medium">{index + 1}</TableCell>
-                        <TableCell>{question.questionText || 'N/A'}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{question.type || 'N/A'}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{question.difficulty || 'N/A'}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">{question.marks || 0}</TableCell>
-                      </TableRow>
-                    ))}
+                    {questions.map((question: any, index) => {
+                      // The schema uses 'text' not 'questionText'
+                      const questionText = question.text || 'N/A';
+                      const truncatedText = questionText.length > 80
+                        ? questionText.substring(0, 80) + '...'
+                        : questionText;
+
+                      return (
+                        <TableRow key={question._id || index}>
+                          <TableCell className="font-medium">{index + 1}</TableCell>
+                          <TableCell className="max-w-md" title={questionText}>
+                            {truncatedText}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{question.type || 'N/A'}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{question.difficulty || 'N/A'}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">{question.marks || 0}</TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>

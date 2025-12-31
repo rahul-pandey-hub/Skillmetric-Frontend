@@ -234,7 +234,7 @@ const StudentResults = () => {
           <CardContent className="pt-6 text-center">
             <Trophy className="h-10 w-10 text-warning mx-auto mb-2" />
             <p className="text-muted-foreground mb-2">Rank</p>
-            <h3 className="text-4xl font-bold">{result.ranking?.rank || 'N/A'}</h3>
+            <h3 className="text-4xl font-bold">{result.ranking?.rank || '-'}</h3>
             <p className="text-muted-foreground">out of {result.ranking?.outOf || 0}</p>
           </CardContent>
         </Card>
@@ -243,14 +243,14 @@ const StudentResults = () => {
           <CardContent className="pt-6 text-center">
             <TrendingUp className="h-10 w-10 text-primary mx-auto mb-2" />
             <p className="text-muted-foreground mb-2">Percentile</p>
-            <h3 className="text-4xl font-bold">{result.ranking?.percentile?.toFixed(0) || 'N/A'}</h3>
+            <h3 className="text-4xl font-bold">{result.ranking?.percentile?.toFixed(0) || '-'}</h3>
             <p className="text-muted-foreground">percentile</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Shortlisting Status */}
-      {result.ranking?.isShortlisted !== undefined && (
+      {/* Shortlisting Status - Only show if passed */}
+      {result.score?.passed && result.ranking?.isShortlisted !== undefined && (
         <Alert
           variant={result.ranking.isShortlisted ? 'success' : 'info'}
           className="mb-6"
@@ -341,28 +341,45 @@ const StudentResults = () => {
         <Card className="p-6 mb-6">
           <h2 className="text-2xl font-semibold mb-4">Proctoring Report</h2>
           <div className="border-t pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className={`h-5 w-5 ${
-                  result.proctoringReport.totalViolations > 0 ? 'text-warning' : 'text-success'
-                }`} />
-                <p>
-                  Total Violations: <strong>{result.proctoringReport.totalViolations}</strong>
-                </p>
-              </div>
-              <div>
-                <p>
-                  Warnings Issued: <strong>{result.proctoringReport.warningsIssued}</strong>
-                </p>
-              </div>
-              {result.proctoringReport.autoSubmitted && (
-                <div className="col-span-2">
-                  <Alert variant="warning">
-                    <AlertDescription>
-                      This exam was auto-submitted due to violation limit exceeded.
-                    </AlertDescription>
-                  </Alert>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className={`h-5 w-5 ${
+                    result.proctoringReport.totalViolations > 0 ? 'text-warning' : 'text-success'
+                  }`} />
+                  <p>
+                    Total Violations: <strong>{result.proctoringReport.totalViolations}</strong>
+                  </p>
                 </div>
+                <div>
+                  <p>
+                    Warnings Issued: <strong>{result.proctoringReport.warningsIssued}</strong>
+                  </p>
+                </div>
+              </div>
+
+              {result.proctoringReport.violationBreakdown && Object.keys(result.proctoringReport.violationBreakdown).length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-2">Violation Details:</h3>
+                  <div className="space-y-2">
+                    {Object.entries(result.proctoringReport.violationBreakdown).map(([type, count]: [string, any]) => (
+                      count > 0 && (
+                        <div key={type} className="flex items-center justify-between bg-muted p-2 rounded">
+                          <span className="capitalize">{type.replace(/_/g, ' ')}</span>
+                          <Badge variant="warning">{count} time{count > 1 ? 's' : ''}</Badge>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {result.proctoringReport.autoSubmitted && (
+                <Alert variant="warning">
+                  <AlertDescription>
+                    This exam was auto-submitted due to violation limit exceeded.
+                  </AlertDescription>
+                </Alert>
               )}
             </div>
           </div>
@@ -393,36 +410,6 @@ const StudentResults = () => {
               </div>
             )}
           </div>
-        </div>
-      </Card>
-
-      {/* Next Steps */}
-      <Card className="p-6">
-        <h2 className="text-2xl font-semibold mb-4">Next Steps</h2>
-        <div className="border-t pt-4">
-          {result.ranking?.isShortlisted ? (
-            <div className="space-y-2">
-              <p className="font-medium">
-                ✅ You have been shortlisted for the next round!
-              </p>
-              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                <li>Check your email for interview schedule and details</li>
-                <li>Prepare using the resources provided in the email</li>
-                <li>Stay tuned for further communication from the recruitment team</li>
-              </ul>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <p className="font-medium">
-                Thank you for taking the assessment!
-              </p>
-              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                <li>Review your performance and identify areas for improvement</li>
-                <li>Practice more to enhance your skills</li>
-                <li>Look out for more opportunities in the future</li>
-              </ul>
-            </div>
-          )}
         </div>
       </Card>
     </div>

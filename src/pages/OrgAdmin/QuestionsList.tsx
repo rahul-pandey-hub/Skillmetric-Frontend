@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Edit, Trash2, Plus, Eye, FolderTree, FileUp } from 'lucide-react';
+import { Edit, Trash2, Plus, Eye, FolderTree, FileUp, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Question, QuestionType, DifficultyLevel } from '@/types/question';
 
@@ -108,7 +108,14 @@ export default function QuestionsList() {
         <div className="flex gap-2">
           <Button onClick={() => navigate('/org-admin/questions/create')}>
             <Plus className="mr-2 h-4 w-4" />
-            Create Question
+            Create Manually
+          </Button>
+          <Button
+            onClick={() => navigate('/org-admin/ai-generate')}
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+          >
+            <Sparkles className="mr-2 h-4 w-4" />
+            Create with AI
           </Button>
           <Button variant="outline" onClick={() => navigate('/org-admin/questions/pools')}>
             <FolderTree className="mr-2 h-4 w-4" />

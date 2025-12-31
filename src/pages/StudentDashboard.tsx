@@ -213,8 +213,8 @@ const StudentDashboard = () => {
                     <CardHeader>
                       <div className="flex justify-between items-start mb-2">
                         <CardTitle className="text-xl">{exam.title}</CardTitle>
-                        <Badge variant={getExamStatusVariant(exam.examStatus)}>
-                          {exam.examStatus}
+                        <Badge variant={exam.attemptStatus === 'completed' ? 'success' : getExamStatusVariant(exam.examStatus)}>
+                          {exam.attemptStatus === 'completed' ? 'Completed' : exam.examStatus}
                         </Badge>
                       </div>
                       {exam.description && (
@@ -242,49 +242,56 @@ const StudentDashboard = () => {
                         </span>
                       </div>
 
-                      <div className="flex gap-2 flex-wrap">
-                        {exam.attemptStatus !== 'not_started' && (
-                          <Badge variant={getAttemptStatusVariant(exam.attemptStatus)}>
-                            {exam.attemptStatus === 'completed' ? 'Completed' : 'In Progress'}
-                          </Badge>
-                        )}
-
-                        {exam.proctoringSettings.enabled && (
-                          <Badge variant="outline" className="gap-1">
-                            <Lock className="w-3 h-3" />
-                            Proctored
-                          </Badge>
-                        )}
-                      </div>
+                      {exam.attemptStatus !== 'completed' && (
+                        <div className="flex gap-2 flex-wrap">
+                          {exam.proctoringSettings.enabled && (
+                            <Badge variant="outline" className="gap-1">
+                              <Lock className="w-3 h-3" />
+                              Proctored
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="flex-col gap-2">
                       {exam.attemptStatus === 'completed' ? (
-                        <Button
-                          className="w-full"
-                          variant="default"
-                          onClick={() => navigate(`/student/results/${exam._id}`)}
-                        >
-                          <CheckCircle className="mr-2 h-4 w-4" />
-                          View Results
-                        </Button>
-                      ) : (
+                        <>
+                          <div className="w-full p-3 rounded-lg bg-green-50 border border-green-200 flex items-center justify-center gap-2">
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                            <span className="font-medium text-green-700">Exam Submitted</span>
+                          </div>
+                          <Button
+                            className="w-full"
+                            variant="default"
+                            onClick={() => navigate(`/student/results/${exam._id}`)}
+                          >
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            View Results
+                          </Button>
+                        </>
+                      ) : exam.examStatus === 'expired' ? (
+                        <div className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center gap-2">
+                          <Clock className="h-5 w-5 text-gray-600" />
+                          <span className="font-medium text-gray-700">Exam Expired</span>
+                        </div>
+                      ) : exam.canAttempt && exam.examStatus === 'active' ? (
                         <Button
                           className="w-full"
                           onClick={() => handleStartExam(exam)}
-                          disabled={!exam.canAttempt && exam.examStatus !== 'active'}
                         >
-                          {exam.canAttempt ? (
-                            <>
-                              <Play className="mr-2 h-4 w-4" />
-                              Start Exam
-                            </>
-                          ) : (
-                            <>
-                              <Info className="mr-2 h-4 w-4" />
-                              View Info
-                            </>
-                          )}
+                          <Play className="mr-2 h-4 w-4" />
+                          Start Exam
                         </Button>
+                      ) : exam.examStatus === 'upcoming' ? (
+                        <div className="w-full p-3 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center gap-2">
+                          <Calendar className="h-5 w-5 text-blue-600" />
+                          <span className="font-medium text-blue-700">Upcoming</span>
+                        </div>
+                      ) : (
+                        <div className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center gap-2">
+                          <Lock className="h-5 w-5 text-gray-600" />
+                          <span className="font-medium text-gray-700">Not Available</span>
+                        </div>
                       )}
                     </CardFooter>
                   </Card>

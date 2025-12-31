@@ -43,6 +43,8 @@ const QuestionsList = lazy(() => import('./pages/OrgAdmin/QuestionsList'));
 const CreateQuestion = lazy(() => import('./pages/OrgAdmin/CreateQuestion'));
 const QuestionView = lazy(() => import('./pages/OrgAdmin/QuestionView'));
 const EditQuestion = lazy(() => import('./pages/OrgAdmin/EditQuestion'));
+const AIQuestionGeneration = lazy(() => import('./pages/OrgAdmin/AIQuestionGeneration'));
+const AIQuestionPreview = lazy(() => import('./pages/OrgAdmin/AIQuestionGeneration/Preview'));
 const OrgAnalytics = lazy(() => import('./pages/OrgAdmin/OrgAnalytics'));
 const OrgSettings = lazy(() => import('./pages/OrgAdmin/OrgSettings'));
 
@@ -112,6 +114,8 @@ function App() {
               <Route path="questions/create" element={<CreateQuestion />} />
               <Route path="questions/:id" element={<QuestionView />} />
               <Route path="questions/:id/edit" element={<EditQuestion />} />
+              <Route path="ai-generate" element={<AIQuestionGeneration />} />
+              <Route path="ai-question-generation/preview" element={<AIQuestionPreview />} />
               {/* Analytics & Settings */}
               <Route path="analytics" element={<OrgAnalytics />} />
               <Route path="settings" element={<OrgSettings />} />

@@ -94,11 +94,23 @@ const StudentExamHistory = () => {
   const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" | "success" | "warning" => {
     const statusConfig: Record<string, "default" | "secondary" | "destructive" | "outline" | "success" | "warning"> = {
       PUBLISHED: 'success',
-      GRADED: 'default',
+      COMPLETED: 'success',
+      GRADED: 'success',
       PENDING: 'warning',
       EVALUATING: 'secondary',
     };
     return statusConfig[status] || 'secondary';
+  };
+
+  const getStatusLabel = (status: string): string => {
+    const statusLabels: Record<string, string> = {
+      PUBLISHED: 'Completed',
+      COMPLETED: 'Completed',
+      GRADED: 'Graded',
+      PENDING: 'Pending',
+      EVALUATING: 'Evaluating',
+    };
+    return statusLabels[status] || status;
   };
 
   if (loading) {
@@ -210,7 +222,7 @@ const StudentExamHistory = () => {
                 </TableCell>
                 <TableCell className="text-center">
                   <Badge variant={getStatusVariant(result.status)}>
-                    {result.status}
+                    {getStatusLabel(result.status)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-center">
@@ -246,7 +258,7 @@ const StudentExamHistory = () => {
                 </TableCell>
                 <TableCell className="text-center">
                   <div>
-                    <p>{result.rank ? `#${result.rank}` : 'N/A'}</p>
+                    <p>{result.rank ? `#${result.rank}` : '-'}</p>
                     {result.percentile && (
                       <p className="text-xs text-muted-foreground">
                         ({result.percentile.toFixed(0)}th)
@@ -256,7 +268,7 @@ const StudentExamHistory = () => {
                 </TableCell>
                 <TableCell className="text-center">
                   <p className="text-sm">
-                    {result.submittedAt ? formatDate(result.submittedAt) : 'N/A'}
+                    {formatDate(result.submittedAt || result.createdAt || new Date().toISOString())}
                   </p>
                 </TableCell>
                 <TableCell className="text-center">

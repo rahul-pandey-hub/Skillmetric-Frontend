@@ -34,7 +34,7 @@ import { cn } from '../lib/utils';
 
 interface ExamQuestion {
   _id: string;
-  questionText: string;
+  text: string; // Changed from questionText to match backend schema
   type: string;
   difficulty: string;
   marks: number;
@@ -84,6 +84,7 @@ const StudentExamTaking = () => {
   const socket = useRef<any>(null);
   const timerRef = useRef<any>(null);
   const autoSaveRef = useRef<any>(null);
+  const isSubmittingRef = useRef(false);
 
   // Start exam and load questions
   useEffect(() => {
@@ -106,6 +107,16 @@ const StudentExamTaking = () => {
       if (socket.current) socketService.disconnect();
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.title = 'SkillMetric';
+
+      // Stop all media tracks (camera/microphone) when component unmounts
+      const videoElements = document.querySelectorAll('video');
+      videoElements.forEach((video) => {
+        if (video.srcObject) {
+          const stream = video.srcObject as MediaStream;
+          stream.getTracks().forEach((track) => track.stop());
+          video.srcObject = null;
+        }
+      });
     };
   }, [examId]);
 
@@ -165,7 +176,18 @@ const StudentExamTaking = () => {
     }
   };
 
-  const setupProctoring = (data: ExamData) => {
+  const handleForceSubmit = useCallback(async (reason: string) => {
+    console.log('Force submit triggered:', reason);
+    if (isSubmittingRef.current) {
+      console.log('Already submitting, skipping force submit');
+      return;
+    }
+
+    enqueueSnackbar(`Exam auto-submitted: ${reason}`, { variant: 'error' });
+    await submitExam();
+  }, [enqueueSnackbar]);
+
+  const setupProctoring = useCallback((data: ExamData) => {
     // For invitation-based access, connect with temporary token
     if (isInvitationBased) {
       const invitationToken = localStorage.getItem('invitationToken');
@@ -191,7 +213,7 @@ const StudentExamTaking = () => {
       enqueueSnackbar(submitData.message, { variant: 'error' });
       handleForceSubmit(submitData.reason);
     });
-  };
+  }, [isInvitationBased, user, enqueueSnackbar, handleForceSubmit]);
 
   // Timer countdown
   useEffect(() => {
@@ -199,6 +221,8 @@ const StudentExamTaking = () => {
       timerRef.current = setInterval(() => {
         setTimeRemaining((prev) => {
           if (prev <= 1) {
+            console.log('Timer reached 0, triggering auto-submit');
+            clearInterval(timerRef.current);
             handleAutoSubmit('Time expired');
             return 0;
           }
@@ -208,7 +232,7 @@ const StudentExamTaking = () => {
 
       return () => clearInterval(timerRef.current);
     }
-  }, [timeRemaining, examData]);
+  }, [timeRemaining, examData, handleAutoSubmit]);
 
   // Auto-save answers
   useEffect(() => {
@@ -415,8 +439,9 @@ const StudentExamTaking = () => {
   };
 
   const submitExam = async () => {
-    if (!examData) return;
+    if (!examData || isSubmittingRef.current) return;
 
+    isSubmittingRef.current = true;
     setSubmitting(true);
     await saveCurrentAnswer();
 
@@ -436,29 +461,46 @@ const StudentExamTaking = () => {
           sessionId: examData.sessionId,
           answers: answersArray,
         });
+        socket.current.disconnect();
       }
 
-      enqueueSnackbar('Exam submitted successfully!', { variant: 'success' });
-      navigate('/student', {
-        state: { examResult: response.data },
+      // Stop all media tracks (camera/microphone)
+      const videoElements = document.querySelectorAll('video');
+      videoElements.forEach((video) => {
+        if (video.srcObject) {
+          const stream = video.srcObject as MediaStream;
+          stream.getTracks().forEach((track) => track.stop());
+          video.srcObject = null;
+        }
       });
+
+      enqueueSnackbar('Exam submitted successfully!', { variant: 'success' });
+
+      // Small delay to ensure camera stops before navigation
+      setTimeout(() => {
+        navigate('/student', {
+          state: { examResult: response.data },
+        });
+      }, 100);
     } catch (error: any) {
       enqueueSnackbar(error.response?.data?.message || 'Failed to submit exam', {
         variant: 'error',
       });
       setSubmitting(false);
+      isSubmittingRef.current = false;
     }
   };
 
-  const handleForceSubmit = async (reason: string) => {
-    enqueueSnackbar(`Exam auto-submitted: ${reason}`, { variant: 'error' });
-    await submitExam();
-  };
+  const handleAutoSubmit = useCallback(async (reason: string) => {
+    console.log('Auto-submit triggered:', reason);
+    if (isSubmittingRef.current) {
+      console.log('Already submitting, skipping auto-submit');
+      return;
+    }
 
-  const handleAutoSubmit = async (reason: string) => {
     enqueueSnackbar(`Time expired! Submitting exam...`, { variant: 'warning' });
-    await handleForceSubmit(reason);
-  };
+    await submitExam();
+  }, [enqueueSnackbar]);
 
   if (loading) {
     return (
@@ -585,7 +627,7 @@ const StudentExamTaking = () => {
                   </Button>
                 </div>
 
-                <p className="text-lg leading-relaxed mb-6">{currentQuestion.questionText}</p>
+                <p className="text-lg leading-relaxed mb-6">{currentQuestion.text}</p>
 
                 {/* Multiple Choice Questions */}
                 {currentQuestion.type === 'MULTIPLE_CHOICE' && (
