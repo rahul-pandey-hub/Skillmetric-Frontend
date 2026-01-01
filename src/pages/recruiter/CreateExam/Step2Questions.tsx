@@ -61,7 +61,15 @@ export default function Step2Questions({ data, updateData }: Step2Props) {
     const newQuestions = isQuestionSelected(id)
       ? data.questions.filter((qId) => qId !== id)
       : [...data.questions, id];
-    updateData({ questions: newQuestions });
+
+    // Auto-calculate total marks based on selected questions
+    const selectedQuestionsList = questions.filter(q => newQuestions.includes(q._id));
+    const calculatedTotalMarks = selectedQuestionsList.reduce((sum, q) => sum + (q.marks || 0), 0);
+
+    updateData({
+      questions: newQuestions,
+      totalMarks: calculatedTotalMarks > 0 ? calculatedTotalMarks : 100 // Default to 100 if no questions selected
+    });
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -127,14 +135,14 @@ export default function Step2Questions({ data, updateData }: Step2Props) {
           <div>
             <p className="text-sm font-medium text-primary-900">Selected Questions</p>
             <p className="text-xs text-primary-700 mt-1">
-              {data.questions.length} question{data.questions.length !== 1 ? 's' : ''} selected
+              {data.questions.length} question{data.questions.length !== 1 ? 's' : ''} selected • Total: {data.totalMarks} marks
             </p>
           </div>
           {data.questions.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => updateData({ questions: [] })}
+              onClick={() => updateData({ questions: [], totalMarks: 100 })}
               className="text-destructive-600 hover:text-destructive-700 hover:bg-destructive-50"
             >
               Clear All

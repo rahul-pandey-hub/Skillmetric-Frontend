@@ -19,11 +19,12 @@ const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 const InvitationExamAccess = lazy(() => import('./pages/InvitationExamAccess'));
 const RecruitmentResults = lazy(() => import('./pages/recruiter/RecruitmentResults'));
 const ExamResults = lazy(() => import('./pages/recruiter/ExamResults'));
-const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
-const StudentResults = lazy(() => import('./pages/StudentResults'));
-const StudentExamHistory = lazy(() => import('./pages/StudentExamHistory'));
-const StudentProfile = lazy(() => import('./pages/StudentProfile'));
-const StudentExamTaking = lazy(() => import('./pages/StudentExamTaking'));
+const ResultDetail = lazy(() => import('./pages/recruiter/ResultDetail'));
+const CandidateDashboard = lazy(() => import('./pages/CandidateDashboard'));
+const CandidateResults = lazy(() => import('./pages/CandidateResults'));
+const CandidateExamHistory = lazy(() => import('./pages/CandidateExamHistory'));
+const CandidateProfile = lazy(() => import('./pages/CandidateProfile'));
+const CandidateExamTaking = lazy(() => import('./pages/CandidateExamTaking'));
 
 // Super Admin Pages
 const SuperAdminDashboard = lazy(() => import('./pages/SuperAdminDashboard'));
@@ -69,16 +70,16 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/exam/invitation/:token" element={<InvitationExamAccess />} />
-        <Route path="/exam/invitation/:token/take" element={<StudentExamTaking />} />
+        <Route path="/exam/invitation/:token/take" element={<CandidateExamTaking />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           {/* Exam Taking Route - Isolated from Layout */}
           <Route
-            path="/student/exam/:examId"
-            element={<ProtectedRoute allowedRoles={['STUDENT']} />}
+            path="/candidate/exam/:examId"
+            element={<ProtectedRoute allowedRoles={['CANDIDATE']} />}
           >
-            <Route index element={<StudentExamTaking />} />
+            <Route index element={<CandidateExamTaking />} />
           </Route>
 
           <Route element={<DashboardLayout />}>
@@ -93,6 +94,7 @@ function App() {
               <Route path="exams/:examId/edit" element={<ManageExamQuestions />} />
               <Route path="exams/:examId/recruitment-results" element={<RecruitmentResults />} />
               <Route path="exams/:examId/results" element={<ExamResults />} />
+              <Route path="exams/:examId/results/:resultId/detail" element={<ResultDetail />} />
               <Route path="create-exam" element={<CreateExam />} />
               <Route path="bulk-enrollment" element={<BulkEnrollment />} />
               <Route path="monitoring" element={<LiveMonitoring />} />
@@ -108,7 +110,6 @@ function App() {
               {/* User Management */}
               <Route path="users" element={<UsersList />} />
               <Route path="users/add" element={<AddUser />} />
-              <Route path="users/bulk-upload" element={<BulkUserUpload />} />
               {/* Question Bank */}
               <Route path="questions" element={<QuestionsList />} />
               <Route path="questions/create" element={<CreateQuestion />} />
@@ -126,17 +127,18 @@ function App() {
               <Route path="exams/:examId/edit" element={<ManageExamQuestions />} />
               <Route path="exams/:examId/recruitment-results" element={<RecruitmentResults />} />
               <Route path="exams/:examId/results" element={<ExamResults />} />
+              <Route path="exams/:examId/results/:resultId/detail" element={<ResultDetail />} />
               <Route path="bulk-enrollment" element={<BulkEnrollment />} />
               <Route path="monitoring" element={<LiveMonitoring />} />
               <Route path="monitoring/:examId" element={<LiveMonitoring />} />
             </Route>
 
-            {/* Student Routes */}
-            <Route path="/student" element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
-              <Route index element={<StudentDashboard />} />
-              <Route path="results/:examId" element={<StudentResults />} />
-              <Route path="history" element={<StudentExamHistory />} />
-              <Route path="profile" element={<StudentProfile />} />
+            {/* Candidate Routes */}
+            <Route path="/candidate" element={<ProtectedRoute allowedRoles={['CANDIDATE']} />}>
+              <Route index element={<CandidateDashboard />} />
+              <Route path="results/:examId" element={<CandidateResults />} />
+              <Route path="history" element={<CandidateExamHistory />} />
+              <Route path="profile" element={<CandidateProfile />} />
             </Route>
 
             {/* Super Admin Routes */}
@@ -159,8 +161,8 @@ function App() {
             isAuthenticated ? (
               <Navigate
                 to={
-                  user?.role === 'STUDENT'
-                    ? '/student'
+                  user?.role === 'CANDIDATE'
+                    ? '/candidate'
                     : user?.role === 'SUPER_ADMIN'
                     ? '/super-admin'
                     : user?.role === 'ORG_ADMIN'

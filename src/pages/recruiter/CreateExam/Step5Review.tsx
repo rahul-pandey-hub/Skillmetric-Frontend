@@ -7,11 +7,11 @@ import {
   BookOpen,
   Shield,
   Camera,
-  Monitor,
   AlertTriangle,
   Target,
   Users,
   CheckCircle2,
+  Calendar,
 } from 'lucide-react';
 
 interface Step5Props {
@@ -45,8 +45,12 @@ export default function Step5Review({ data }: Step5Props) {
             <p className="font-medium text-gray-900">{data.title || 'Not set'}</p>
           </div>
           <div>
+            <p className="text-sm text-gray-600">Exam Code</p>
+            <p className="font-medium text-gray-900">{data.code || 'Not set'}</p>
+          </div>
+          <div>
             <p className="text-sm text-gray-600">Category</p>
-            <p className="font-medium text-gray-900 capitalize">{data.category || 'Not set'}</p>
+            <p className="font-medium text-gray-900 capitalize">{data.category.replace('_', ' ').toLowerCase() || 'Not set'}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Duration</p>
@@ -63,22 +67,8 @@ export default function Step5Review({ data }: Step5Props) {
             </div>
           </div>
           <div>
-            <p className="text-sm text-gray-600">Difficulty</p>
-            <Badge
-              className={
-                data.difficulty === 'hard'
-                  ? 'bg-destructive-100 text-destructive-700'
-                  : data.difficulty === 'medium'
-                  ? 'bg-warning-100 text-warning-700'
-                  : 'bg-success-100 text-success-700'
-              }
-            >
-              {data.difficulty}
-            </Badge>
-          </div>
-          <div>
             <p className="text-sm text-gray-600">Passing Percentage</p>
-            <p className="font-medium text-gray-900">{data.passingPercentage}%</p>
+            <p className="font-medium text-gray-900">{data.passingPercentage}% ({((data.totalMarks * data.passingPercentage) / 100).toFixed(1)} marks)</p>
           </div>
         </div>
         {data.description && (
@@ -86,6 +76,133 @@ export default function Step5Review({ data }: Step5Props) {
             <p className="text-sm text-gray-600">Description</p>
             <p className="text-gray-900 text-sm mt-1">{data.description}</p>
           </div>
+        )}
+
+        {/* Schedule */}
+        <div className="mt-4 pt-4 border-t">
+          <div className="flex items-center mb-3">
+            <Calendar className="w-4 h-4 text-primary-600 mr-2" />
+            <h4 className="text-sm font-semibold text-gray-900">Schedule</h4>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-600">Start Date & Time</p>
+              <p className="font-medium text-gray-900">
+                {data.startDate ? new Date(data.startDate).toLocaleDateString() : 'Not set'} at {data.startTime || '09:00'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">End Date & Time</p>
+              <p className="font-medium text-gray-900">
+                {data.endDate ? new Date(data.endDate).toLocaleDateString() : 'Not set'} at {data.endTime || '10:00'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Late Submission</p>
+              <Badge variant={data.lateSubmissionAllowed ? 'default' : 'outline'}>
+                {data.lateSubmissionAllowed ? 'Allowed' : 'Not Allowed'}
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Proctoring Settings */}
+      <div className="border rounded-lg p-5">
+        <div className="flex items-center mb-4">
+          <Shield className="w-5 h-5 text-primary-600 mr-2" />
+          <h3 className="text-lg font-semibold text-gray-900">Proctoring Settings</h3>
+        </div>
+        {data.proctoringSettings.enabled ? (
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {data.proctoringSettings.webcamRequired && (
+                <div className="flex items-center text-sm">
+                  <Camera className="w-4 h-4 text-success-600 mr-2" />
+                  <span className="text-gray-700">Webcam Required</span>
+                </div>
+              )}
+              {data.proctoringSettings.multiFaceDetection && (
+                <div className="flex items-center text-sm">
+                  <Users className="w-4 h-4 text-success-600 mr-2" />
+                  <span className="text-gray-700">Multi-Face Detection</span>
+                </div>
+              )}
+              {data.proctoringSettings.tabSwitchDetection && (
+                <div className="flex items-center text-sm">
+                  <AlertTriangle className="w-4 h-4 text-success-600 mr-2" />
+                  <span className="text-gray-700">Tab Switch Detection</span>
+                </div>
+              )}
+              {data.proctoringSettings.copyPasteDetection && (
+                <div className="flex items-center text-sm">
+                  <CheckCircle2 className="w-4 h-4 text-success-600 mr-2" />
+                  <span className="text-gray-700">Copy/Paste Detection</span>
+                </div>
+              )}
+              {data.proctoringSettings.rightClickDisabled && (
+                <div className="flex items-center text-sm">
+                  <CheckCircle2 className="w-4 h-4 text-success-600 mr-2" />
+                  <span className="text-gray-700">Right-Click Disabled</span>
+                </div>
+              )}
+              {data.proctoringSettings.fullscreenRequired && (
+                <div className="flex items-center text-sm">
+                  <CheckCircle2 className="w-4 h-4 text-success-600 mr-2" />
+                  <span className="text-gray-700">Fullscreen Required</span>
+                </div>
+              )}
+            </div>
+            <div className="pt-3 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-gray-600">Violation Warning Limit:</span>
+                  <span className="ml-2 font-medium text-gray-900">
+                    {data.proctoringSettings.violationWarningLimit}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Auto Submit on Violation:</span>
+                  <span className="ml-2 font-medium text-gray-900">
+                    {data.proctoringSettings.autoSubmitOnViolation ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600">Proctoring is disabled for this exam</p>
+        )}
+      </div>
+
+      {/* Shortlisting Criteria */}
+      <div className="border rounded-lg p-5">
+        <div className="flex items-center mb-4">
+          <Target className="w-5 h-5 text-primary-600 mr-2" />
+          <h3 className="text-lg font-semibold text-gray-900">Shortlisting Criteria</h3>
+        </div>
+        {data.shortlistingCriteria.enabled ? (
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center">
+              <div className="w-2 h-2 bg-primary-500 rounded-full mr-2"></div>
+              <span className="text-gray-700">
+                Minimum Percentage:{' '}
+                <strong className="text-gray-900">{data.shortlistingCriteria.minimumPercentage}%</strong>
+              </span>
+            </div>
+            {data.shortlistingCriteria.autoAdvanceTopN > 0 && (
+              <div className="flex items-center">
+                <Users className="w-4 h-4 text-primary-600 mr-2" />
+                <span className="text-gray-700">
+                  Auto-advance top{' '}
+                  <strong className="text-gray-900">{data.shortlistingCriteria.autoAdvanceTopN}</strong>{' '}
+                  candidates
+                </span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600">Automated shortlisting is not enabled</p>
         )}
       </div>
 
@@ -108,93 +225,10 @@ export default function Step5Review({ data }: Step5Props) {
         )}
       </div>
 
-      {/* Proctoring Settings */}
-      <div className="border rounded-lg p-5">
-        <div className="flex items-center mb-4">
-          <Shield className="w-5 h-5 text-primary-600 mr-2" />
-          <h3 className="text-lg font-semibold text-gray-900">Proctoring Settings</h3>
-        </div>
-        {data.proctoringSettings.enabled ? (
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {data.proctoringSettings.webcamRequired && (
-                <div className="flex items-center text-sm">
-                  <Camera className="w-4 h-4 text-success-600 mr-2" />
-                  <span className="text-gray-700">Webcam Required</span>
-                </div>
-              )}
-              {data.proctoringSettings.screenRecording && (
-                <div className="flex items-center text-sm">
-                  <Monitor className="w-4 h-4 text-success-600 mr-2" />
-                  <span className="text-gray-700">Screen Recording</span>
-                </div>
-              )}
-              {data.proctoringSettings.tabSwitchDetection && (
-                <div className="flex items-center text-sm">
-                  <AlertTriangle className="w-4 h-4 text-success-600 mr-2" />
-                  <span className="text-gray-700">Tab Switch Detection</span>
-                </div>
-              )}
-              {data.proctoringSettings.idVerification && (
-                <div className="flex items-center text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-success-600 mr-2" />
-                  <span className="text-gray-700">ID Verification</span>
-                </div>
-              )}
-            </div>
-            <div className="pt-3 border-t">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-gray-600">Max Tab Switches:</span>
-                  <span className="ml-2 font-medium text-gray-900">
-                    {data.proctoringSettings.maxTabSwitches}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Max Violations:</span>
-                  <span className="ml-2 font-medium text-gray-900">
-                    {data.proctoringSettings.maxViolations}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-600">Proctoring is disabled for this exam</p>
-        )}
-      </div>
-
-      {/* Shortlisting Criteria */}
-      <div className="border rounded-lg p-5">
-        <div className="flex items-center mb-4">
-          <Target className="w-5 h-5 text-primary-600 mr-2" />
-          <h3 className="text-lg font-semibold text-gray-900">Shortlisting Criteria</h3>
-        </div>
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center">
-            <div className="w-2 h-2 bg-primary-500 rounded-full mr-2"></div>
-            <span className="text-gray-700">
-              Cutoff Percentage:{' '}
-              <strong className="text-gray-900">{data.shortlistingCriteria.cutoffPercentage}%</strong>
-            </span>
-          </div>
-          {data.shortlistingCriteria.autoSelect && (
-            <div className="flex items-center">
-              <Users className="w-4 h-4 text-primary-600 mr-2" />
-              <span className="text-gray-700">
-                Auto-select top{' '}
-                <strong className="text-gray-900">{data.shortlistingCriteria.topNStudents}</strong>{' '}
-                students
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Final Note */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-900">
-          <strong>Note:</strong> After publishing, students will be able to see and take this exam. You
+          <strong>Note:</strong> After publishing, candidates will be able to see and take this exam. You
           can edit exam details or pause the exam anytime from the exam management page.
         </p>
       </div>

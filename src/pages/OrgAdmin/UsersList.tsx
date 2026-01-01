@@ -28,7 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Edit, Trash2, Plus, UserMinus, UserPlus, Eye, Upload } from 'lucide-react';
+import { Edit, Trash2, Plus, UserMinus, UserPlus, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { orgAdminService, User } from '@/services/orgAdminService';
 import { useSnackbar } from 'notistack';
@@ -161,10 +161,6 @@ export default function UsersList() {
           <Button onClick={() => navigate('/org-admin/users/add')}>
             <Plus className="mr-2 h-4 w-4" />
             Add User
-          </Button>
-          <Button variant="outline" onClick={() => navigate('/org-admin/users/bulk-upload')}>
-            <Upload className="mr-2 h-4 w-4" />
-            Bulk Upload
           </Button>
         </div>
       </div>

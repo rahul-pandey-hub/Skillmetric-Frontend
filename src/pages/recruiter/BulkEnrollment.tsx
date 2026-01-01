@@ -35,7 +35,7 @@ import * as XLSX from 'xlsx';
 import { examService } from '@/services/examService';
 import type { Exam } from '@/types/exam';
 
-interface StudentRecord {
+interface CandidateRecord {
   name: string;
   email: string;
   status: 'pending' | 'success' | 'error';
@@ -47,7 +47,7 @@ export default function BulkEnrollment() {
   const [selectedExamId, setSelectedExamId] = useState<string>('');
   const [loadingExams, setLoadingExams] = useState(true);
   const [file, setFile] = useState<File | null>(null);
-  const [students, setStudents] = useState<StudentRecord[]>([]);
+  const [candidates, setCandidates] = useState<CandidateRecord[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadComplete, setUploadComplete] = useState(false);
@@ -72,7 +72,7 @@ export default function BulkEnrollment() {
 
   const handleFileSelect = async (selectedFile: File) => {
     setFile(selectedFile);
-    setStudents([]);
+    setCandidates([]);
     setUploadComplete(false);
 
     try {
@@ -113,8 +113,8 @@ export default function BulkEnrollment() {
         return;
       }
 
-      // Parse students
-      const parsedStudents: StudentRecord[] = [];
+      // Parse candidates
+      const parsedCandidates: CandidateRecord[] = [];
       for (let i = 1; i < jsonData.length; i++) {
         const row = jsonData[i];
         if (!row || row.length === 0) continue; // Skip empty rows
@@ -123,7 +123,7 @@ export default function BulkEnrollment() {
         const email = row[emailIndex];
 
         if (name && email) {
-          parsedStudents.push({
+          parsedCandidates.push({
             name: name.toString().trim(),
             email: email.toString().trim(),
             status: 'pending',
@@ -131,13 +131,13 @@ export default function BulkEnrollment() {
         }
       }
 
-      if (parsedStudents.length === 0) {
-        toast.error('No valid student data found in file');
+      if (parsedCandidates.length === 0) {
+        toast.error('No valid candidate data found in file');
         return;
       }
 
-      setStudents(parsedStudents);
-      toast.success(`Parsed ${parsedStudents.length} student records`);
+      setCandidates(parsedCandidates);
+      toast.success(`Parsed ${parsedCandidates.length} candidate records`);
     } catch (error) {
       console.error('Error parsing file:', error);
       toast.error('Failed to parse file. Please check the file format.');
@@ -150,8 +150,8 @@ export default function BulkEnrollment() {
       return;
     }
 
-    if (students.length === 0) {
-      toast.error('No students to upload');
+    if (candidates.length === 0) {
+      toast.error('No candidates to upload');
       return;
     }
 
@@ -159,42 +159,42 @@ export default function BulkEnrollment() {
     setUploadProgress(0);
 
     try {
-      // Call the API to enroll students
-      const response = await examService.enrollStudents(
+      // Call the API to enroll candidates
+      const response = await examService.enrollCandidates(
         selectedExamId,
-        students.map((s) => ({ name: s.name, email: s.email }))
+        candidates.map((c) => ({ name: c.name, email: c.email }))
       );
 
       const { summary, details } = response.data;
 
-      // Update student status based on the response
-      setStudents((prev) =>
-        prev.map((student) => {
-          // Check if student was enrolled successfully
-          const enrolled = details.enrolled.find((e: any) => e.email === student.email);
+      // Update candidate status based on the response
+      setCandidates((prev) =>
+        prev.map((candidate) => {
+          // Check if candidate was enrolled successfully
+          const enrolled = details.enrolled.find((e: any) => e.email === candidate.email);
           if (enrolled) {
-            return { ...student, status: 'success' };
+            return { ...candidate, status: 'success' };
           }
 
-          // Check if student was already enrolled
-          const alreadyEnrolled = details.alreadyEnrolled.find((e: any) => e.email === student.email);
+          // Check if candidate was already enrolled
+          const alreadyEnrolled = details.alreadyEnrolled.find((e: any) => e.email === candidate.email);
           if (alreadyEnrolled) {
-            return { ...student, status: 'success' };
+            return { ...candidate, status: 'success' };
           }
 
           // Check if there was an error
-          const error = details.errors.find((e: any) => e.email === student.email);
+          const error = details.errors.find((e: any) => e.email === candidate.email);
           if (error) {
-            return { ...student, status: 'error', error: error.error };
+            return { ...candidate, status: 'error', error: error.error };
           }
 
           // Default to success if created
-          const created = details.created.find((c: any) => c.email === student.email);
+          const created = details.created.find((c: any) => c.email === candidate.email);
           if (created) {
-            return { ...student, status: 'success' };
+            return { ...candidate, status: 'success' };
           }
 
-          return student;
+          return candidate;
         })
       );
 
@@ -210,12 +210,12 @@ export default function BulkEnrollment() {
     } catch (error: any) {
       console.error('Upload error:', error);
       setIsUploading(false);
-      toast.error(error.response?.data?.message || 'Failed to enroll students');
+      toast.error(error.response?.data?.message || 'Failed to enroll candidates');
 
       // Mark all as error
-      setStudents((prev) =>
-        prev.map((student) => ({
-          ...student,
+      setCandidates((prev) =>
+        prev.map((candidate) => ({
+          ...candidate,
           status: 'error',
           error: 'Upload failed',
         }))
@@ -233,21 +233,21 @@ export default function BulkEnrollment() {
 
     const worksheet = XLSX.utils.aoa_to_sheet(sampleData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Students');
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Candidates');
 
-    XLSX.writeFile(workbook, 'student_enrollment_template.xlsx');
+    XLSX.writeFile(workbook, 'candidate_enrollment_template.xlsx');
     toast.success('Template downloaded');
   };
 
-  const successCount = students.filter((s) => s.status === 'success').length;
-  const errorCount = students.filter((s) => s.status === 'error').length;
-  const pendingCount = students.filter((s) => s.status === 'pending').length;
+  const successCount = candidates.filter((c) => c.status === 'success').length;
+  const errorCount = candidates.filter((c) => c.status === 'error').length;
+  const pendingCount = candidates.filter((c) => c.status === 'pending').length;
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Bulk Student Enrollment</h1>
-        <p className="text-gray-600 mt-2">Upload an Excel/CSV file to enroll multiple students at once</p>
+        <h1 className="text-3xl font-bold text-gray-900">Bulk Candidate Enrollment</h1>
+        <p className="text-gray-600 mt-2">Upload an Excel/CSV file to enroll multiple candidates at once</p>
       </div>
 
       {/* Exam Selection */}
@@ -264,7 +264,7 @@ export default function BulkEnrollment() {
           ) : (
             <Select value={selectedExamId} onValueChange={setSelectedExamId}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select an exam to enroll students" />
+                <SelectValue placeholder="Select an exam to enroll candidates" />
               </SelectTrigger>
               <SelectContent>
                 {exams.map((exam) => (
@@ -282,7 +282,7 @@ export default function BulkEnrollment() {
       </Card>
 
       {/* Stats Cards */}
-      {students.length > 0 && (
+      {candidates.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <Card>
@@ -290,7 +290,7 @@ export default function BulkEnrollment() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Total</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{students.length}</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">{candidates.length}</p>
                   </div>
                   <Users className="w-8 h-8 text-primary-600" />
                 </div>
@@ -358,7 +358,7 @@ export default function BulkEnrollment() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Upload Student Data</span>
+            <span>Upload Candidate Data</span>
             <Button variant="outline" onClick={downloadTemplate}>
               <Download className="w-4 h-4 mr-2" />
               Download Template
@@ -404,7 +404,7 @@ export default function BulkEnrollment() {
                 </div>
                 <Button
                   onClick={handleUpload}
-                  disabled={isUploading || uploadComplete || students.length === 0 || !selectedExamId}
+                  disabled={isUploading || uploadComplete || candidates.length === 0 || !selectedExamId}
                   className="gap-2"
                 >
                   <Upload className="w-4 h-4" />
@@ -427,10 +427,10 @@ export default function BulkEnrollment() {
       </Card>
 
       {/* Preview Table */}
-      {students.length > 0 && (
+      {candidates.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Student Records Preview ({students.length})</CardTitle>
+            <CardTitle>Candidate Records Preview ({candidates.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto max-h-96">
@@ -443,24 +443,24 @@ export default function BulkEnrollment() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {students.map((student, index) => (
+                  {candidates.map((candidate, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">{student.name}</TableCell>
-                      <TableCell>{student.email}</TableCell>
+                      <TableCell className="font-medium">{candidate.name}</TableCell>
+                      <TableCell>{candidate.email}</TableCell>
                       <TableCell>
-                        {student.status === 'success' && (
+                        {candidate.status === 'success' && (
                           <Badge className="bg-success-100 text-success-700 border-success-200">
                             <CheckCircle2 className="w-3 h-3 mr-1" />
                             Success
                           </Badge>
                         )}
-                        {student.status === 'error' && (
+                        {candidate.status === 'error' && (
                           <Badge className="bg-destructive-100 text-destructive-700 border-destructive-200">
                             <XCircle className="w-3 h-3 mr-1" />
-                            {student.error || 'Error'}
+                            {candidate.error || 'Error'}
                           </Badge>
                         )}
-                        {student.status === 'pending' && (
+                        {candidate.status === 'pending' && (
                           <Badge className="bg-gray-100 text-gray-700 border-gray-200">
                             <AlertCircle className="w-3 h-3 mr-1" />
                             Pending

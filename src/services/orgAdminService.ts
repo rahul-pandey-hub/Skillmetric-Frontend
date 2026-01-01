@@ -205,6 +205,23 @@ export const orgAdminService = {
   },
 
   /**
+   * Create a new user
+   */
+  createUser: async (userData: {
+    name: string;
+    email: string;
+    role: string;
+    password?: string;
+  }): Promise<{
+    user: any;
+    temporaryPassword?: string;
+    message?: string;
+  }> => {
+    const response = await orgAdminApi.post('/users', userData);
+    return response.data;
+  },
+
+  /**
    * Bulk create users
    */
   bulkCreateUsers: async (users: Array<{ name: string; email: string; role: string }>): Promise<{

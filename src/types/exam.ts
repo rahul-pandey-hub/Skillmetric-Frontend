@@ -14,7 +14,7 @@ export interface Exam {
     email: string;
   };
   questions: string[] | Question[];
-  enrolledStudents: string[];
+  enrolledCandidates: string[];
   proctoringSettings: ProctoringSettings;
   schedule: Schedule;
   grading: Grading;
@@ -86,7 +86,7 @@ export interface CreateExamDto {
   grading: Grading;
   settings: ExamSettings;
   questions?: string[];
-  enrolledStudents?: string[];
+  enrolledCandidates?: string[];
 }
 
 export interface AddQuestionsDto {

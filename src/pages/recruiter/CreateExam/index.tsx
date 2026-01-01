@@ -27,7 +27,9 @@ export interface ExamFormData {
 
   // Schedule
   startDate: Date;
-  endDate: Date;
+  startTime: string; // HH:MM format
+  endDate: Date; // Auto-calculated
+  endTime: string; // Auto-calculated (HH:MM format)
   lateSubmissionAllowed: boolean;
 
   // Step 2 - Questions
@@ -38,6 +40,7 @@ export interface ExamFormData {
     enabled: boolean;
     webcamRequired: boolean;
     screenRecording: boolean;
+    multiFaceDetection: boolean;
     tabSwitchDetection: boolean;
     copyPasteDetection: boolean;
     rightClickDisabled: boolean;
@@ -88,20 +91,23 @@ export default function CreateExam() {
     code: '',
     description: '',
     type: 'ASSESSMENT',
-    category: 'GENERAL_ASSESSMENT',
+    category: 'INTERNAL_ASSESSMENT',
     accessMode: 'ENROLLMENT_BASED',
     duration: 60,
     totalMarks: 100,
     passingPercentage: 40,
     instructions: '',
     startDate: new Date(),
+    startTime: '09:00', // Default to 9 AM
     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    endTime: '10:00', // Will be auto-calculated
     lateSubmissionAllowed: false,
     questions: [],
     proctoringSettings: {
       enabled: true,
       webcamRequired: true,
       screenRecording: false,
+      multiFaceDetection: true,
       tabSwitchDetection: true,
       copyPasteDetection: false,
       rightClickDisabled: true,

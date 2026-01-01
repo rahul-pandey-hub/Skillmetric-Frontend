@@ -321,10 +321,10 @@ const LiveExamMonitoring: React.FC = () => {
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       activity.action === 'STARTED'
-                        ? 'bg-primary text-primary-foreground'
+                        ? 'bg-blue-500 text-white'
                         : activity.action === 'SUBMITTED'
-                        ? 'bg-success text-success-foreground'
-                        : 'bg-destructive text-destructive-foreground'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-red-500 text-white'
                     }`}
                   >
                     {activity.action === 'STARTED' ? (

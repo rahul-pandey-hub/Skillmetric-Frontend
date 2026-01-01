@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,7 +20,29 @@ const handleCategoryChange = (category: string, updateData: (data: Partial<ExamF
   updateData({ category, accessMode });
 };
 
+// Calculate end date/time based on start date/time + duration + 15 min buffer
+const calculateEndDateTime = (startDate: Date, startTime: string, durationMinutes: number): { endDate: Date; endTime: string } => {
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const startDateTime = new Date(startDate);
+  startDateTime.setHours(hours, minutes, 0, 0);
+
+  // Add duration + 15 minute buffer
+  const endDateTime = new Date(startDateTime.getTime() + (durationMinutes + 15) * 60000);
+
+  const endTime = `${endDateTime.getHours().toString().padStart(2, '0')}:${endDateTime.getMinutes().toString().padStart(2, '0')}`;
+
+  return { endDate: endDateTime, endTime };
+};
+
 export default function Step1BasicInfo({ data, updateData }: Step1Props) {
+  // Auto-calculate end date/time when start date/time or duration changes
+  useEffect(() => {
+    if (data.startDate && data.startTime && data.duration > 0) {
+      const { endDate, endTime } = calculateEndDateTime(data.startDate, data.startTime, data.duration);
+      updateData({ endDate, endTime });
+    }
+  }, [data.startDate, data.startTime, data.duration]);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -81,15 +104,11 @@ export default function Step1BasicInfo({ data, updateData }: Step1Props) {
               <SelectItem value={ExamCategory.RECRUITMENT}>
                 Recruitment
               </SelectItem>
-              <SelectItem value={ExamCategory.GENERAL_ASSESSMENT}>
-                General Assessment
-              </SelectItem>
             </SelectContent>
           </Select>
           <p className="text-xs text-gray-500 mt-1">
             {data.category === ExamCategory.RECRUITMENT && 'One-time invitation link access'}
             {data.category === ExamCategory.INTERNAL_ASSESSMENT && 'For registered employees only'}
-            {data.category === ExamCategory.GENERAL_ASSESSMENT && 'For registered students only'}
           </p>
         </div>
 
@@ -107,15 +126,20 @@ export default function Step1BasicInfo({ data, updateData }: Step1Props) {
         </div>
 
         <div>
-          <Label htmlFor="totalMarks">Total Marks *</Label>
+          <Label htmlFor="totalMarks">
+            Total Marks <span className="text-xs text-gray-500">(Auto-calculated from questions in Step 2)</span>
+          </Label>
           <Input
             id="totalMarks"
             type="number"
             value={data.totalMarks}
-            onChange={(e) => updateData({ totalMarks: parseInt(e.target.value) || 0 })}
-            min="1"
-            className="mt-2"
+            readOnly
+            disabled
+            className="mt-2 bg-gray-100 cursor-not-allowed"
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Total marks will be calculated when you select questions in the next step
+          </p>
         </div>
       </div>
 
@@ -139,24 +163,55 @@ export default function Step1BasicInfo({ data, updateData }: Step1Props) {
         <h3 className="text-lg font-medium text-gray-900 mb-4">Schedule</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label htmlFor="startDate">Start Date & Time</Label>
+            <Label htmlFor="startDate">Start Date *</Label>
             <Input
               id="startDate"
-              type="datetime-local"
-              value={data.startDate ? new Date(data.startDate.getTime() - data.startDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
+              type="date"
+              value={data.startDate ? data.startDate.toISOString().split('T')[0] : ''}
               onChange={(e) => updateData({ startDate: new Date(e.target.value) })}
               className="mt-2"
             />
           </div>
 
           <div>
-            <Label htmlFor="endDate">End Date & Time</Label>
+            <Label htmlFor="startTime">Start Time *</Label>
+            <Input
+              id="startTime"
+              type="time"
+              value={data.startTime || '09:00'}
+              onChange={(e) => updateData({ startTime: e.target.value })}
+              className="mt-2"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="endDate">
+              End Date <span className="text-xs text-gray-500">(Auto-calculated)</span>
+            </Label>
             <Input
               id="endDate"
-              type="datetime-local"
-              value={data.endDate ? new Date(data.endDate.getTime() - data.endDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
-              onChange={(e) => updateData({ endDate: new Date(e.target.value) })}
-              className="mt-2"
+              type="date"
+              value={data.endDate ? data.endDate.toISOString().split('T')[0] : ''}
+              readOnly
+              disabled
+              className="mt-2 bg-gray-100 cursor-not-allowed"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Calculated as Start Date/Time + Duration + 15 min buffer
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="endTime">
+              End Time <span className="text-xs text-gray-500">(Auto-calculated)</span>
+            </Label>
+            <Input
+              id="endTime"
+              type="time"
+              value={data.endTime || '10:00'}
+              readOnly
+              disabled
+              className="mt-2 bg-gray-100 cursor-not-allowed"
             />
           </div>
         </div>

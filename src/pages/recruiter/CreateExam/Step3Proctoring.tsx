@@ -2,7 +2,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { ExamFormData } from './index';
-import { Shield, Camera, Monitor, AlertTriangle, Eye, Maximize, MousePointer } from 'lucide-react';
+import { Shield, Camera, Users, AlertTriangle, Eye, Maximize, MousePointer } from 'lucide-react';
 
 interface Step3Props {
   data: ExamFormData;
@@ -65,7 +65,7 @@ export default function Step3Proctoring({ data, updateData }: Step3Props) {
                     Require Webcam
                   </Label>
                   <p className="text-sm text-gray-600 mt-1">
-                    Students must have webcam enabled during the exam
+                    Candidates must have webcam enabled during the exam
                   </p>
                 </div>
               </div>
@@ -76,23 +76,23 @@ export default function Step3Proctoring({ data, updateData }: Step3Props) {
               />
             </div>
 
-            {/* Screen Recording */}
+            {/* Multi-Face Detection */}
             <div className="flex items-center justify-between p-4 border rounded-lg">
               <div className="flex items-start">
-                <Monitor className="w-5 h-5 text-gray-600 mt-1 mr-3" />
+                <Users className="w-5 h-5 text-gray-600 mt-1 mr-3" />
                 <div>
-                  <Label htmlFor="screen" className="text-base font-medium">
-                    Screen Recording
+                  <Label htmlFor="multiface" className="text-base font-medium">
+                    Multi-Face Detection
                   </Label>
                   <p className="text-sm text-gray-600 mt-1">
-                    Record student's screen during the exam session
+                    Detect if multiple faces appear in the webcam during the exam
                   </p>
                 </div>
               </div>
               <Switch
-                id="screen"
-                checked={data.proctoringSettings.screenRecording}
-                onCheckedChange={(checked) => updateProctoringSetting('screenRecording', checked)}
+                id="multiface"
+                checked={data.proctoringSettings.multiFaceDetection}
+                onCheckedChange={(checked) => updateProctoringSetting('multiFaceDetection', checked)}
               />
             </div>
 
@@ -105,7 +105,7 @@ export default function Step3Proctoring({ data, updateData }: Step3Props) {
                     Tab Switch Detection
                   </Label>
                   <p className="text-sm text-gray-600 mt-1">
-                    Detect and count when student switches tabs or windows
+                    Detect and count when candidate switches tabs or windows
                   </p>
                 </div>
               </div>
@@ -165,7 +165,7 @@ export default function Step3Proctoring({ data, updateData }: Step3Props) {
                     Require Fullscreen
                   </Label>
                   <p className="text-sm text-gray-600 mt-1">
-                    Student must take exam in fullscreen mode
+                    Candidate must take exam in fullscreen mode
                   </p>
                 </div>
               </div>
@@ -176,9 +176,9 @@ export default function Step3Proctoring({ data, updateData }: Step3Props) {
               />
             </div>
 
-            {/* Violation Thresholds */}
+            {/* Maximum Violations */}
             <div className="space-y-6 p-4 border rounded-lg bg-gray-50">
-              <h4 className="font-medium text-gray-900">Violation Thresholds</h4>
+              <h4 className="font-medium text-gray-900">Maximum Violations</h4>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -196,7 +196,7 @@ export default function Step3Proctoring({ data, updateData }: Step3Props) {
                   className="mt-2"
                 />
                 <p className="text-xs text-gray-600 mt-2">
-                  Number of warnings before taking action
+                  Number of violations before taking action
                 </p>
               </div>
 

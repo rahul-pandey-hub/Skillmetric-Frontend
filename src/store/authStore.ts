@@ -5,7 +5,7 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
-  role: 'SUPER_ADMIN' | 'ORG_ADMIN' | 'RECRUITER' | 'INSTRUCTOR' | 'STUDENT';
+  role: 'SUPER_ADMIN' | 'ORG_ADMIN' | 'RECRUITER' | 'CANDIDATE';
   organizationId?: string; // Default/current organization
   organizationIds?: string[]; // All organizations user belongs to
   avatar?: string;

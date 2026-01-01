@@ -51,11 +51,11 @@ export const examService = {
   },
 
   /**
-   * Bulk enroll students to an exam
+   * Bulk enroll candidates to an exam
    */
-  enrollStudents: async (
+  enrollCandidates: async (
     examId: string,
-    students: { name: string; email: string }[]
+    candidates: { name: string; email: string }[]
   ): Promise<AxiosResponse<{
     message: string;
     summary: {
@@ -67,7 +67,20 @@ export const examService = {
     };
     details: any;
   }>> => {
-    return api.post(`/exams/${examId}/enroll-students`, { students });
+    return api.post(`/exams/${examId}/enroll-candidates`, { candidates });
+  },
+
+  /**
+   * Unenroll candidates from an exam
+   */
+  unenrollCandidates: async (
+    examId: string,
+    candidateIds: string[]
+  ): Promise<AxiosResponse<{
+    message: string;
+    unenrolled: number;
+  }>> => {
+    return api.post(`/exams/${examId}/unenroll-candidates`, { candidateIds });
   },
 
   /**

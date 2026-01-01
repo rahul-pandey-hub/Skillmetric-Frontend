@@ -45,7 +45,7 @@ export default function Step4Settings({ data, updateData }: Step4Props) {
           <div>
             <h3 className="text-sm font-medium text-blue-900">Exam Configuration</h3>
             <p className="text-xs text-blue-700 mt-1">
-              Configure exam behavior and student experience settings
+              Configure exam behavior and candidate experience settings
             </p>
           </div>
         </div>
@@ -63,7 +63,7 @@ export default function Step4Settings({ data, updateData }: Step4Props) {
                 Shuffle Questions
               </Label>
               <p className="text-sm text-gray-600 mt-1">
-                Display questions in random order for each student
+                Display questions in random order for each candidate
               </p>
             </div>
           </div>
@@ -90,127 +90,6 @@ export default function Step4Settings({ data, updateData }: Step4Props) {
             id="shuffleOptions"
             checked={data.settings.shuffleOptions}
             onCheckedChange={(checked) => updateSetting('shuffleOptions', checked)}
-          />
-        </div>
-      </div>
-
-      {/* Exam Attempts */}
-      <div className="space-y-4 pt-4 border-t">
-        <h4 className="font-medium text-gray-900">Exam Attempts</h4>
-
-        <div className="p-4 border rounded-lg">
-          <Label htmlFor="attemptsAllowed">Number of Attempts Allowed</Label>
-          <Input
-            id="attemptsAllowed"
-            type="number"
-            value={data.settings.attemptsAllowed}
-            onChange={(e) => updateSetting('attemptsAllowed', parseInt(e.target.value) || 1)}
-            min="1"
-            max="5"
-            className="mt-2 w-32"
-          />
-          <p className="text-xs text-gray-600 mt-2">
-            How many times can a student attempt this exam
-          </p>
-        </div>
-      </div>
-
-      {/* Results Settings */}
-      <div className="space-y-4 pt-4 border-t">
-        <h4 className="font-medium text-gray-900">Results Settings</h4>
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div className="flex items-start">
-            <Eye className="w-5 h-5 text-gray-600 mt-1 mr-3" />
-            <div>
-              <Label htmlFor="showResults" className="text-base font-medium">
-                Show Results Immediately
-              </Label>
-              <p className="text-sm text-gray-600 mt-1">
-                Display results immediately after submission
-              </p>
-            </div>
-          </div>
-          <Switch
-            id="showResults"
-            checked={data.settings.showResultsImmediately}
-            onCheckedChange={(checked) => updateSetting('showResultsImmediately', checked)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div className="flex items-start">
-            <Eye className="w-5 h-5 text-gray-600 mt-1 mr-3" />
-            <div>
-              <Label htmlFor="allowReview" className="text-base font-medium">
-                Allow Review
-              </Label>
-              <p className="text-sm text-gray-600 mt-1">
-                Students can review their answers before submission
-              </p>
-            </div>
-          </div>
-          <Switch
-            id="allowReview"
-            checked={data.settings.allowReview}
-            onCheckedChange={(checked) => updateSetting('allowReview', checked)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div className="flex items-start">
-            <Eye className="w-5 h-5 text-gray-600 mt-1 mr-3" />
-            <div>
-              <Label htmlFor="showScore" className="text-base font-medium">
-                Show Score
-              </Label>
-              <p className="text-sm text-gray-600 mt-1">
-                Display score in results
-              </p>
-            </div>
-          </div>
-          <Switch
-            id="showScore"
-            checked={data.resultsSettings.showScore}
-            onCheckedChange={(checked) => updateResultsSetting('showScore', checked)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div className="flex items-start">
-            <Eye className="w-5 h-5 text-gray-600 mt-1 mr-3" />
-            <div>
-              <Label htmlFor="showPercentile" className="text-base font-medium">
-                Show Percentile
-              </Label>
-              <p className="text-sm text-gray-600 mt-1">
-                Display percentile ranking in results
-              </p>
-            </div>
-          </div>
-          <Switch
-            id="showPercentile"
-            checked={data.resultsSettings.showPercentile}
-            onCheckedChange={(checked) => updateResultsSetting('showPercentile', checked)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div className="flex items-start">
-            <Eye className="w-5 h-5 text-gray-600 mt-1 mr-3" />
-            <div>
-              <Label htmlFor="generateCert" className="text-base font-medium">
-                Generate Certificate
-              </Label>
-              <p className="text-sm text-gray-600 mt-1">
-                Auto-generate certificate for passing students
-              </p>
-            </div>
-          </div>
-          <Switch
-            id="generateCert"
-            checked={data.resultsSettings.generateCertificate}
-            onCheckedChange={(checked) => updateResultsSetting('generateCertificate', checked)}
           />
         </div>
       </div>
@@ -254,7 +133,7 @@ export default function Step4Settings({ data, updateData }: Step4Props) {
             </div>
 
             <div className="p-4 border rounded-lg">
-              <Label htmlFor="autoAdvance">Auto-advance Top N Students</Label>
+              <Label htmlFor="autoAdvance">Auto-advance Top N Candidates</Label>
               <Input
                 id="autoAdvance"
                 type="number"
@@ -265,7 +144,7 @@ export default function Step4Settings({ data, updateData }: Step4Props) {
                 className="mt-2 w-32"
               />
               <p className="text-xs text-gray-600 mt-2">
-                Automatically shortlist top performing students (0 to disable)
+                Automatically shortlist top performing candidates (0 to disable)
               </p>
             </div>
           </>

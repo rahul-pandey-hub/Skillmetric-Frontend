@@ -13,19 +13,18 @@ import {
 } from '@/components/ui/select';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { orgAdminService } from '@/services/orgAdminService';
 
 export default function AddUser() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    role: 'STUDENT',
+    role: 'CANDIDATE',
     password: '',
-    phone: '',
-    department: '',
-    batch: '',
   });
 
   const handleChange = (field: string, value: string) => {
@@ -37,9 +36,21 @@ export default function AddUser() {
     try {
       setError('');
       setSuccess('');
+      setLoading(true);
 
-      // TODO: Replace with actual API call
-      // const response = await userService.createUser(formData);
+      // Create user data object
+      const userData: any = {
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+      };
+
+      // Only include password if provided
+      if (formData.password) {
+        userData.password = formData.password;
+      }
+
+      const response = await orgAdminService.createUser(userData);
 
       setSuccess('User created successfully! Credentials have been sent to their email.');
 
@@ -49,6 +60,8 @@ export default function AddUser() {
       }, 2000);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create user');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -126,15 +139,14 @@ export default function AddUser() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="RECRUITER">Recruiter</SelectItem>
-                      <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
-                      <SelectItem value="STUDENT">Student</SelectItem>
+                      <SelectItem value="CANDIDATE">Candidate</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* Password */}
-                <div>
-                  <Label htmlFor="password">Password</Label>
+                <div className="col-span-2">
+                  <Label htmlFor="password">Password (Optional)</Label>
                   <Input
                     id="password"
                     type="password"
@@ -147,54 +159,15 @@ export default function AddUser() {
                     Leave blank to auto-generate and send via email
                   </p>
                 </div>
-
-                {/* Phone */}
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => handleChange('phone', e.target.value)}
-                    placeholder="+1234567890"
-                    className="mt-1.5"
-                  />
-                </div>
-
-                {/* Student-specific fields */}
-                {formData.role === 'STUDENT' && (
-                  <>
-                    <div>
-                      <Label htmlFor="department">Department</Label>
-                      <Input
-                        id="department"
-                        value={formData.department}
-                        onChange={(e) => handleChange('department', e.target.value)}
-                        placeholder="Computer Science"
-                        className="mt-1.5"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="batch">Batch</Label>
-                      <Input
-                        id="batch"
-                        value={formData.batch}
-                        onChange={(e) => handleChange('batch', e.target.value)}
-                        placeholder="2024"
-                        className="mt-1.5"
-                      />
-                    </div>
-                  </>
-                )}
               </div>
 
               {/* Action Buttons */}
               <div className="flex justify-between pt-4">
-                <Button type="button" variant="outline" onClick={() => navigate('/org-admin/users')}>
+                <Button type="button" variant="outline" onClick={() => navigate('/org-admin/users')} disabled={loading}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  Create User
+                <Button type="submit" disabled={loading}>
+                  {loading ? 'Creating...' : 'Create User'}
                 </Button>
               </div>
             </form>

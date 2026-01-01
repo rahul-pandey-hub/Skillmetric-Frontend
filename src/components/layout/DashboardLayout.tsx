@@ -45,7 +45,6 @@ export default function DashboardLayout() {
           { name: 'Create Exam', href: '/org-admin/exams/create', icon: PlusCircle },
           { name: 'Users', href: '/org-admin/users', icon: Users },
           { name: 'Add User', href: '/org-admin/users/add', icon: UserPlus },
-          { name: 'Bulk Upload Users', href: '/org-admin/users/bulk-upload', icon: Upload },
           { name: 'Analytics', href: '/org-admin/analytics', icon: BarChart3 },
           { name: 'Settings', href: '/org-admin/settings', icon: Settings },
         ];
@@ -59,12 +58,12 @@ export default function DashboardLayout() {
           { name: 'Analytics', href: '/recruiter/analytics', icon: BarChart3 },
           { name: 'Settings', href: '/recruiter/settings', icon: Settings },
         ];
-      case 'STUDENT':
+      case 'CANDIDATE':
         return [
-          { name: 'Dashboard', href: '/student', icon: LayoutDashboard },
-          { name: 'My Exams', href: '/student', icon: ClipboardList },
-          { name: 'Exam History', href: '/student/history', icon: FileText },
-          { name: 'Profile', href: '/student/profile', icon: Settings },
+          { name: 'Dashboard', href: '/candidate', icon: LayoutDashboard },
+          { name: 'My Exams', href: '/candidate', icon: ClipboardList },
+          { name: 'Exam History', href: '/candidate/history', icon: FileText },
+          { name: 'Profile', href: '/candidate/profile', icon: Settings },
         ];
       case 'SUPER_ADMIN':
         return [
@@ -111,7 +110,7 @@ export default function DashboardLayout() {
               <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto scrollbar-thin">
                 {navigation.map((item) => {
                   const isActive = location.pathname === item.href ||
-                    (item.href !== '/recruiter' && item.href !== '/student' && location.pathname.startsWith(item.href));
+                    (item.href !== '/recruiter' && item.href !== '/candidate' && location.pathname.startsWith(item.href));
 
                   return (
                     <Link key={item.name} to={item.href}>

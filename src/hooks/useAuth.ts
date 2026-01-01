@@ -39,11 +39,8 @@ export function useLogin() {
         case 'RECRUITER':
           navigate('/recruiter');
           break;
-        case 'INSTRUCTOR':
-          navigate('/instructor');
-          break;
-        case 'STUDENT':
-          navigate('/student');
+        case 'CANDIDATE':
+          navigate('/candidate');
           break;
         default:
           navigate('/');

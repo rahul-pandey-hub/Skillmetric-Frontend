@@ -7,8 +7,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ArrowLeft, Edit, Plus, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { examService } from '../services/examService';
 import { Exam, ExamStatus, ExamAccessMode, ExamCategory } from '../types/exam';
-import BulkStudentUpload from '../components/BulkStudentUpload';
+import BulkCandidateUpload from '../components/BulkCandidateUpload';
 import InvitationManagement from '../components/InvitationManagement';
+import { CandidateSelector } from '../components/exam/CandidateSelector';
+import { EnrolledCandidatesList } from '../components/exam/EnrolledCandidatesList';
 
 const ExamDetails = () => {
   const { examId } = useParams<{ examId: string }>();
@@ -69,11 +71,11 @@ const ExamDetails = () => {
     });
   };
 
-  const handleStudentUpload = async (students: { name: string; email: string }[]) => {
+  const handleCandidateUpload = async (candidates: { name: string; email: string }[]) => {
     try {
       setError('');
       setSuccess('');
-      const response = await examService.enrollStudents(examId!, students);
+      const response = await examService.enrollCandidates(examId!, candidates);
       const { summary, details } = response.data;
 
       if (summary.errors > 0) {
@@ -89,7 +91,7 @@ const ExamDetails = () => {
 
       if (summary.enrolled > 0 || summary.created > 0) {
         setSuccess(
-          `Successfully enrolled ${summary.enrolled} students. ` +
+          `Successfully enrolled ${summary.enrolled} candidates. ` +
           `${summary.created > 0 ? `Created ${summary.created} new accounts. ` : ''}` +
           `${summary.alreadyEnrolled > 0 ? `${summary.alreadyEnrolled} already enrolled. ` : ''}`
         );
@@ -98,7 +100,7 @@ const ExamDetails = () => {
       fetchExam();
     } catch (err: any) {
       console.error('Enrollment error:', err);
-      setError(err.response?.data?.message || 'Failed to enroll students');
+      setError(err.response?.data?.message || 'Failed to enroll candidates');
     }
   };
 
@@ -173,9 +175,9 @@ const ExamDetails = () => {
           </div>
         )}
         {success && (
-          <div className="flex items-center gap-2 p-4 rounded-lg bg-success/10 border border-success/30 text-success-foreground">
-            <CheckCircle className="h-5 w-5 flex-shrink-0" />
-            <p className="text-sm">{success}</p>
+          <div className="flex items-center gap-2 p-4 rounded-lg bg-green-50 border border-green-500/50 text-green-900 dark:bg-green-900/20 dark:text-green-200">
+            <CheckCircle className="h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400" />
+            <p className="text-sm font-medium">{success}</p>
           </div>
         )}
 
@@ -276,28 +278,40 @@ const ExamDetails = () => {
           </CardContent>
         </Card>
 
-        {/* Enrolled Students - Show only for enrollment-based exams */}
+        {/* Enrolled Candidates - Show only for enrollment-based exams */}
         {(exam.accessMode === ExamAccessMode.ENROLLMENT_BASED || exam.accessMode === ExamAccessMode.HYBRID || !exam.accessMode) && (
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle>Enrolled Students ({exam.enrolledStudents?.length || 0})</CardTitle>
-                <BulkStudentUpload examId={examId!} onUploadComplete={handleStudentUpload} />
+                <CardTitle>Enrolled Candidates ({exam.enrolledCandidates?.length || 0})</CardTitle>
+                <BulkCandidateUpload examId={examId!} onUploadComplete={handleCandidateUpload} />
               </div>
             </CardHeader>
             <CardContent>
-              {(!exam.enrolledStudents || exam.enrolledStudents.length === 0) ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-2">No students enrolled yet</p>
-                  <p className="text-sm text-muted-foreground">
-                    Use the "Bulk Upload Students" button to enroll students via Excel/CSV file
-                  </p>
-                </div>
-              ) : (
-                <p className="text-muted-foreground">
-                  {exam.enrolledStudents.length} student{exam.enrolledStudents.length !== 1 ? 's' : ''} enrolled
-                </p>
-              )}
+              <div className="space-y-6">
+                {/* Individual Candidate Selector */}
+                <CandidateSelector
+                  examId={examId!}
+                  onEnrollComplete={fetchExam}
+                  enrolledCandidateIds={exam.enrolledCandidates?.map((c: any) => c._id || c) || []}
+                />
+
+                {/* Enrolled Candidates List with CRUD */}
+                {(!exam.enrolledCandidates || exam.enrolledCandidates.length === 0) ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-2">No candidates enrolled yet</p>
+                    <p className="text-sm text-muted-foreground">
+                      Click "Enroll Candidates" above to select candidates from your organization or use bulk upload
+                    </p>
+                  </div>
+                ) : (
+                  <EnrolledCandidatesList
+                    examId={examId!}
+                    candidates={exam.enrolledCandidates}
+                    onUpdate={fetchExam}
+                  />
+                )}
+              </div>
             </CardContent>
           </Card>
         )}

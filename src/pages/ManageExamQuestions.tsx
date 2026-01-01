@@ -180,9 +180,9 @@ const ManageExamQuestions = () => {
           </div>
         )}
         {success && (
-          <div className="flex items-center gap-2 p-4 rounded-lg bg-success/10 border border-success/30 text-success-foreground">
-            <CheckCircle className="h-5 w-5 flex-shrink-0" />
-            <p className="text-sm">{success}</p>
+          <div className="flex items-center gap-2 p-4 rounded-lg bg-green-50 border border-green-500/50 text-green-900 dark:bg-green-900/20 dark:text-green-200">
+            <CheckCircle className="h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400" />
+            <p className="text-sm font-medium">{success}</p>
           </div>
         )}
 

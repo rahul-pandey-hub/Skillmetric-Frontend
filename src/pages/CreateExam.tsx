@@ -118,7 +118,7 @@ const CreateExam = () => {
   });
 
   // New: Category and Access Mode
-  const [category, setCategory] = useState<ExamCategory>(ExamCategory.GENERAL_ASSESSMENT);
+  const [category, setCategory] = useState<ExamCategory>(ExamCategory.INTERNAL_ASSESSMENT);
   const [accessMode, setAccessMode] = useState<ExamAccessMode>(ExamAccessMode.ENROLLMENT_BASED);
 
   // Auto-set accessMode based on category
@@ -168,6 +168,19 @@ const CreateExam = () => {
   useEffect(() => {
     fetchQuestions();
   }, []);
+
+  // Auto-calculate total marks when questions are selected/deselected
+  useEffect(() => {
+    const selectedQuestionsList = allQuestions.filter(q => selectedQuestions.has(q._id));
+    const calculatedTotalMarks = selectedQuestionsList.reduce((sum, q) => sum + (q.marks || 0), 0);
+
+    if (calculatedTotalMarks > 0) {
+      setGrading(prev => ({
+        ...prev,
+        totalMarks: calculatedTotalMarks
+      }));
+    }
+  }, [selectedQuestions, allQuestions]);
 
   const fetchQuestions = async () => {
     try {
@@ -390,15 +403,11 @@ const CreateExam = () => {
                       <SelectItem value={ExamCategory.RECRUITMENT}>
                         Recruitment
                       </SelectItem>
-                      <SelectItem value={ExamCategory.GENERAL_ASSESSMENT}>
-                        General Assessment
-                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1.5">
                     {category === ExamCategory.INTERNAL_ASSESSMENT && 'For internal employees/students'}
                     {category === ExamCategory.RECRUITMENT && 'For recruitment candidates (one-time access)'}
-                    {category === ExamCategory.GENERAL_ASSESSMENT && 'For registered external candidates'}
                   </p>
                 </div>
                 <div>
@@ -644,16 +653,20 @@ const CreateExam = () => {
               <div className="border-t pt-4"></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="totalMarks" className="required">Total Marks</Label>
+                  <Label htmlFor="totalMarks">
+                    Total Marks <span className="text-xs text-muted-foreground">(Auto-calculated from selected questions)</span>
+                  </Label>
                   <Input
                     id="totalMarks"
                     type="number"
                     value={grading.totalMarks}
-                    onChange={(e) => handleGradingChange('totalMarks', Number(e.target.value))}
-                    required
-                    min={0}
-                    className="mt-1.5"
+                    readOnly
+                    disabled
+                    className="mt-1.5 bg-muted cursor-not-allowed"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {selectedQuestions.size} question(s) selected
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="passingMarks" className="required">Passing Marks</Label>

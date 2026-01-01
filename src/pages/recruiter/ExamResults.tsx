@@ -12,6 +12,7 @@ import {
   Users,
   Award,
   BarChart3,
+  Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -420,12 +421,13 @@ export default function ExamResults() {
                   <TableHead className="text-center">Duration</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead>Submitted At</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredResults.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       No results found
                     </TableCell>
                   </TableRow>
@@ -466,6 +468,17 @@ export default function ExamResults() {
                         {result.submittedAt
                           ? new Date(result.submittedAt).toLocaleString()
                           : 'Not submitted'}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/org-admin/exams/${examId}/results/${result._id}/detail`)}
+                          className="gap-1"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Detail
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
