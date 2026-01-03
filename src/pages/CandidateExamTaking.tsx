@@ -393,19 +393,61 @@ const CandidateExamTaking = () => {
     };
   }, [examData]);
 
-  // Proctoring: Right Click Detection
+  // Proctoring: Dev Tools Detection (Right-click & Keyboard Shortcuts)
   useEffect(() => {
     if (!examData?.proctoringSettings?.rightClickDisabled) return;
 
     const handleRightClick = (e: MouseEvent) => {
       e.preventDefault();
-      reportViolation('RIGHT_CLICK', {
-        description: 'Right-click attempted',
+      reportViolation('DEV_TOOLS', {
+        description: 'Attempted to open developer tools (right-click)',
       });
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // F12
+      if (e.key === 'F12') {
+        e.preventDefault();
+        reportViolation('DEV_TOOLS', {
+          description: 'Attempted to open developer tools (F12)',
+        });
+      }
+      // Ctrl+Shift+I (Inspect Element)
+      if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+        e.preventDefault();
+        reportViolation('DEV_TOOLS', {
+          description: 'Attempted to open developer tools (Ctrl+Shift+I)',
+        });
+      }
+      // Ctrl+Shift+J (Console)
+      if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+        e.preventDefault();
+        reportViolation('DEV_TOOLS', {
+          description: 'Attempted to open developer tools (Ctrl+Shift+J)',
+        });
+      }
+      // Ctrl+Shift+C (Inspect)
+      if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+        e.preventDefault();
+        reportViolation('DEV_TOOLS', {
+          description: 'Attempted to open developer tools (Ctrl+Shift+C)',
+        });
+      }
+      // Cmd+Option+I for Mac
+      if (e.metaKey && e.altKey && e.key === 'I') {
+        e.preventDefault();
+        reportViolation('DEV_TOOLS', {
+          description: 'Attempted to open developer tools (Cmd+Option+I)',
+        });
+      }
+    };
+
     document.addEventListener('contextmenu', handleRightClick);
-    return () => document.removeEventListener('contextmenu', handleRightClick);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('contextmenu', handleRightClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [examData]);
 
   // Proctoring: Fullscreen Detection
